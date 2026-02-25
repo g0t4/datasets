@@ -1,0 +1,63 @@
+{
+  "response_message":{
+    "reasoning_content":"We need to replace assignments with return statements. So each branch should return use_xxx(model) instead of setting use then later maybe return. Provide modified snippet.",
+    "role":"assistant",
+    "_logged":true,
+    "finish_reason":"stop",
+    "content":"```python\nif \"--ollama\" in ask_service:\n    return use_ollama(model)\nelif \"--groq\" in ask_service:\n    return use_groq(model)\nelif \"--deepseek\" in ask_service:\n    return use_deepseek(model)\nelif \"--vllm\" in ask_service:\n    return use_vllm(model)\nelif \"--lmstudio\" in ask_service:\n    return use_lmstudio(model)\nelif \"--anthropic\" in ask_service:\n    return use_anthropic(model)\nelif \"--gh-copilot\" in ask_service:\n    return use_gh_copilot(model)\nelif \"--build21\" in ask_service:\n    return use_build21(model)\nelif \"--inception\" in ask_service:\n    return use_inception(model)\nelif \"--xai\" in ask_service:\n    return use_xai(model)\nelif \"--openai\" in ask_service:\n    return use_openai(model)\n```"
+  },
+  "request_body":{
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/iterm2/scripts/AutoLaunch/wes/wes/asyncs.py:0-19\nimport re\nfrom services import get_selected_service\nfrom logs import log\nfrom langchain_openai import ChatOpenAI\n\nasync def ask_openai_async_type_response(session, messages):\n\n    use = get_selected_service()\n    log(f\"using: {use}\")\n    api_key = use.api_key or \"\"  # must set empty at least\n    model = ChatOpenAI(model=use.model, api_key=api_key, base_url=use.base_url)\n    # FYI I had use.chat_completions_path too but shouldn't need it beyond MAYBE vllm (anthropic will be handled above w/ diff Chat client)\n\n    if use.name == \"anthropic\":\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(model_name=use.model, api_key=use.api_key, timeout=None, stop=None)\n        return\n\n    # max_tokens=use.max_tokens or 200,\n    # TODO temperature? and other model params on Service? (maybe rename it to be ServiceModel combo?)\n\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/suggest.py:11-45\ndef get_openai_suggestion(passed_context: str, system_message: str, use: Service, max_tokens: int):\n    http_client = httpx.Client()\n    try:\n        body = {\n            \"model\": use.model,\n            \"messages\": [\n                {\n                    \"role\": \"system\",\n                    \"content\": system_message\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"{passed_context}\"\n                },\n            ],\n            \"max_tokens\": max_tokens,\n            \"n\": 1  # default\n        }\n        chat_url = use.chat_url()\n        headers = {\n            \"Authorization\": f\"Bearer {use.api_key}\",\n            \"Content-Type\": \"application/json\",\n        }\n        response = http_client.post(chat_url, json=body, headers=headers)\n        response.raise_for_status()\n        completion = response.json()\n        return completion[\"choices\"][0][\"message\"][\"content\"]\n    except httpx.HTTPStatusError as e:\n        # this is triggered by raise_for_status and gives me access to resopnse body\n        #   i.e. useful with ollama when I request invalid model, the body explains that where as w/o the body its a generic 404 which is frustrating at best\n        print(f\"HTTP error occurred: {e}\")\n        print(f\"Response body: {e.response.text}\")  # response body\n    except Exception as e:\n        print(f\"{e}\")\n        return None\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/suggest.py:4-8\ndef generate(passed_context: str, system_message: str, use: Service, max_tokens: int):\n    if use.name == \"anthropic\":\n        return get_anthropic_suggestion(passed_context, system_message, use, max_tokens)\n    else:\n        return get_openai_suggestion(passed_context, system_message, use, max_tokens)\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/suggest.py:8-27\n\n\n\ndef get_openai_suggestion(passed_context: str, system_message: str, use: Service, max_tokens: int):\n    http_client = httpx.Client()\n    try:\n        body = {\n            \"model\": use.model,\n            \"messages\": [\n                {\n                    \"role\": \"system\",\n                    \"content\": system_message\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"{passed_context}\"\n                },\n            ],\n            \"max_tokens\": max_tokens,\n            \"n\": 1  # default\n\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/devtools.py:22-33\ndef main():\n\n    use = args_to_use()\n\n    stdin_context = sys.stdin.read()\n\n    command = get_openai_suggestion(stdin_context, system_message, use, max_tokens)\n    if command is None:\n        sys.exit(1)\n\n    # response is piped to STDOUT => STDIN of SHELL => command line buffer (as if user typed it)\n    print(command)\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"instead of setting `use =` replace that with `return`\n\nHere is the code I selected:\n```zsh/universals/3-last/ask-openai/services.py:292-313\n    if \"--ollama\" in ask_service:\n        use = use_ollama(model)\n    elif \"--groq\" in ask_service:\n        use = use_groq(model)\n    elif \"--deepseek\" in ask_service:\n        use = use_deepseek(model)\n    elif \"--vllm\" in ask_service:\n        use = use_vllm(model)\n    elif \"--lmstudio\" in ask_service:\n        use = use_lmstudio(model)\n    elif \"--anthropic\" in ask_service:\n        use = use_anthropic(model)\n    elif \"--gh-copilot\" in ask_service:\n        use = use_gh_copilot(model)\n    elif \"--build21\" in ask_service:\n        use = use_build21(model)\n    elif \"--inception\" in ask_service:\n        use = use_inception(model)\n    elif \"--xai\" in ask_service:\n        use = use_xai(model)\n    elif \"--openai\" in ask_service:\n        use = use_openai(model)\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "top_p":1,
+    "max_tokens":4096,
+    "temperature":1,
+    "model":""
+  },
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "timings":{
+      "predicted_per_second":211.61810651747,
+      "predicted_n":233,
+      "prompt_per_second":3276.5521735083,
+      "prompt_ms":429.72,
+      "prompt_per_token_ms":0.30519886363636,
+      "cache_n":182,
+      "predicted_per_token_ms":4.7254935622318,
+      "prompt_n":1408,
+      "predicted_ms":1101.04
+    },
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "created":1772047142,
+    "id":"chatcmpl-NnnQT4phUs7loSgG9k5nWqHiodzLRcqm",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}

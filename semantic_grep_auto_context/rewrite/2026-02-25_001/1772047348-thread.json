@@ -1,0 +1,63 @@
+{
+  "response_message":{
+    "content":"```zsh/universals/3-last/ask-openai/services.py:292-315\n    if ask_service == \"--ollama\":\n        return use_ollama(model)\n    if ask_service == \"--groq\":\n        return use_groq(model)\n    if ask_service == \"--deepseek\":\n        return use_deepseek(model)\n    if ask_service == \"--vllm\":\n        return use_vllm(model)\n    if ask_service == \"--lmstudio\":\n        return use_lmstudio(model)\n    if ask_service == \"--anthropic\":\n        return use_anthropic(model)\n    if ask_service == \"--gh-copilot\":\n        return use_gh_copilot(model)\n    if ask_service == \"--build21\":\n        return use_build21(model)\n    if ask_service == \"--inception\":\n        return use_inception(model)\n    if ask_service == \"--xai\":\n        return use_xai(model)\n    if ask_service == \"--openai\":\n        return use_openai(model)\n    raise Exception(\"invalid ask_service: \" + str(ask_service))\n```",
+    "finish_reason":"stop",
+    "reasoning_content":"We need to replace all condition checks with equality rather than substring checks, similar to first line which checks == \"--ollama\". So change lines with `if \"--groq\" in ask_service:` to `if ask_service == \"--groq\":` etc. Provide updated code snippet preserving indentation.",
+    "role":"assistant",
+    "_logged":true
+  },
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "model":"",
+    "max_tokens":4096,
+    "top_p":1,
+    "messages":[{
+        "_logged":true,
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/suggest.py:4-8\ndef generate(passed_context: str, system_message: str, use: Service, max_tokens: int):\n    if use.name == \"anthropic\":\n        return get_anthropic_suggestion(passed_context, system_message, use, max_tokens)\n    else:\n        return get_openai_suggestion(passed_context, system_message, use, max_tokens)\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/suggest.py:0-3\nfrom services import Service\nimport httpx  # import alone is ~58ms\n\n\n\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/suggest.py:11-45\ndef get_openai_suggestion(passed_context: str, system_message: str, use: Service, max_tokens: int):\n    http_client = httpx.Client()\n    try:\n        body = {\n            \"model\": use.model,\n            \"messages\": [\n                {\n                    \"role\": \"system\",\n                    \"content\": system_message\n                },\n                {\n                    \"role\": \"user\",\n                    \"content\": f\"{passed_context}\"\n                },\n            ],\n            \"max_tokens\": max_tokens,\n            \"n\": 1  # default\n        }\n        chat_url = use.chat_url()\n        headers = {\n            \"Authorization\": f\"Bearer {use.api_key}\",\n            \"Content-Type\": \"application/json\",\n        }\n        response = http_client.post(chat_url, json=body, headers=headers)\n        response.raise_for_status()\n        completion = response.json()\n        return completion[\"choices\"][0][\"message\"][\"content\"]\n    except httpx.HTTPStatusError as e:\n        # this is triggered by raise_for_status and gives me access to resopnse body\n        #   i.e. useful with ollama when I request invalid model, the body explains that where as w/o the body its a generic 404 which is frustrating at best\n        print(f\"HTTP error occurred: {e}\")\n        print(f\"Response body: {e.response.text}\")  # response body\n    except Exception as e:\n        print(f\"{e}\")\n        return None\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/link.py:6-50\ndef generate_command(context: str):\n\n    service_name = 'openai'\n    account_name = 'ask'\n    password = keyring.get_password(service_name, account_name)\n    # windows => open Credential Manager => Windows Credentials tab => Generic Credentials section (add new)...  service_name => Internet/NetworkAddress, account_name => username\n    # macos => open Keychain Access => kind=app password, (security add-generic-password IIRC)\n\n    if password is None:\n        print(f\"No password found for {account_name} in {service_name}\")\n        sys.exit(1)\n\n    client = OpenAI(api_key=password)\n    try:\n        # TODO ideas\n        #   return first url to help me understand the command better\n        #   need to differentiate which command I am struggling with, esp if multiple (so where am I likely having issues or not understanding)\n        #   diff semantic vs syntactic questions/issues/lookups\n        #   just like with generating a command, use comments after to explain what I want to do and/or to modify the command\n        #   find the most helpful resource (i.e. docker container run => https://docs.docker.com/reference/cli/docker/container/run)\n        #   can't be hallucinating URLs... needs to confirm the link before responding to me? can I do that over the API?\n\n        completion = client.chat.completions.create(\n            # models https://platform.openai.com/docs/models\n            model=\"gpt-4-1106-preview\",  # gpt-4 \"turbo\" (cheaper than gpt-4)\n            # model=\"gpt-3.5-turbo-1106\",\n            # gpt-4 \"turbo\" and gpt-3.5-turbo are both fast, so use gpt-4 for accuracy (else 3.5 might need to be re-run/fixed which costs more)\n            # ? gpt-3.5-turbo-instruct\n            messages=[{\n                \"role\":\n                \"system\",\n                \"content\":\n                \"You are a command line expert. Find out what I am struggling with, or asking a question about. Find me only the best resource(s). Help with both syntax and semantic. I will open the link(s) and read it. No explanation. No markdown blocks. Make sure these are not hallucinated links. Return link(s) only. No more than 3 of the best links, each new line prefixed with a pound sign to comment them out.\"\n            }, {\n                \"role\": \"user\",\n                \"content\": f\"{context}\"\n            }],\n            max_tokens=200,\n            n=1  # default\n        )\n\n        return completion.choices[0].message.content\n    except Exception as e:\n        print(f\"{e}\")\n        return None\n\n## ~/repos/github/g0t4/dotfiles/iterm2/scripts/AutoLaunch/wes/wes/asyncs.py:0-19\nimport re\nfrom services import get_selected_service\nfrom logs import log\nfrom langchain_openai import ChatOpenAI\n\nasync def ask_openai_async_type_response(session, messages):\n\n    use = get_selected_service()\n    log(f\"using: {use}\")\n    api_key = use.api_key or \"\"  # must set empty at least\n    model = ChatOpenAI(model=use.model, api_key=api_key, base_url=use.base_url)\n    # FYI I had use.chat_completions_path too but shouldn't need it beyond MAYBE vllm (anthropic will be handled above w/ diff Chat client)\n\n    if use.name == \"anthropic\":\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(model_name=use.model, api_key=use.api_key, timeout=None, stop=None)\n        return\n\n    # max_tokens=use.max_tokens or 200,\n    # TODO temperature? and other model params on Service? (maybe rename it to be ServiceModel combo?)\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"make all other cases like the first one, just use equalty check\n\nHere is the code I selected:\n```zsh/universals/3-last/ask-openai/services.py:292-315\n    if ask_service == \"--ollama\":\n        return use_ollama(model)\n    if \"--groq\" in ask_service:\n        return use_groq(model)\n    if \"--deepseek\" in ask_service:\n        return use_deepseek(model)\n    if \"--vllm\" in ask_service:\n        return use_vllm(model)\n    if \"--lmstudio\" in ask_service:\n        return use_lmstudio(model)\n    if \"--anthropic\" in ask_service:\n        return use_anthropic(model)\n    if \"--gh-copilot\" in ask_service:\n        return use_gh_copilot(model)\n    if \"--build21\" in ask_service:\n        return use_build21(model)\n    if \"--inception\" in ask_service:\n        return use_inception(model)\n    if \"--xai\" in ask_service:\n        return use_xai(model)\n    if \"--openai\" in ask_service:\n        return use_openai(model)\n    raise Exception(\"invalid ask_service: \" + str(ask_service))\n\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "temperature":1
+  },
+  "last_sse":{
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "id":"chatcmpl-7tHIcidUkx78JaiSnrXKH7ZGWBlzsk2U",
+    "timings":{
+      "prompt_per_token_ms":0.26602203182375,
+      "predicted_ms":1263.973,
+      "prompt_n":1634,
+      "cache_n":367,
+      "predicted_per_second":231.01759293909,
+      "predicted_n":292,
+      "prompt_per_second":3759.0871445661,
+      "predicted_per_token_ms":4.3286746575342,
+      "prompt_ms":434.68
+    },
+    "object":"chat.completion.chunk",
+    "created":1772047350,
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
