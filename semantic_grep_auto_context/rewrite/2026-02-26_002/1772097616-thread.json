@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "timings":{
+      "predicted_ms":1090.995,
+      "predicted_per_token_ms":4.2952559055118,
+      "cache_n":735,
+      "predicted_per_second":232.81499915215,
+      "predicted_n":254,
+      "prompt_per_second":5079.5053003534,
+      "prompt_n":713,
+      "prompt_ms":140.368,
+      "prompt_per_token_ms":0.19686956521739
+    },
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-cy9MobMflIC6lz3sU5lVmDoRNNrUFnwc",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "created":1772097618
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to modify get_selected_service to use service.model from args function, not model variable. Likely change get_selected_service_for_args call. Probably pass model as separate arg? Actually they want to look at service.model returned from _args func not model variable. So after calling get_selected_service_for_args, we get Service with model set. So we should remove usage of model variable for temperature check, instead use service.model after retrieving. So restructure: first get args, then get service, then check service.model. Provide code.",
+    "role":"assistant",
+    "_logged":true,
+    "content":"```python\ndef get_selected_service() -> Service:\n    # Retrieve the raw service name and model string from the universal variable\n    ask_service, model = get_fish_universal_variable_ask_service()\n\n    # Build a Service instance that already has its .model attribute populated\n    service = get_selected_service_for_args(ask_service, model)\n\n    # If the resolved model name contains \"gptoss\" (or \"gpt-oss\") set a default temperature\n    if service.model and re.search(r'gpt[-]?oss', service.model):\n        log(\"gptoss setting temp SHIT\")\n        service.temperature = 1\n\n    return service\n```"
+  },
+  "request_body":{
+    "max_tokens":4096,
+    "temperature":1,
+    "messages":[{
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/chat_non_stream.py:15-34\n    if service.name == \"anthropic\":\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n            timeout=None,\n            stop=None,\n        )\n    else:\n        from langchain_openai import ChatOpenAI\n        model = ChatOpenAI(\n            model=service.model,\n            api_key=service.api_key,\n            base_url=service.base_url,\n        )\n\n    # TODO add temperature (optional) to Service? (perhaps rename to ServiceModel or split out generation args somehow)\n    # PRN timeout?\n    ai_message = model.invoke(messages, max_tokens=max_tokens)\n    content = ai_message.content\n\n\n## ~/repos/github/g0t4/dotfiles/iterm2/scripts/AutoLaunch/wes/wes/chat_stream.py:15-34\n            api_key=service.api_key,\n            timeout=None,\n            stop=None,\n        )\n        return model, service\n\n    # TODO why is this import so slow?\n    from langchain_openai import ChatOpenAI\n    model = ChatOpenAI(\n        model=service.model,\n        api_key=service.api_key,\n        base_url=service.base_url,\n    )\n    return model, service\n\nasync def ask_openai_async_type_response(messages: list[dict], on_chunk: Callable[[str], Awaitable[None]]):\n    log(f\"{messages=}\")\n    model, service = get_model()\n\n    # TODO temperature? and other model params on Service? (maybe rename it to be ServiceModel combo?)\n\n\n## ~/repos/github/g0t4/dotfiles/iterm2/scripts/AutoLaunch/wes/wes/chat_stream.py:0-19\nimport re\nfrom collections.abc import Awaitable, Callable\nfrom services import get_selected_service, Service\nfrom logs import log\nfrom langchain_core.language_models import BaseChatModel\n\ndef get_model() -> tuple[BaseChatModel, Service]:\n    service = get_selected_service()\n    log(f\"using: {service}\")\n\n    if service.name == \"anthropic\":\n        # TODO is this one slow too? measure it\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n            timeout=None,\n            stop=None,\n        )\n        return model, service\n\n\n## ~/repos/github/g0t4/dotfiles/iterm2/scripts/AutoLaunch/wes/wes/chat_stream.py:6-28\ndef get_model() -> tuple[BaseChatModel, Service]:\n    service = get_selected_service()\n    log(f\"using: {service}\")\n\n    if service.name == \"anthropic\":\n        # TODO is this one slow too? measure it\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n            timeout=None,\n            stop=None,\n        )\n        return model, service\n\n    # TODO why is this import so slow?\n    from langchain_openai import ChatOpenAI\n    model = ChatOpenAI(\n        model=service.model,\n        api_key=service.api_key,\n        base_url=service.base_url,\n    )\n    return model, service\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/chat_non_stream.py:0-19\nimport re\nfrom langchain_core.messages import HumanMessage, SystemMessage\nfrom services import Service, get_selected_service\n\n# TODO testing this with only one consumer: (ctrl-b via single.py)\n# TODO test anthropic\n# DONE: openai/llama-server\n\ndef generate_non_streaming(passed_context: str, system_message: str, max_tokens: int):\n    messages = [\n        SystemMessage(content=system_message),\n        HumanMessage(content=passed_context),\n    ]\n\n    service = get_selected_service()\n    if service.name == \"anthropic\":\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"fix this to look at service.model returned from the _args func not model\n\nHere is the code I selected:\n```zsh/universals/3-last/ask-openai/services.py:213-223\ndef get_selected_service() -> Service:\n    ask_service, model = get_fish_universal_variable_ask_service()\n    # if model is gptoss/gpt-oss then set temperature to 1\n    if model and re.search(r'gpt[-]?oss', model):\n        log(\"gptoss setting temp SHIT\")\n        ask_service.temperature = 1\n        # TODO other recommends\n        pass\n\n    return get_selected_service_for_args(ask_service, model)\n\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      }],
+    "model":"",
+    "top_p":1,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    }
+  }
+}
