@@ -1,3 +1,7 @@
+# datasets
+
+This repo has several of my datasets, key part right now is the local AI tool use chat threads.
+
 ## chat thread viewer
 
 This repo houses select threads from my local AI tools. Mostly `gptoss120b` at this time.  
