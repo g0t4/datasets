@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "id":"chatcmpl-5DqyUM4het3apTiFw8EPNfjDoLHRfvHC",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "created":1772092847,
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "timings":{
+      "predicted_ms":1308.069,
+      "predicted_per_token_ms":4.2608110749186,
+      "predicted_per_second":234.69709931204,
+      "predicted_n":307,
+      "prompt_per_second":6056.4224126703,
+      "prompt_per_token_ms":0.16511397849462,
+      "prompt_ms":153.556,
+      "cache_n":687,
+      "prompt_n":930
+    }
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to return service as second return value from get_model. So modify get_model to return tuple (model, service). Keep other code unchanged except adjust calls? The instruction: \"do not change anything else\". So just change return statements to return both. In async function they call model = get_model() – that will now be tuple, but instruction says not to change anything else, maybe they expect they will unpack later. We'll just return (model, service). So modify both return points to return model, service. Also adjust type hint to -> tuple[BaseChatModel, Service]? Use list[] style. Use tuple[]. Probably need import Service. Assume already imported. We'll just change.",
+    "content":"def get_model() -> tuple[BaseChatModel, Service]:\n    service = get_selected_service()\n    log(f\"using: {service}\")\n\n    if service.name == \"anthropic\":\n        # TODO is this one slow too? measure it\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n            timeout=None,\n            stop=None,\n        )\n        return model, service\n\n    # TODO why is this import so slow?\n    from langchain_openai import ChatOpenAI\n    model = ChatOpenAI(\n        model=service.model,\n        api_key=service.api_key,\n        base_url=service.base_url,\n    )\n    return model, service",
+    "_logged":true,
+    "role":"assistant"
+  },
+  "request_body":{
+    "temperature":1,
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "max_tokens":4096,
+    "messages":[{
+        "_logged":true,
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/chat_non_stream.py:15-34\n    if service.name == \"anthropic\":\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n            timeout=None,\n            stop=None,\n        )\n    else:\n        from langchain_openai import ChatOpenAI\n        model = ChatOpenAI(\n            model=service.model,\n            api_key=service.api_key,\n            base_url=service.base_url,\n        )\n\n    # TODO add temperature (optional) to Service? (perhaps rename to ServiceModel or split out generation args somehow)\n    # PRN timeout?\n    ai_message = model.invoke(messages, max_tokens=max_tokens)\n    content = ai_message.content\n\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/services.py:87-94\ndef use_anthropic(model: Optional[str] = None):\n    return Service(\n        name='anthropic',\n        api_key=get_api_key('anthropic', 'ask'),\n        base_url=\"https://api.anthropic.com/v1\",\n        model=model if model else 'claude-sonnet-4-6',\n    )\n    # https://docs.anthropic.com/en/docs/about-claude/models\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/services.py:215-241\ndef get_selected_service_for_args(ask_service, model) -> Service:\n    if ask_service is None:\n        return use_build21(None)\n    # PRN this parsing logic can be shared with single.py, after I re-hydrate the ask_service variable\n    if \"--ollama\" in ask_service:\n        return use_ollama(model)\n    if \"--groq\" in ask_service:\n        return use_groq(model)\n    if \"--deepseek\" in ask_service:\n        return use_deepseek(model)\n    if \"--vllm\" in ask_service:\n        return use_vllm(model)\n    if \"--lmstudio\" in ask_service:\n        return use_lmstudio(model)\n    if \"--anthropic\" in ask_service:\n        return use_anthropic(model)\n    if \"--gh-copilot\" in ask_service:\n        return use_gh_copilot(model)\n    if \"--build21\" in ask_service:\n        return use_build21(model)\n    if \"--inception\" in ask_service:\n        return use_inception(model)\n    if \"--xai\" in ask_service:\n        return use_xai(model)\n    if \"--openai\" in ask_service:\n        return use_openai(model)\n    raise Exception(\"invalid ask_service: \" + str(ask_service))\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/chat_non_stream.py:0-19\nimport re\nfrom langchain_core.messages import HumanMessage, SystemMessage\nfrom services import Service, get_selected_service\n\n# TODO testing this with only one consumer: (ctrl-b via single.py)\n# TODO test anthropic\n# DONE: openai/llama-server\n\ndef generate_non_streaming(passed_context: str, system_message: str, max_tokens: int):\n    messages = [\n        SystemMessage(content=system_message),\n        HumanMessage(content=passed_context),\n    ]\n\n    service = get_selected_service()\n    if service.name == \"anthropic\":\n        from langchain_anthropic import ChatAnthropic\n        model = ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n\n\n## ~/repos/github/g0t4/dotfiles/zsh/universals/3-last/ask-openai/services.py:213-232\n\n\ndef get_selected_service_for_args(ask_service, model) -> Service:\n    if ask_service is None:\n        return use_build21(None)\n    # PRN this parsing logic can be shared with single.py, after I re-hydrate the ask_service variable\n    if \"--ollama\" in ask_service:\n        return use_ollama(model)\n    if \"--groq\" in ask_service:\n        return use_groq(model)\n    if \"--deepseek\" in ask_service:\n        return use_deepseek(model)\n    if \"--vllm\" in ask_service:\n        return use_vllm(model)\n    if \"--lmstudio\" in ask_service:\n        return use_lmstudio(model)\n    if \"--anthropic\" in ask_service:\n        return use_anthropic(model)\n    if \"--gh-copilot\" in ask_service:\n        return use_gh_copilot(model)\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"return service as second return value (do not change anyting else)\n\nHere is the code I selected:\n```iterm2/scripts/AutoLaunch/wes/wes/chat_stream.py:7-33\ndef get_model() -> BaseChatModel:\n\n    service = get_selected_service()\n    log(f\"using: {service}\")\n\n    if service.name == \"anthropic\":\n        # TODO is this one slow too? measure it\n        from langchain_anthropic import ChatAnthropic\n        return ChatAnthropic(\n            model_name=service.model,\n            api_key=service.api_key,\n            timeout=None,\n            stop=None,\n        )\n\n    # TODO why is this import so slow?\n    from langchain_openai import ChatOpenAI\n    return ChatOpenAI(\n        model=service.model,\n        api_key=service.api_key,\n        base_url=service.base_url,\n    )\n\nasync def ask_openai_async_type_response(messages: list[dict], on_chunk: Callable[[str], Awaitable[None]]):\n    log(f\"{messages=}\")\n    model = get_model()\n\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "stream":true,
+    "top_p":1
+  }
+}
