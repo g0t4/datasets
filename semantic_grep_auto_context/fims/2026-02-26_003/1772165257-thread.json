@@ -1,0 +1,61 @@
+{
+  "last_sse":{
+    "timings":{
+      "cache_n":959,
+      "predicted_per_second":212.25926692897,
+      "predicted_n":82,
+      "prompt_per_second":3590.7837936236,
+      "prompt_ms":480.675,
+      "prompt_per_token_ms":0.27849073001159,
+      "predicted_ms":386.32,
+      "predicted_per_token_ms":4.7112195121951,
+      "prompt_n":1726
+    },
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "id":"chatcmpl-ye9wAbtc8fyRzf8YT78Zf90o5I9u9QcC",
+    "created":1772165258,
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to replace <|fim_middle|> after workspace. Likely call function to get workspace root. In repo there is workspace module with get_werkspace_root_dir (typo). So should be workspace.get_werkspace_root_dir(). So code: local work_dir = workspace.get_werkspace_root_dir()",
+    "role":"assistant",
+    "_logged":true,
+    "content":"get_werkspace_root_dir()"
+  },
+  "request_body":{
+    "options":[],
+    "raw":false,
+    "model":"gpt-oss:120b",
+    "max_tokens":4096,
+    "top_p":1,
+    "temperature":1,
+    "messages":[{
+        "_logged":true,
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"developer"
+      },{
+        "_logged":true,
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/workspace.lua:16-22\n--- Directory opened in neovim with the user's files, either:\n--- - If in a git repo, the repo root directory\n--- - Or, CWD\n---@return string path\nfunction M.get_werkspace_root_dir()\n    return get_git_root() or vim.fn.getcwd()\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/backends/fim_backend.lua:207-210\nfunction FimBackend:get_repo_name()\n    -- TODO confirm repo naming? is it just basename of repo root? or GH link? or org/repo?\n    return vim.fn.getcwd():match(\"([^/]+)$\")\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/backends/fim_backend.lua:203-205\nfunction FimBackend.inject_file_path_test_seam()\n    return files.get_current_file_relative_path()\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/workspace.lua:0-3\nlocal M = {}\n\n-- FYI copied from my dotfiles repo werkspace plugin/feature\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:15-17\nlocal function mkdir_p(path)\n    vim.fn.mkdir(vim.fn.fnamemodify(path, ':h'), 'p')\nend\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/ask-openai/rag/client/init.lua\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal files = require(\"ask-openai.helpers.files\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal safely = require(\"ask-openai.helpers.safely\")\n\nlocal M = {}\n\n---@class RagYamlConfig\n---@field enabled boolean\n\n---@param work_dir string\n---@return RagYamlConfig?\nlocal function load_rag_yaml_config(work_dir)\n    -- FYI\n    -- luarocks install --lua-version=5.1  lyaml\n\n    local rag_yaml_path = work_dir .. \"/.rag.yaml\"\n    if not files.exists(rag_yaml_path) then\n        log:info(\"no .rag.yaml found at\", rag_yaml_path)\n        return nil\n    end\n\n    local yaml_content = vim.fn.readfile(rag_yaml_path)\n    if not yaml_content then\n        error(\"failed to read file contents\", rag_yaml_path)\n        return nil\n    end\n\n    local yaml_str = table.concat(yaml_content, \"\\n\")\n    local ok, parsed = safely.decode_yaml(yaml_str)\n    if not ok then\n        error(\"Failed to parse yaml\" .. rag_yaml_path)\n        return nil\n    end\n\n    ---@type RagYamlConfig\n    local parsed_config = parsed or {}\n\n    -- AS NEEDED load defaults\n    if parsed_config.enabled == nil then\n        parsed_config.enabled = true\n    end\n    return parsed_config\nend\n\nlocal function check_supported_dirs()\n    local work_dir = workspace.<|fim_middle|>\n    local dot_rag_dir = work_dir .. \"/.rag\"\n\n    local is_rag_dir = files.exists(work_dir)\n    M.rag_yaml = load_rag_yaml_config(work_dir)\n    -- log:info(\"RAG\", vim.inspect(M.rag_yaml))\n\n    if M.rag_yaml and not M.rag_yaml.enabled then\n        log:error(\"RAG is disabled in .rag.yaml\")\n        return\n    end\n\n    if not is_rag_dir then\n        -- fallback check git repo root\n        --   i.e. the rag dir in this ask-openai repo, or my hammerspoon config in my dotfiles repo\n        --   I often work inside these directories, maybe I should just have a .rag dir in them too.. and scope to just it but maybe not?\n        local git_root = vim.fn.systemlist(\"git rev-parse --show-toplevel\")[1]\n        dot_rag_dir = git_root .. \"/.rag\"\n        is_rag_dir = files.exists(dot_rag_dir)\n        if not is_rag_dir then\n            log:info(\"RAG is disabled b/c there is NO .rag dir: \" .. dot_rag_dir)\n            return\n        end\n        log:info(\"fallback, found .rag in repo root: \" .. git_root .. \"/.rag\")\n    end\n\n    M.is_rag_indexed_workspace = is_rag_dir\n    M.rag_extensions = files.list_directories(dot_rag_dir)\n    log:info(\"RAG is supported for: \" .. vim.inspect(M.rag_extensions))\nend\ncheck_supported_dirs()\n\nfunction M.get_filetypes_for_workspace()\n    -- FYI vim filetypes for enabling the LSP client for RAG purposes\n    local ext_to_filetype = {\n        -- extension = filetype\n        bash = \"sh\", -- *\n        clj = \"clojure\",\n        coffee = \"coffeescript\",\n        conf = \"cfg\",\n        cs = \"csharp\",\n        h = \"c\",\n        hh = \"cpp\",\n        hpp = \"cpp\",\n        hs = \"haskell\",\n        htm = \"html\",\n        jade = \"pug\",\n        js = \"javascript\", -- *\n        julia = \"julia\",\n        kt = \"kotlin\",\n        lhs = \"lhaskell\",\n        m = \"objc\", -- others for objc?\n        mm = \"objc\",\n        md = \"markdown\", -- *\n        pl = \"perl\",\n        pm = \"perl\",\n        py = \"python\", -- *\n        patch = \"diff\",\n        rb = \"ruby\",\n        rs = \"rust\",\n        scm = \"scheme\",\n        shtml = \"html\",\n        swift = \"swift\",\n        ts = \"typescript\",\n        tsx = \"typescriptreact\",\n        vimrc = \"vim\",\n        yml = \"yaml\", -- *\n    }\n\n    return vim.iter(M.rag_extensions or {})\n        :map(function(ext) return ext_to_filetype[ext] or ext end)\n        :totable()\nend\n\nfunction M.is_rag_supported()\n    if M.rag_yaml and not M.rag_yaml.enabled then\n        -- FYI this was a rushed addition, to toggle RAG on/off in .rag.yaml...\n        --   don't be surprised if you have to fix some bugs\n        --   I didn't care to spend too much time making sure this was done \"right\"\n        return false\n    end\n    return M.is_rag_indexed_workspace == true\nend\n\nfunction M.is_rag_supported_in_current_file(bufnr)\n    -- TODO add a virtual toggle so LSP failure stops requests too\n    --   can I detect non-connected LSP (w/o hugh perf hit?)\n\n    if not M.is_rag_supported() then\n        return false\n    end\n\n    bufnr = bufnr or 0\n    local buffer_name = vim.api.nvim_buf_get_name(bufnr)\n    local extension = vim.fn.fnamemodify(buffer_name, \":e\")\n    -- TODO use filetype instead?\n    --  i.e. .yaml/.yml\n    --  or c: .h/.c/.cpp ...\n    --  or node: .js/.mjs\n    return vim.tbl_contains(M.rag_extensions, extension)\nend\n\n---@param str string\n---@return string\nfunction trim(str)\n    return (str:gsub(\"^%s*(.-)%s*$\", \"%1\"))\nend\n\n---@param ps_chunk PrefixSuffixChunk\n---@returns string? -- FIM query string, or nil to disable FIM Semantic Grep\nlocal function fim_concat(ps_chunk)\n    -- FYI see fim_query_notes.md for past and future ideas for Semantic Grep selection w.r.t. RAG+FIM\n\n    -- * TESTING FIM+RAG with cursor line ONLY for query\n    local query = ps_chunk.cursor_line.before_cursor\n```\n\n## Reminders about the cursor line:\nText before cursor: `    local work_dir = workspace.`",
+        "role":"user"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true
+  }
+}
