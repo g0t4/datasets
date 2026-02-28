@@ -1,0 +1,57 @@
+{
+  "last_sse":{
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "timings":{
+      "prompt_per_second":6178.1636734198,
+      "prompt_n":967,
+      "predicted_per_second":240.40552616387,
+      "predicted_n":152,
+      "predicted_per_token_ms":4.1596381578947,
+      "cache_n":1078,
+      "prompt_ms":156.519,
+      "prompt_per_token_ms":0.16186039296794,
+      "predicted_ms":632.265
+    },
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "id":"chatcmpl-2tEWvMKXha7Hfpl4uxlXSxbQEUQoBceT",
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "created":1772255255
+  },
+  "response_message":{
+    "role":"assistant",
+    "_logged":true,
+    "reasoning_content":"We need to complete dict entry. In _lazy_from_imports.update we need mapping of \"URL\": \"httpx\". Probably also other imports like \"Proxy\", \"Timeout\", \"Response\", \"BaseTransport\", \"AsyncBaseTransport\". So after \"URL\" add comma and others. Likely: ,\"Proxy\":\"httpx\",\"Timeout\":\"httpx\",\"Response\":\"httpx\",\"BaseTransport\":\"httpx\",\"AsyncBaseTransport\":\"httpx\". Return that string.",
+    "finish_reason":"stop",
+    "content":": \"httpx\",\n        \"Proxy\": \"httpx\",\n        \"Timeout\": \"httpx\",\n        \"Response\": \"httpx\",\n        \"BaseTransport\": \"httpx\",\n        \"AsyncBaseTransport\": \"httpx\","
+  },
+  "request_body":{
+    "raw":false,
+    "max_tokens":4096,
+    "model":"gpt-oss:120b",
+    "top_p":1,
+    "options":[],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "messages":[{
+        "role":"developer",
+        "_logged":true,
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: anthropic-sdk-python\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```src/anthropic/_types.py\nfrom __future__ import annotations\n\n_lazy_from_imports: dict[str, str] = {}\n_lazy_module_imports: dict[str, str] = {}\n\nfrom os import PathLike\nfrom typing import (\n    IO,\n    TYPE_CHECKING,\n    Any,\n    Dict,\n    List,\n    Type,\n    Tuple,\n    Union,\n    Mapping,\n    TypeVar,\n    Callable,\n    Iterable,\n    Iterator,\n    Optional,\n    Sequence,\n    AsyncIterable,\n)\nfrom typing_extensions import (\n    Set,\n    Literal,\n    Protocol,\n    TypeAlias,\n    TypedDict,\n    SupportsIndex,\n    overload,\n    override,\n    runtime_checkable,\n)\n\nif TYPE_CHECKING:\n    import httpx\n    import pydantic\n    from httpx import URL, Proxy, Timeout, Response, BaseTransport, AsyncBaseTransport\nelse:\n    _lazy_module_imports.update({\n        \"httpx\": \"httpx\",\n        \"pydantic\": \"pydantic\",\n    })\n    _lazy_from_imports.update({\n        \"URL\"<|fim_middle|>\n    })\n\nif TYPE_CHECKING:\n    from ._models import BaseModel\n    from ._response import APIResponse, AsyncAPIResponse\n    from ._legacy_response import HttpxBinaryResponseContent\n\nTransport = BaseTransport\nAsyncTransport = AsyncBaseTransport\nQuery = Mapping[str, object]\nBody = object\nAnyMapping = Mapping[str, object]\nif TYPE_CHECKING:\n    ModelT = TypeVar(\"ModelT\", bound=pydantic.BaseModel)\n    _T = TypeVar(\"_T\")\n\n\n# Approximates httpx internal ProxiesTypes and RequestFiles types\n# while adding support for `PathLike` instances\nProxiesDict = Dict[\"str | URL\", Union[None, str, URL, Proxy]]\nProxiesTypes = Union[str, Proxy, ProxiesDict]\nif TYPE_CHECKING:\n    Base64FileInput = Union[IO[bytes], PathLike[str]]\n    FileContent = Union[IO[bytes], bytes, PathLike[str]]\nelse:\n    Base64FileInput = Union[IO[bytes], PathLike]\n    FileContent = Union[IO[bytes], bytes, PathLike]  # PathLike is not subscriptable in Python 3.8.\n\n\n# Used for sending raw binary data / streaming data in request bodies\n# e.g. for file uploads without multipart encoding\nBinaryTypes = Union[bytes, bytearray, IO[bytes], Iterable[bytes]]\nAsyncBinaryTypes = Union[bytes, bytearray, IO[bytes], AsyncIterable[bytes]]\n\nFileTypes = Union[\n    # file (or bytes)\n    FileContent,\n    # (filename, file (or bytes))\n    Tuple[Optional[str], FileContent],\n    # (filename, file (or bytes), content_type)\n    Tuple[Optional[str], FileContent, Optional[str]],\n    # (filename, file (or bytes), content_type, headers)\n    Tuple[Optional[str], FileContent, Optional[str], Mapping[str, str]],\n]\nRequestFiles = Union[Mapping[str, FileTypes], Sequence[Tuple[str, FileTypes]]]\n\n# duplicate of the above but without our custom file support\nHttpxFileContent = Union[IO[bytes], bytes]\nHttpxFileTypes = Union[\n    # file (or bytes)\n    HttpxFileContent,\n    # (filename, file (or bytes))\n    Tuple[Optional[str], HttpxFileContent],\n    # (filename, file (or bytes), content_type)\n    Tuple[Optional[str], HttpxFileContent, Optional[str]],\n    # (filename, file (or bytes), content_type, headers)\n    Tuple[Optional[str], HttpxFileContent, Optional[str], Mapping[str, str]],\n]\nHttpxRequestFiles = Union[Mapping[str, HttpxFileTypes], Sequence[Tuple[str, HttpxFileTypes]]]\n\n# Workaround to support (cast_to: Type[ResponseT]) -> ResponseT\n# where ResponseT includes `None`. In order to support directly\n# passing `None`, overloads would have to be defined for every\n# method that uses `ResponseT` which would lead to an unacceptable\n# amount of code duplication and make it unreadable. See _base_client.py\n# for example usage.\n#\n# This unfortunately means that you will either have\n# to import this type and pass it explicitly:\n#\n# from anthropic import NoneType\n# client.get('/foo', cast_to=NoneType)\n#\n# or build it yourself:\n#\n# client.get('/foo', cast_to=type(None))\nif TYPE_CHECKING:\n    NoneType: Type[None]\nelse:\n    NoneType = type(None)\n\n\nclass RequestOptions(TypedDict, total=False):\n    headers: Headers\n    max_retries: int\n    timeout: float | Timeout | None\n    params: Query\n    extra_json: AnyMapping\n    idempotency_key: str\n    follow_redirects: bool\n\n\n# Sentinel class used until PEP 0661 is accepted\nclass NotGiven:\n    \"\"\"\n    For parameters with a meaningful None value, we need to distinguish between\n    the user explicitly passing None, and the user not passing the parameter at\n    all.\n\n    User code shouldn't need to use not_given directly.\n\n    For example:\n\n    ```py\n    def create(timeout: Timeout | None | NotGiven = not_given): ...\n\n\n    create(timeout=1)  # 1s timeout\n    create(timeout=None)  # No timeout\n    create()  # Default timeout behavior\n    ```\n    \"\"\"\n\n    def __bool__(self) -> Literal[False]:\n```\n\n## Reminders about the cursor line:\nText before cursor: `        \"URL\"`"
+      }],
+    "stream":true,
+    "temperature":1
+  }
+}
