@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "predicted_ms":914.75,
+      "predicted_per_token_ms":4.715206185567,
+      "prompt_n":1282,
+      "cache_n":438,
+      "predicted_per_second":212.07980322492,
+      "predicted_n":194,
+      "prompt_per_second":4384.1050543738,
+      "prompt_ms":292.42,
+      "prompt_per_token_ms":0.22809672386895
+    },
+    "created":1772353909,
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "id":"chatcmpl-XOA53SA39UznALnIg4ttEM2UbM6HftoQ"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to rewrite function to just map level and return vim level, then call vim.notify outside. Provide code.",
+    "role":"assistant",
+    "_logged":true,
+    "content":"```lua\n---@param result { message: string, type: number }  -- Language Server MessageType\nlocal function map_lsp_level(result)\n    local level_map = {\n        [1] = vim.log.levels.ERROR, -- MessageType.Error\n        [2] = vim.log.levels.WARN,  -- MessageType.Warning\n        [3] = vim.log.levels.INFO,  -- MessageType.Info\n        [5] = vim.log.levels.DEBUG, -- MessageType.Debug\n        [4] = vim.log.levels.TRACE, -- MessageType.Log (treated as Trace)\n    }\n    return level_map[result.type] or vim.log.levels.INFO\nend\n\nlocal vim_level = map_lsp_level(result)\nvim.notify(result.message, vim_level)\n```"
+  },
+  "request_body":{
+    "model":"",
+    "max_tokens":4096,
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:17-36\n\n\n\n-- * log level constants\nlocal LEVEL_NUMBERS = {\n    TRACE = 0,\n    INFO = 1,\n    WARN = 2,\n    ERROR = 3,\n}\nM.LOG_LEVEL_NUMBERS = LEVEL_NUMBERS\nlocal LEVEL_TEXT_TO_NUMBER = {\n    [\"TRACE\"] = LEVEL_NUMBERS.TRACE,\n    [\"INFO\"]  = LEVEL_NUMBERS.INFO,\n    [\"WARN\"]  = LEVEL_NUMBERS.WARN,\n    [\"ERROR\"] = LEVEL_NUMBERS.ERROR,\n}\nM.LOG_LEVEL_TEXT_TO_NUMBER = LEVEL_TEXT_TO_NUMBER\nlocal LEVEL_NUMBER_TO_TEXT = {\n    [LEVEL_NUMBERS.TRACE] = \"TRACE\",\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/context/coc/learn/diagnostics.lua:15-34\n\n\n-- *example from CocAction('diagnosticList')\n--\n-- {\n--   bufnr = 7,\n--   level = 1,\n--   code = \"reportArgumentType\",\n--   col = 39, end_col = 46,\n--   lnum = 10, end_lnum = 10,\n--   file = \"~/repos/github/g0t4/private-auto-edit-suggests/auto_edit/new_silence/detects/crossings_tests.py\",\n--   location = {\n--     range = {\n--       [\"end\"] = { character = 45, line = 9 },\n--       start = { character = 38, line = 9 }\n--     },\n--     uri = \"file://~/repos/github/g0t4/private-auto-edit-suggests/auto_edit/new_silence/detects/crossings_tests.py\"\n--   },\n--   message = 'Argument of type \"list[Crossover]\" cannot be assigned to parameter \"x\" of type \"ArrayLike\" in function \"assert_array_equal\"\\n  Type \"list[Crossover]\" is not assignable to type \"ArrayLike\"\\n    \"list[Crossover]\" is incompatible with protocol \"Buffer\"\\n      \"__buffer__\" is not present\\n    \"list[Crossover]\" is incompatible with protocol \"_SupportsArray[dtype[Any]]\"\\n      \"__array__\" is not present\\n    \"list[Crossover]\" is incompatible with protocol \"_NestedSequence[_SupportsArray[dtype[Any]]]\"\\n      \"__getitem__\" is an incompatible type\\n        No overloaded function matches type \"(index: int, /) -> (_T_co@_NestedSequence | _NestedSequence[_T_co@_NestedSequence])\"\\n  ...',\n--   severity = \"Error\",\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:32-51\n    [\"ERROR\"] = LEVEL_NUMBERS.ERROR,\n}\nM.LOG_LEVEL_TEXT_TO_NUMBER = LEVEL_TEXT_TO_NUMBER\nlocal LEVEL_NUMBER_TO_TEXT = {\n    [LEVEL_NUMBERS.TRACE] = \"TRACE\",\n    [LEVEL_NUMBERS.INFO]  = \"INFO\",\n    [LEVEL_NUMBERS.WARN]  = \"WARN\",\n    [LEVEL_NUMBERS.ERROR] = \"ERROR\",\n}\nM.LOG_LEVEL_NUMBER_TO_TEXT = LEVEL_NUMBER_TO_TEXT\nlocal DEFAULT_LOG_LEVEL_NUMBER = LEVEL_NUMBERS.WARN\n\nlocal function load_config()\n    local default = {\n        predictions = { enabled = true },\n        notify_stats = false,\n        rag = { enabled = true },\n        log_threshold_text = LEVEL_NUMBER_TO_TEXT[DEFAULT_LOG_LEVEL_NUMBER],\n        fim = { semantic_grep = { all_files = false } },\n        gptoss = {} -- allow downstream to define defaults\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/status/lualine.lua:14-31\n\n\nlocal LEVEL_ICONS = {\n    trace = \"∙\", -- or \"…\" / \"⋯\" / \"·\"\n    debug = \"\",\n    info  = \"\",\n    warn  = \"\",\n    error = \"\",\n}\n\nfunction M.lualine_components()\n    -- FYI this is an example, copy and modify it to your liking!\n    -- reference: \"󰼇\" \"󰼈\"\n    --  ''            󰨰   (test/debug)\n    --  󰵉  󱐎  󰵕  search axis/arrow\n    --     󰕡 (search vector)\n\n    \n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:113-117\n\n\n-- * log threshold *\nlocal MAX_LOG_THRESHOLD = 2 -- must always show WARN/ERROR\n\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"rewrite function to just map the level and then return the vim level and pass that to vim.notify outside\n\nHere is the code I selected:\n```lua/ask-openai/rag/init.lua:86-99\n        ---@param result { message: string, type: number }  -- Language Server MessageType\n        local function notify_with_lsp_level(result)\n            local level_map = {\n                [1] = vim.log.levels.ERROR, -- MessageType.Error\n                [2] = vim.log.levels.WARN, -- MessageType.Warning\n                [3] = vim.log.levels.INFO, -- MessageType.Info\n                [5] = vim.log.levels.DEBUG, -- MessageType.Debug\n                [4] = vim.log.levels.TRACE, -- MessageType.Log => not sure Log == Trace but meh!\n            }\n            local level = level_map[result.type] or vim.log.levels.INFO\n            vim.notify(result.message, level)\n        end\n\n        notify_with_lsp_level(result)\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "top_p":1,
+    "temperature":1,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    }
+  }
+}
