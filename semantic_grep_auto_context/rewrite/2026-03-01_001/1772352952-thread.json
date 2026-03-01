@@ -1,0 +1,63 @@
+{
+  "request_body":{
+    "top_p":1,
+    "stream":true,
+    "temperature":1,
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/init.lua:310-335\n    ---@param result LSPSemanticGrepResult\n    local function on_server_response(err, result)\n        -- FYI do your best to log errors here so that code is not duplicated downstream\n        if err then\n            vim.notify(\"Semantic Grep failed: \" .. err.message, vim.log.levels.ERROR)\n            callback({}) -- still callback w/ no results\n            return\n        end\n\n        if result.error ~= nil and result.error ~= \"\" then\n            if result.error == \"Client cancelled query\" then\n                -- do not log if its just a cancel (this is my server side error)\n                -- no caller would need to get a callback in this case\n                -- ?? maybe the server should not even bother responding?\n                return\n            end\n            log:error(\"RAG response error, still calling back: \", vim.inspect(result))\n\n            -- in the event matches are still returned, process them too... if server returns matches, use them!\n            callback(result.matches or {})\n            return\n        end\n        -- log:info(ansi.white_bold(ansi.red_bg(\"RAG matches (client):\")), vim.inspect(result))\n        -- TODO use log_semantic_grep_matches(result) instead of luaify_trace/vim.inspect ... move the func and make it useful here\n        callback(result.matches or {})\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/frontend.lua:130-133\n        ---@type ExplainError\n        local function explain_error(text)\n            vim.notify(\"ERROR in new PREDICTIONS FRONTEND PoC: \" .. text, vim.log.levels.ERROR)\n        end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:0-5\nlocal local_share = require(\"ask-openai.config.local_share\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal uv = vim.loop\nlocal Logger = {}\nLogger.__index = Logger\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/context/edits.lua:0-6\nlocal RingBuffer = require(\"ask-openai.predictions.edits.ring_buffer\")\nlocal messages = require(\"devtools.messages\")\n\nlocal edit_log = RingBuffer.new(500)\n\nvim.api.nvim_create_autocmd({ \"TextChanged\", \"TextChangedI\" }, {\n    callback = \n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/init.lua:127-137\nfunction M.ask_openai()\n    local cmdline = vim.fn.getcmdline()\n    print(\"asking...\") -- overwrites showing luaeval(\"...\") in cmdline\n\n    local stdin_text = ' env: nvim (neovim) command mode (return a valid command w/o the leading : ) \\n question: ' ..\n        cmdline\n\n    local suggest = require(\"ask-openai.suggest\")\n    local result = suggest.get_vim_command_suggestion(stdin_text)\n    return trim_null_characters(result)\nend\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"use result.type (Language Server MessageType) and map it to vim.log.levels so I can display as error/warn/debug/etc\n\nHere is the code I selected:\n```lua/ask-openai/rag/init.lua:85-86\n\n        vim.notify(result.message)\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true
+      }],
+    "model":""
+  },
+  "last_sse":{
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "predicted_per_token_ms":4.8545524861878,
+      "prompt_n":1203,
+      "prompt_per_token_ms":0.16793516209476,
+      "cache_n":0,
+      "prompt_ms":202.026,
+      "predicted_per_second":205.99221099065,
+      "predicted_n":181,
+      "prompt_per_second":5954.6791007098,
+      "predicted_ms":878.674
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "created":1772352953,
+    "id":"chatcmpl-anOtCw4ixixC1IApGYUTCooFO8UTlcwo"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to modify that line to map result.type to vim.log.levels. Likely need a function. Provide code snippet.",
+    "role":"assistant",
+    "content":"```lua\n---@param result { message: string, type: number }  -- Language Server MessageType\nlocal function notify_with_lsp_level(result)\n    local level_map = {\n        [1] = vim.log.levels.ERROR,   -- Error\n        [2] = vim.log.levels.WARN,    -- Warning\n        [3] = vim.log.levels.INFO,    -- Info\n        [4] = vim.log.levels.DEBUG,   -- Log (treated as debug)\n    }\n    local level = level_map[result.type] or vim.log.levels.INFO\n    vim.notify(result.message, level)\nend\n\n-- replace the original line with:\nnotify_with_lsp_level(result)\n```",
+    "_logged":true
+  }
+}
