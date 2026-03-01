@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "system_fingerprint":"b8115-77d6ae4ac",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "id":"chatcmpl-FSjtR451rs1C5rPiRIVXTkqc9GB5mKpD",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "timings":{
+      "prompt_per_second":4337.130849524,
+      "prompt_n":1645,
+      "prompt_ms":379.283,
+      "prompt_per_token_ms":0.23056717325228,
+      "predicted_ms":1055.237,
+      "predicted_per_token_ms":4.7108794642857,
+      "cache_n":438,
+      "predicted_per_second":212.27458855215,
+      "predicted_n":224
+    },
+    "object":"chat.completion.chunk",
+    "created":1772354599
+  },
+  "response_message":{
+    "role":"assistant",
+    "content":"---@param overridden fun(err: any, res: any, ctx: any): any\nlocal function handle_register_capability(overridden)\n    -- see :h LspAttach\n    return function(err, res, ctx)\n        -- TODO if I don't have this in my LS then comment out this handler\n        log:info(string.format(\"client/registerCapability: client_id=%s\", ctx.client_id))\n        local result = overridden(err, res, ctx)\n        local client = vim.lsp.get_client_by_id(ctx.client_id)\n        if not client or client.name ~= \"ask_language_server\" then\n            return\n        end\n\n        for bufnr, _ in pairs(client.attached_buffers) do\n            -- Call your custom on_attach logic...\n            -- my_on_attach(client, bufnr)\n        end\n        return result\n    end\nend\n\nvim.lsp.handlers['client/registerCapability'] = handle_register_capability(vim.lsp.handlers['client/registerCapability'])",
+    "_logged":true,
+    "finish_reason":"stop",
+    "reasoning_content":"We need to extract function. Provide new named function and assign."
+  },
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "temperature":1,
+    "model":"",
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/frontend.lua:138-157\n\n\n        ---@type StreamingFrontend\n        local frontend = {\n            on_parsed_data_sse = on_parsed_data_sse,\n            on_curl_exited_successfully = on_curl_exited_successfully,\n            explain_error = explain_error,\n            on_sse_llama_server_timings = on_sse_llama_server_timings,\n        }\n\n        Curl.spawn(fim_request, frontend)\n    end\n\n    if enable_rag and rag_client.is_rag_supported_in_current_file() then\n        if not vim.lsp.get_clients({ name = \"ask_language_server\", bufnr = 0 })[1] then\n            -- FYI this check of client ready, must have immaterial overhead for working clients\n            --  would be better to do no checks than slow down normal use\n            log:error(\"RAG not available in current LSP, when it should be, so, sending FIM w/o RAG\")\n            then_send_fim({})\n            return\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/init.lua:310-335\n    ---@param result LSPSemanticGrepResult\n    local function on_server_response(err, result)\n        -- FYI do your best to log errors here so that code is not duplicated downstream\n        if err then\n            vim.notify(\"Semantic Grep failed: \" .. err.message, vim.log.levels.ERROR)\n            callback({}) -- still callback w/ no results\n            return\n        end\n\n        if result.error ~= nil and result.error ~= \"\" then\n            if result.error == \"Client cancelled query\" then\n                -- do not log if its just a cancel (this is my server side error)\n                -- no caller would need to get a callback in this case\n                -- ?? maybe the server should not even bother responding?\n                return\n            end\n            log:error(\"RAG response error, still calling back: \", vim.inspect(result))\n\n            -- in the event matches are still returned, process them too... if server returns matches, use them!\n            callback(result.matches or {})\n            return\n        end\n        -- log:info(ansi.white_bold(ansi.red_bg(\"RAG matches (client):\")), vim.inspect(result))\n        -- TODO use log_semantic_grep_matches(result) instead of luaify_trace/vim.inspect ... move the func and make it useful here\n        callback(result.matches or {})\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/frontend.lua:153-172\n            -- FYI this check of client ready, must have immaterial overhead for working clients\n            --  would be better to do no checks than slow down normal use\n            log:error(\"RAG not available in current LSP, when it should be, so, sending FIM w/o RAG\")\n            then_send_fim({})\n            return\n        end\n        -- FYI vim.lsp.get_clients is taking ~3us for case when the LSP is operational, imperceptible overhead\n\n        local this_request_ids, cancel -- declare in advance so closure can access\n        perf:rag_started()\n\n        ---@param rag_matches LSPRankedMatch[]\n        function on_rag_response(rag_matches)\n            log:info(\"on_rag_response\", vim.inspect(rag_matches))\n            -- can this be called twice? one for done/cancel and a race condition b/w the two?\n            -- log:info(\"on_rag_response(rag_matches:'\" .. vim.inspect(rag_matches) .. \"')\")\n\n            -- FYI unroll all rag specific safeguards here so that logic doesn't live inside send_fim\n            perf:rag_done()\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/init.lua:48-79\nlocal function determine_rag_config()\n    -- * find .rag/ dir\n    -- PRN review terminology for root_dir/source_dir (wherever .rag/ and .rag.yaml live, make it consistent across lua/python)\n    local root_dir = vim.fn.getcwd()\n    local dot_rag_dir = root_dir .. \"/.rag\"\n    if not files.exists(dot_rag_dir) then\n        -- fallback check git repo root\n        --   i.e. the rag dir in this ask-openai repo, or my hammerspoon config in my dotfiles repo\n        --   I often work inside these directories, maybe I should just have a .rag dir in them too.. and scope to just it but maybe not?\n        local git_root = vim.fn.systemlist(\"git rev-parse --show-toplevel\")[1]\n        dot_rag_dir = git_root .. \"/.rag\"\n        if not files.exists(dot_rag_dir) then\n            log:info(\"RAG is disabled b/c there is NO .rag dir: \" .. dot_rag_dir)\n            return\n        end\n        root_dir = git_root\n        log:info(\"fallback, found .rag in repo root: \" .. dot_rag_dir)\n    end\n\n    -- * load .rag.yaml\n    M.rag_yaml = load_rag_yaml_config(root_dir)\n\n    if M.rag_yaml and not M.rag_yaml.enabled then\n        log:error(\"RAG is disabled in .rag.yaml\")\n        return\n    end\n\n    M.is_rag_indexed_workspace = true\n    M.rag_indexed_file_extensions = files.list_directories(dot_rag_dir)\n    table.sort(M.rag_indexed_file_extensions)\n    log:info(\"RAG is supported for: \" .. vim.inspect(M.rag_indexed_file_extensions))\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/init.lua:134-150\nfunction M.is_rag_supported_in_current_file(bufnr)\n    -- TODO add a virtual toggle so LSP failure stops requests too\n    --   can I detect non-connected LSP (w/o hugh perf hit?)\n\n    if not M.is_rag_supported() then\n        return false\n    end\n\n    bufnr = bufnr or 0\n    local buffer_name = vim.api.nvim_buf_get_name(bufnr)\n    local extension = vim.fn.fnamemodify(buffer_name, \":e\")\n    -- TODO use filetype instead?\n    --  i.e. .yaml/.yml\n    --  or c: .h/.c/.cpp ...\n    --  or node: .js/.mjs\n    return vim.tbl_contains(M.rag_indexed_file_extensions, extension)\nend\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"move the function out so its more readable code\n\nHere is the code I selected:\n```lua/ask-openai/rag/init.lua:98-113\n    vim.lsp.handlers['client/registerCapability'] = (function(overridden)\n        -- see :h LspAttach\n        return function(err, res, ctx)\n            -- TODO if I don't have this in my LS then comment out this handler\n            log:info(string.format(\"client/registerCapability: client_id=%s\", ctx.client_id))\n            local result = overridden(err, res, ctx)\n            local client = vim.lsp.get_client_by_id(ctx.client_id)\n            if not client or client.name ~= \"ask_language_server\" then return end\n\n            for bufnr, _ in pairs(client.attached_buffers) do\n                -- Call your custom on_attach logic...\n                -- my_on_attach(client, bufnr)\n            end\n            return result\n        end\n    end)(vim.lsp.handlers['client/registerCapability'])\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true
+      }],
+    "top_p":1,
+    "max_tokens":4096
+  }
+}
