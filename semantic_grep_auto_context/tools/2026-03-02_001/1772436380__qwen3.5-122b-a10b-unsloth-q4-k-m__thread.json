@@ -1,0 +1,191 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b8184-319146247",
+    "timings":{
+      "prompt_ms":144.989,
+      "prompt_per_token_ms":2.2306,
+      "predicted_ms":426.418,
+      "predicted_per_token_ms":9.0727234042553,
+      "predicted_per_second":110.22048787809,
+      "predicted_n":47,
+      "cache_n":3383,
+      "prompt_n":65,
+      "prompt_per_second":448.30987178338
+    },
+    "created":1772436384,
+    "id":"chatcmpl-REpyDzoBiwk9DN6mRNnR6wlZ8f5sQfuB",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "model":"unsloth/Qwen3.5-122B-A10B-GGUF:Q4_K_M"
+  },
+  "response_message":{
+    "role":"assistant",
+    "finish_reason":"stop",
+    "content":"It's **Monday, March 2, 2026 at 1:26 AM CST**.",
+    "reasoning_content":"The command ran successfully and returned the current time. I should present this information clearly to the user."
+  },
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nFor tool use, never modify files outside of the current working directory unless the user requested it:\n~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n\n## Committing\n\n- This project is in a git repo.\n- Reminder, you can use git commands to undo changes (e.g., stash, restore, reset)\n- Once a request is complete and verified done, please commit the changes.\n- Keep the description concise.\n- And, include \"Co-Authored-By: gptoss120b\" in commit message\n- Only commit files you changed.\n\n\n## Commands\n\nHere are noteworthy commands you have access to:\n\n- fd, rg, gsed, gawk, jq, yq, httpie\n- exa, icdiff, ffmpeg, imagemagick, fzf\n\nHere are some *suggestions* too...\n\n### Use `fd` to list files\n\n```sh\n# Usage: fd [OPTIONS] [regex] [path]...\nfd                      # list files and dirs (except hidden and ignored)\nfd foo                  # basename contains \"foo\" (regex)\nfd '^foo' src           # limit to \"src\" directory (path)\nfd --extension js\nfd -p foo               # --full-path contains foo\nfd --type file\nfd --type dir\n\nfd -l                   # think: ls -l\nfd --exec stat          # execute stat on each result\n\nfd --hidden             # show hidden files == start with dot like .bashrc\nfd --no-ignore          # disable using .gitignore, .ignore, .fdignore to hide files\nfd --unrestricted    # show everything: both hidden and ignored\n\nfd --exclude node_modules # glob exclusion (not regex)\n\nfd --max-depth 3\nfd --size +10M\nfd --changed-within 2hours\nfd --changed-before 7days\n\n# Files are versioned in git, so you can use `git` to find files too:\ngit ls-files\n\n# other commands are fine too! as long as they're not needlessly slow / verbose!\n```\n\n### Use `rg` (ripgrep) to search file contents\n\n```sh\nrg bar # instead of grep -R\nrg -o bar  # only matched part (grep -o)\nrg -v bar # invert match (grep -v)\nrg --glob=\"*manual*\" embed  # glob filters paths (contains manual)\nrg --glob=\"!*manual*\" embed  # ! excludes (does not contain manual)\nrg --max-depth 1\nrg --multiline\n\n# list files only:\nrg --files-with-matches # or -l\nrg --files  # list searched files\n\nfd | rg foo # search STDIN\n```\n\n### _Verboten_ Commands\n\n> [!WARNING]\n> NEVER use `ls -R`\n> NEVER use `grep -R`\n> NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate tons of useless output as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\nOther costly mistakes to avoid:\n```sh\nls -R ~ # gonna be a late night 🥱\nls -R / # only assholes do this 😈\n```\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/filetypemods.lua:228-230\n               function()\n        vim.bo.commentstring = \"// %s\" -- %s is original text\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/filetypemods.lua:276-278\n               function()\n        vim.bo.commentstring = \"# %s\" -- %s is original text\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/filetypemods.lua:192-195\n               function()\n        -- TODO review nvim's bundled ftplugin/lua.vim and ftplugin/lua.lua and see if I wannna override anything in them\n        -- vim.bo.commentstring = \"# %s\" -- %s is original text\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/filetypemods.lua:219-221\n               function()\n        vim.bo.commentstring = \"# %s\" -- %s is original text\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/keymaps.lua:244-247\n                           function()\n    vim.o.operatorfunc = \"v:lua.toggle_linewise_comments_operator_func\"\n    return \"g@\"\nend\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"what time is it?"
+      },{
+        "role":"assistant",
+        "_logged":true,
+        "content":"",
+        "tool_calls":[{
+            "type":"function",
+            "id":"iz5ZREMlkEfZdOlLHXueMu5ubhEJACkH",
+            "function":{
+              "arguments":"{\"mode\":\"executable\",\"command_line\":\"date\"}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"The user is asking what time it is - this is a simple time/date question that doesn't require any code analysis or file modifications. I should just use the system to get the current time."
+      },{
+        "role":"tool",
+        "tool_call_id":"iz5ZREMlkEfZdOlLHXueMu5ubhEJACkH",
+        "content":"{\"isError\":true,\"content\":[{\"type\":\"text\",\"text\":\"Mode 'executable' requires a non‑empty 'argv' array.\",\"name\":\"ERROR\"}]}",
+        "_logged":true
+      },{
+        "role":"assistant",
+        "_logged":true,
+        "content":"",
+        "tool_calls":[{
+            "type":"function",
+            "id":"rufk3IQUzUvoH8MQXl7jhNOtejn4kKQF",
+            "function":{
+              "arguments":"{\"mode\":\"shell\",\"command_line\":\"date\"}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"The error says I need to use 'argv' array for executable mode. Let me use mode 'shell' instead with the 'command_line' parameter."
+      },{
+        "role":"tool",
+        "tool_call_id":"rufk3IQUzUvoH8MQXl7jhNOtejn4kKQF",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"Mon Mar  2 01:26:23 CST 2026\\n\",\"name\":\"STDOUT\"}]}",
+        "_logged":true
+      }],
+    "stream":true,
+    "top_p":1,
+    "tools":[{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "argv":{
+                "type":"array",
+                "items":{
+                  "type":"string"
+                },
+                "minItems":1,
+                "description":"Executable and arguments. argv[0] is the executable. Required when mode='executable'. Forbidden when mode='shell'."
+              },
+              "dry_run":{
+                "type":"boolean",
+                "description":"Optional explain what would run, defaults to False."
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              },
+              "mode":{
+                "enum":["shell","executable"],
+                "description":"What are you running, two choices: 'shell' or 'executable' (required, no default)"
+              },
+              "stdin":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "command_line":{
+                "type":"string",
+                "description":"Shell command line. Required when mode='shell'. Forbidden when mode='executable'."
+              }
+            },
+            "required":["mode"]
+          },
+          "description":"Run a process on this darwin machine",
+          "name":"run_process"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              }
+            },
+            "required":["query"]
+          },
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "patch":{
+                "type":"string",
+                "description":"file changes in custom diff format"
+              }
+            },
+            "required":["patch"]
+          },
+          "description":"Patch a file",
+          "name":"apply_patch"
+        },
+        "type":"function"
+      }],
+    "temperature":1,
+    "model":"",
+    "max_tokens":4096
+  }
+}
