@@ -71,15 +71,22 @@ QWEN25_INSTRUCT = "Qwen/Qwen2.5-7B-Instruct"
 QWEN25_INSTRUCT = "Qwen/Qwen2.5-7B-Instruct"
 QWEN1 = 'Qwen/Qwen-1_8B-chat'
 QWEN25_BASE = 'Qwen/Qwen2.5-0.5B'
+QWEN35 = 'Qwen/Qwen3.5-0.8B' # https://huggingface.co/Qwen/Qwen3.5-0.8B
 
 # ***! SET MODEL HERE:
-MODEL_PATH = QWEN1
+MODEL_PATH = QWEN35
+# MODEL_PATH = QWEN1
 # MODEL_PATH =  QWEN_25_BASE # base (not instruct) - interesting it didn't refuse many prompts even before lobotomizing
 # MODEL_PATH = QWEN25_INSTRUCT
 # ***! END SET MODEL
 
+use_qwen35 = MODEL_PATH.startswith("Qwen/Qwen3.5")
 use_qwen2 = MODEL_PATH.startswith("Qwen/Qwen2.5")
 use_qwen1 = MODEL_PATH.startswith("Qwen/Qwen-1")
+
+print(f'{use_qwen35=} NOT yet supported by transformer_lens... just use HF model directly')
+print("  USE g0t4/remove-refusals-with-transformers w/o transformer_lens")
+exit(1)
 
 # FYI transformer_lens is not compat with gptoss, use direct hooks and cache yourself (see refusal-gptoss.py)
 
