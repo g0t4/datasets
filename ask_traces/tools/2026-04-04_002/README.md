@@ -1,0 +1,2 @@
+implement custom SIGTERM/KILL on timeout and stop using spawn options timeout... which is not reliable, especially for more complex commands that I run like git commit + core.editor=vim which spawn options timeout fails to terminate (and has no follow up kill)
+- LOVE that I understand the implemetation here but I didn't have to do the typing... this is where AI really shines, the crap we know we have to do but that's not always fun to type out (save time with bugs)... this saved me hours most likely by the time I was done testing it and fixing issues
