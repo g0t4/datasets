@@ -1,0 +1,253 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-F3p8RFNOAP4HANKQuhAEaTz5x6I8dbB7",
+    "system_fingerprint":"b8656-9062d4e84",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "__verbose":{
+      "prompt":"<|start|>system<|message|>You are ChatGPT, a large language model trained by OpenAI.\nKnowledge cutoff: 2024-06\nCurrent date: 2026-04-05\n\nReasoning: medium\n\n# Valid channels: analysis, commentary, final. Channel must be included for every message.\nCalls to these tools must go to the commentary channel: 'functions'.<|end|><|start|>developer<|message|># Instructions\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nFor tool use, never modify files outside of the current working directory unless the user requested it:\n~/repos/github/g0t4/mcp-server-commands\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Include \"Co-Authored-By: gptoss120b\"\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n\n\n# Tools\n\n## functions\n\nnamespace functions {\n\n// Run a process on this darwin machine\ntype run_process = (_: {\n// Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\nargv?: string[],\n// Optional to set working directory\ncwd?: string,\n// Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\ncommand_line?: string,\n// Optional timeout in milliseconds, defaults to 30,000ms\ntimeout_ms?: number,\n// Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\nstdin_text?: string,\n}) => any;\n\n// Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\ntype semantic_grep = (_: {\n// number of embeddings matches to consider for reranking\nembed_top_k?: number,\n// number of matches to return (post reranking)\ntop_k?: number,\n// instructions for the query, explain the type of query\ninstruct?: string,\n// limit matches to a vim compatible filetype. default includes all filetypes\nfiletype?: string,\n// query text, what you are looking for\nquery: string,\n}) => any;\n\n// Patch a file\ntype apply_patch = (_: {\n// file changes in custom diff format\npatch: string,\n}) => any;\n\n} // namespace functions<|end|><|start|>user<|message|>## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n<|end|><|start|>user<|message|>## TypeScript Code Preferences\n\n- Use camelCase\n- Use PascalCase for classes and interfaces\n- Terminate with a semicolon.\n<|end|><|start|>user<|message|>/tools /norag follow directions verbatim, use a tool call to run_process, pass a message \"hello world\" over STDIN into the cat command ... you must use argv (executable mode), do not use command_line (shell mode)... cat should output the text to STDOUT<|end|><|start|>assistant<|channel|>analysis<|message|>User wants us to run a process: use run_process with argv mode (executable mode), passing stdin_text \"hello world\" into cat command. Need to output the result? Probably they want to see the output. So we call run_process with argv: [\"cat\"], stdin_text: \"hello world\". Use cwd maybe not needed. Return output.<|end|><|start|>assistant<|channel|>commentary to=functions.run_process <|constrain|>json<|message|>{\"argv\": [\"cat\"], \"stdin_text\": \"hello world\"}<|call|><|start|>functions.run_process to=assistant<|channel|>commentary<|message|>{\"content\":[{\"name\":\"EXIT_CODE\",\"type\":\"text\",\"text\":\"0\"},{\"name\":\"STDOUT\",\"type\":\"text\",\"text\":\"hello world\"}]}<|end|><|start|>assistant",
+      "generation_settings":{
+        "n_keep":0,
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "speculative.n_max":16,
+        "speculative.n_min":0,
+        "speculative.p_min":0.75,
+        "speculative.type":"none",
+        "speculative.ngram_size_n":1024,
+        "speculative.ngram_size_m":1024,
+        "speculative.ngram_m_hits":1024,
+        "timings_per_token":false,
+        "post_sampling_probs":false,
+        "grammar":"char ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (\",\" space json-value)* space \"]\") space\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)?  space\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\") space\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\" space\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\" space\ntool-apply-patch ::= (\" to=functions.\" \"apply_patch\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-apply-patch-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"apply_patch\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-apply-patch-schema\ntool-apply-patch-schema ::= \"{\" space tool-apply-patch-schema-patch-kv \"}\" space\ntool-apply-patch-schema-patch-kv ::= \"\\\"patch\\\"\" space \":\" space string\ntool-call ::= tool-run-process | tool-semantic-grep | tool-apply-patch\ntool-run-process ::= (\" to=functions.\" \"run_process\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-process-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"run_process\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-process-schema\ntool-run-process-schema ::= \"{\" space  (tool-run-process-schema-argv-kv tool-run-process-schema-argv-rest | tool-run-process-schema-cwd-kv tool-run-process-schema-cwd-rest | tool-run-process-schema-command-line-kv tool-run-process-schema-command-line-rest | tool-run-process-schema-timeout-ms-kv tool-run-process-schema-timeout-ms-rest | tool-run-process-schema-stdin-text-kv )? \"}\" space\ntool-run-process-schema-argv ::= \"[\" space string (\",\" space string)* \"]\" space\ntool-run-process-schema-argv-kv ::= \"\\\"argv\\\"\" space \":\" space tool-run-process-schema-argv\ntool-run-process-schema-argv-rest ::= ( \",\" space tool-run-process-schema-cwd-kv )? tool-run-process-schema-cwd-rest\ntool-run-process-schema-command-line-kv ::= \"\\\"command_line\\\"\" space \":\" space string\ntool-run-process-schema-command-line-rest ::= ( \",\" space tool-run-process-schema-timeout-ms-kv )? tool-run-process-schema-timeout-ms-rest\ntool-run-process-schema-cwd-kv ::= \"\\\"cwd\\\"\" space \":\" space string\ntool-run-process-schema-cwd-rest ::= ( \",\" space tool-run-process-schema-command-line-kv )? tool-run-process-schema-command-line-rest\ntool-run-process-schema-stdin-text-kv ::= \"\\\"stdin_text\\\"\" space \":\" space string\ntool-run-process-schema-timeout-ms-kv ::= \"\\\"timeout_ms\\\"\" space \":\" space number\ntool-run-process-schema-timeout-ms-rest ::= ( \",\" space tool-run-process-schema-stdin-text-kv )?\ntool-semantic-grep ::= (\" to=functions.\" \"semantic_grep\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-semantic-grep-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"semantic_grep\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-semantic-grep-schema\ntool-semantic-grep-schema ::= \"{\" space tool-semantic-grep-schema-query-kv ( \",\" space ( tool-semantic-grep-schema-embed-top-k-kv tool-semantic-grep-schema-embed-top-k-rest | tool-semantic-grep-schema-top-k-kv tool-semantic-grep-schema-top-k-rest | tool-semantic-grep-schema-instruct-kv tool-semantic-grep-schema-instruct-rest | tool-semantic-grep-schema-filetype-kv ) )? \"}\" space\ntool-semantic-grep-schema-embed-top-k-kv ::= \"\\\"embed_top_k\\\"\" space \":\" space number\ntool-semantic-grep-schema-embed-top-k-rest ::= ( \",\" space tool-semantic-grep-schema-top-k-kv )? tool-semantic-grep-schema-top-k-rest\ntool-semantic-grep-schema-filetype-kv ::= \"\\\"filetype\\\"\" space \":\" space string\ntool-semantic-grep-schema-instruct-kv ::= \"\\\"instruct\\\"\" space \":\" space string\ntool-semantic-grep-schema-instruct-rest ::= ( \",\" space tool-semantic-grep-schema-filetype-kv )?\ntool-semantic-grep-schema-query-kv ::= \"\\\"query\\\"\" space \":\" space string\ntool-semantic-grep-schema-top-k-kv ::= \"\\\"top_k\\\"\" space \":\" space number\ntool-semantic-grep-schema-top-k-rest ::= ( \",\" space tool-semantic-grep-schema-instruct-kv )? tool-semantic-grep-schema-instruct-rest\n",
+        "lora":[],
+        "backend_sampling":false,
+        "generation_prompt":"<|start|>assistant",
+        "max_tokens":8192,
+        "top_k":40,
+        "dynatemp_range":0,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "temperature":1,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "n_predict":8192,
+        "ignore_eos":false,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "stop":[],
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "type":2,
+            "value":"^\\s+to$"
+          },{
+            "type":2,
+            "value":"^<\\|channel\\|>(?:commentary|analysis)\\s+to=functions$"
+          },{
+            "type":2,
+            "value":"<\\|start\\|>assistant(\\s+to)"
+          },{
+            "type":2,
+            "value":"<\\|start\\|>assistant(<\\|channel\\|>(?:commentary|analysis)\\s+to)"
+          }],
+        "reasoning_format":"deepseek",
+        "dry_penalty_last_n":131072,
+        "seed":4294967295,
+        "repeat_penalty":1,
+        "preserved_tokens":[200003,200005,200006,200007,200008],
+        "chat_format":"peg-native",
+        "top_p":1,
+        "stream":true,
+        "n_discard":0,
+        "reasoning_in_content":false
+      },
+      "timings":{
+        "cache_n":1905,
+        "prompt_per_second":1309.5468109315,
+        "prompt_n":61,
+        "predicted_ms":153.078,
+        "predicted_per_token_ms":4.6387272727273,
+        "predicted_per_second":215.57637282954,
+        "predicted_n":33,
+        "prompt_per_token_ms":0.76362295081967,
+        "prompt_ms":46.581
+      },
+      "content":"",
+      "stop_type":"eos",
+      "tokens_cached":1998,
+      "stopping_word":"",
+      "truncated":false,
+      "index":0,
+      "tokens_predicted":33,
+      "model":"ggml-org/gpt-oss-120b-GGUF",
+      "has_new_line":true,
+      "tokens":[],
+      "id_slot":3,
+      "stop":true,
+      "tokens_evaluated":1966
+    },
+    "timings":{
+      "cache_n":1905,
+      "prompt_per_second":1309.5468109315,
+      "prompt_n":61,
+      "predicted_ms":153.078,
+      "predicted_per_token_ms":4.6387272727273,
+      "predicted_per_second":215.57637282954,
+      "predicted_n":33,
+      "prompt_per_token_ms":0.76362295081967,
+      "prompt_ms":46.581
+    },
+    "object":"chat.completion.chunk",
+    "created":1775376611
+  },
+  "response_message":{
+    "role":"assistant",
+    "finish_reason":"stop",
+    "content":"The `cat` command received the input `\"hello world\"` via STDIN and echoed it back to STDOUT:\n\n```\nhello world\n```"
+  },
+  "request_body":{
+    "stream":true,
+    "temperature":1,
+    "model":"",
+    "max_tokens":8192,
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nFor tool use, never modify files outside of the current working directory unless the user requested it:\n~/repos/github/g0t4/mcp-server-commands\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Include \"Co-Authored-By: gptoss120b\"\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## TypeScript Code Preferences\n\n- Use camelCase\n- Use PascalCase for classes and interfaces\n- Terminate with a semicolon.\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"/tools /norag follow directions verbatim, use a tool call to run_process, pass a message \"hello world\" over STDIN into the cat command ... you must use argv (executable mode), do not use command_line (shell mode)... cat should output the text to STDOUT"
+      },{
+        "role":"assistant",
+        "tool_calls":[{
+            "id":"6UFmSpGDKabWn3SBbBbpKYgvLb6FzUsi",
+            "type":"function",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\n  \"argv\": [\"cat\"],\n  \"stdin_text\": \"hello world\"\n}"
+            }
+          }],
+        "content":"",
+        "_logged":true,
+        "reasoning_content":"User wants us to run a process: use run_process with argv mode (executable mode), passing stdin_text \"hello world\" into cat command. Need to output the result? Probably they want to see the output. So we call run_process with argv: [\"cat\"], stdin_text: \"hello world\". Use cwd maybe not needed. Return output."
+      },{
+        "role":"tool",
+        "_logged":true,
+        "tool_call_id":"6UFmSpGDKabWn3SBbBbpKYgvLb6FzUsi",
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"type\":\"text\",\"text\":\"0\"},{\"name\":\"STDOUT\",\"type\":\"text\",\"text\":\"hello world\"}]}"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "tools":[{
+        "type":"function",
+        "function":{
+          "name":"run_process",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "argv":{
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "items":{
+                  "type":"string"
+                },
+                "type":"array",
+                "minItems":1
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              }
+            }
+          },
+          "description":"Run a process on this darwin machine"
+        }
+      },{
+        "function":{
+          "name":"semantic_grep",
+          "parameters":{
+            "properties":{
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              }
+            },
+            "type":"object",
+            "required":["query"]
+          },
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results."
+        },
+        "type":"function"
+      },{
+        "function":{
+          "name":"apply_patch",
+          "parameters":{
+            "properties":{
+              "patch":{
+                "type":"string",
+                "description":"file changes in custom diff format"
+              }
+            },
+            "type":"object",
+            "required":["patch"]
+          },
+          "description":"Patch a file"
+        },
+        "type":"function"
+      }]
+  }
+}
