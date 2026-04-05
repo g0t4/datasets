@@ -2,7 +2,7 @@
 
 TLDR: just not working at all (once out of like 30+ tries in 3 threads)
 
-TODO any correlation for `stdin` failing vs one time it worked w.r.t. where arg name is listed in tool definition?
+FYI no real correlation at all to `stdin` arg order position... in fact it was first the one time it worked in one thread after many failed attempts in that thread...
 
 ## 1775367684-thread.json
 
@@ -39,6 +39,8 @@ WORKED ON FIRST REQUEST!!!! for BOTH attempts (new thread each time)
 3 more threads after the first two... one worked first try, other two failed first try and repeatedly!
 - interestingly for all the times it worked on first_try... the argument `stdin_text` as NOT listed first... whereas both failed times had `stdin_text` listed as a first argument in the tool definition
   - TODO can I get tool definition parameter ordering to remain the same always? at a minimum it would make things more reproducible!
+  - FYI prove this matters before obsessing about order at all?
+  - issue likely is lua tables and ordering of keys is not guaranteed/deterministic
 
 ## EVAL
 
