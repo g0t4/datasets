@@ -34,6 +34,9 @@ TLDR: worked first and second times!
 
 WORKED ON FIRST REQUEST!!!! for BOTH attempts (new thread each time)
 
+3 more threads after the first two... one worked first try, other two failed first try and repeatedly!
+- interestingly for all the times it worked on first_try... the argument `stdin_text` as NOT listed first... whereas both failed times had `stdin_text` listed as a first argument in the tool definition
+  - TODO can I get tool definition parameter ordering to remain the same always? at a minimum it would make things more reproducible!
 
 ## EVAL
 
