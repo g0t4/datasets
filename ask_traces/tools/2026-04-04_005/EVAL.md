@@ -23,3 +23,22 @@ GIST of steps:
 - delete runProcess.ts file
 - update imports of runProcess.ts file name to use exec-util.ts instead
   - but, `runProcess` name is kept so consumers otherwise don't have any changes
+
+## gptoss120b's summary of actions taken => plan of action eval too?
+
+Part of the eval can be asking for this plan and then judging the one the user comes up with vs the following:
+
+```gptoss120b-plan.md
+Implemented full migration:
+- Renamed `spawn_wrapped` to `runProcess` and updated its signature to accept only `RunProcessArgs`.
+- Integrated argument validation and command resolution directly into `runProcess`.
+- Adjusted logging to use resolved command and args.
+- Updated imports across tests to use the new `runProcess` from `exec-utils.ts`.
+- Removed obsolete `run_process.ts` file.
+- Cleaned up remaining references and ensured internal logic aligns with the new function name.
+```
+
+## original request from me
+
+> AskQuestion /tools I am half way done merging runProcess into the start of spawn_wrapped, can you finish for me? move runProcess logic into the file for exec-utils.ts into spawn_wrapped that way the bulk of the logic doesn't move...
+
