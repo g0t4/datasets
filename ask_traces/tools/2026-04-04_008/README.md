@@ -1,0 +1,1 @@
+refactor review of simple variables (I wanted them inlined)... but I confused the model and it just renamed stuff (some variables arguably should be renamed but not what I had in mind)... so I reset and will try again
