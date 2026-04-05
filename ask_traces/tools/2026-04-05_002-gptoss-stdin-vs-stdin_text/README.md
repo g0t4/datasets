@@ -2,6 +2,8 @@
 
 TLDR: just not working at all (once out of like 30+ tries in 3 threads)
 
+TODO any correlation for `stdin` failing vs one time it worked w.r.t. where arg name is listed in tool definition?
+
 ## 1775367684-thread.json
 
 Round 1 chat thread... can't do it! and this is even with source code access to my run_process tool that it is using!!! yikes
