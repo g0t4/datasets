@@ -1,3 +1,7 @@
+# old `stdin` name
+
+TLDR: just not working at all (once out of like 30+ tries in 3 threads)
+
 ## 1775367684-thread.json
 
 Round 1 chat thread... can't do it! and this is even with source code access to my run_process tool that it is using!!! yikes
@@ -14,12 +18,17 @@ Round 1 chat thread... can't do it! and this is even with source code access to 
 fascinating that I cannot get gptoss120b to use the `stdin` argument to `run_process` ... it discusses with itself and then doesn't do it.
 - AND IT REFLECTS on this in a loop, tries again, fails to add it... I checked raw tool call, there is no `stdin` arg added... WTH?!
 - I was running a test to see how well it would do with `stdin` vs if I renamed it `stdin_text`... seems like `stdin` doesn't work for gptoss120b at all!!!!
+
 ## 1775375497-thread.json - old `stdin` name
 
 ok still stubborn BUT finally I got gptoss120b to pass `stdin` one time!!!!
 - BTW I told it to use`stdin_text` and thought I was testing the new name `stdin_text` but... the tool's build directory was not rebuilt so it still had `stdin`... so this counts as using the old name!
 - TODO I need to double check something isn't a miss in my tool calling infrastructure that might be dropping some or all of what it passes?
   - prompt the model directly w/o my tooling
+
+# `stdin_text` name
+
+TLDR: worked first and second times!
 
 ## 1775376052-thread.json, 1775376283-thread.json - new `stdin_text` name
 
