@@ -12,3 +12,11 @@ criticism of follow up w.r.t. info level logging
 - a few hunks it changed had no changes! ... they did have "trace" in their function calls... but there's no info equivalent
   - so it's good it didn't try to use an info level function that doesn't exist...
   - but it is interesting that it still patched the hunks that didn't change! (and they are fully standalone hunks with no other changes)
+
+## follow up for logging
+
+love things like adding server name to logs via follow up... and it gets other logs too not just for initialize!
+- previously I would've opened a new instance of neovim (new thread basically) to keep the change separate...
+  I am starting to like the little tangents via follow up
+  IN FACT... I need to habituate using follow up in general... too often I've just relied on one-shot change requests and then a new thread to modify things...
+  I just need to "trust" one thread is fine for many changes, even tangents!
