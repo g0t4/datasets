@@ -1,0 +1,312 @@
+{
+  "response_message":{
+    "reasoning_content":"We have some top headlines. Provide summary. The user asked \"tell me the current world news, top stories\". Provide list. Use the fetched content. Summarize a few.",
+    "role":"assistant",
+    "finish_reason":"stop",
+    "content":"**Top World News (as of the latest BBC World feed)**  \n\n| Headline | Brief Summary |\n|----------|---------------|\n| **Israel attacks major Iranian petrochemical site** | Israel says the strike hit a plant that produces roughly half of Iran’s petrochemical output, following U.S. threats to intervene if the Strait of Hormuz remains closed. |\n| **Rescue of a U.S. airman in remote Iran** | A complex, multi‑agency operation succeeded in extracting a U.S. airman from hostile Iranian territory. Details remain limited. |\n| **DR\u202fCongo agrees to take U.S. deportees** | The Democratic Republic of Congo will begin receiving deported individuals from the United States this month; the exact numbers have not been disclosed. |\n| **U.S. Secret Service investigates gunfire near the White House** | Reports of gunfire prompted a heightened security posture around the White House; no injuries or suspects have been identified. |\n| **Trump declares victory after rescue but warns of ongoing Iran threats** | President Trump hailed the rescue operation as a win while warning that threats to U.S. interests in Iran persist. |\n| **Savannah\u202fGuthrie returns to NBC amid missing‑mother case** | NBC anchor Savannah\u202fGuthrie is back on air while authorities continue searching for a missing mother in Tucson, Arizona. |\n| **Measles outbreak in Bangladesh kills over 100 children** | More than 100 children have died from suspected measles since mid‑March, prompting emergency vaccination drives. |\n| **Young gray whale dies after swimming up a Washington river** | The whale, nicknamed “Willapa\u202fWilly,” likely died of hunger after traveling far inland. |\n| **Nigerian army rescues 31 hostages after Easter church attack** | After an Easter‑day assault on a church, the Nigerian military freed 31 people; five civilians were killed. |\n| **Hungary alleges gas‑pipeline bomb plot ahead of election** | Hungarian officials claim a sabotage plot targeting a gas pipeline, suggesting a possible false‑flag operation tied to the upcoming vote. |\n| **Pope\u202fLeo\u202fXIV calls for peace in his first Easter Mass** | In his inaugural Easter address, Pope Leo\u202fXIV urges world leaders to choose peace. |\n| **Germany tightens travel rules for men under\u202f45** | New legislation may require military approval for long overseas stays by German men under 45, raising questions about enforcement. |\n| **Artemis\u202fII Moon photos spark debate** | Stunning images from the Artemis\u202fII mission have sparked discussion over whether they’re scientific data or promotional material. |\n| **Youth‑led political shift in Nepal vs. Bangladesh** | A generational movement succeeded in Nepal’s elections but fell short in Bangladesh, highlighting differing political dynamics. |\n| **Malawian mother coping with autism in low‑resource setting** | A personal story of a mother learning to support her autistic child in a country with limited services. |\n\n*These stories were pulled from the BBC World News homepage (https://www.bbc.com/news/world). The feed is updated continuously, so the exact headlines may shift as new events develop.*"
+  },
+  "request_body":{
+    "max_tokens":8192,
+    "stream":true,
+    "tools":[{
+        "function":{
+          "description":"Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.",
+          "parameters":{
+            "required":["url"],
+            "properties":{
+              "start_index":{
+                "default":0,
+                "description":"On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+                "title":"Start Index",
+                "minimum":0,
+                "type":"integer"
+              },
+              "url":{
+                "format":"uri",
+                "description":"URL to fetch",
+                "title":"Url",
+                "type":"string",
+                "minLength":1
+              },
+              "raw":{
+                "default":false,
+                "title":"Raw",
+                "description":"Get the actual HTML content of the requested page, without simplification.",
+                "type":"boolean"
+              },
+              "max_length":{
+                "default":5000,
+                "exclusiveMaximum":1000000,
+                "exclusiveMinimum":0,
+                "title":"Max Length",
+                "description":"Maximum number of characters to return.",
+                "type":"integer"
+              }
+            },
+            "type":"object"
+          },
+          "name":"fetch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Run a process on this darwin machine",
+          "parameters":{
+            "properties":{
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              },
+              "argv":{
+                "items":{
+                  "type":"string"
+                },
+                "minItems":1,
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "type":"array"
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_process"
+        },
+        "type":"function"
+      },{
+        "type":"function",
+        "function":{
+          "description":"Patch a file",
+          "parameters":{
+            "required":["patch"],
+            "properties":{
+              "patch":{
+                "description":"file changes in custom diff format",
+                "type":"string"
+              }
+            },
+            "type":"object"
+          },
+          "name":"apply_patch"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "parameters":{
+            "required":["query"],
+            "type":"object",
+            "properties":{
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              },
+              "top_k":{
+                "description":"number of matches to return (post reranking)",
+                "type":"number"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              }
+            }
+          },
+          "name":"semantic_grep"
+        }
+      }],
+    "top_p":1,
+    "model":"",
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nFor tool use, never modify files outside of the current working directory unless the user requested it:\n~/repos/github/g0t4/mcp-server-commands\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Include \"Co-Authored-By: gptoss120b\"\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"/tools tell me the current world news, top stories"
+      },{
+        "reasoning_content":"The user asks: \"/tools tell me the current world news, top stories\". They want current world news. We have tool fetch. Use fetch to get news. Maybe use a news site like BBC, CNN, Reuters. Let's fetch top stories. Use fetch with URL. We'll fetch from e.g., https://www.reuters.com/world/. Use fetch.",
+        "role":"assistant",
+        "_logged":true,
+        "tool_calls":[{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\n  \"url\": \"https://www.reuters.com/world/\",\n  \"max_length\": 3000\n}"
+            },
+            "id":"jrDsK5c6C4I13n0tTFJza66awZ9lYi5J",
+            "type":"function"
+          }],
+        "content":""
+      },{
+        "tool_call_id":"jrDsK5c6C4I13n0tTFJza66awZ9lYi5J",
+        "role":"tool",
+        "_logged":true,
+        "content":"{\"isError\":true,\"content\":[{\"text\":\"Failed to fetch https://www.reuters.com/world/ - status code 401\",\"type\":\"text\"}]}"
+      },{
+        "reasoning_content":"403/401 maybe need a different source. Try BBC world news.",
+        "role":"assistant",
+        "_logged":true,
+        "tool_calls":[{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\": \"https://www.bbc.com/news/world\", \"max_length\": 3000}"
+            },
+            "id":"x13cl3W5nrlP6IsjEv5BGFLdn97pggGp",
+            "type":"function"
+          }],
+        "content":""
+      },{
+        "tool_call_id":"x13cl3W5nrlP6IsjEv5BGFLdn97pggGp",
+        "role":"tool",
+        "_logged":true,
+        "content":"{\"isError\":false,\"content\":[{\"text\":\"Contents of https://www.bbc.com/news/world:\\n<p>World | Latest News & Updates | BBC News</p>Skip to contentWatch LiveWatch Live\\n# World\\n\\nLIVE\\n## Israel attacks major Iranian petrochemical site after Trump's infrastructure threats\\n\\nIsrael claims the site produces half of Iran's petrochemical output. The Israeli attack follows Donald Trump threatening more US attacks if the Strait of Hormuz is not open by Tuesday.\\n\\n## How rescue of US airman in remote part of Iran unfolded\\n\\nThe operation to extract him from the ground in hostile territory was hugely complex and involved multiple US government agencies.\\n\\n3 hrs ago\\n\\nWorld\\n\\n## DR Congo agrees to take deportees from the US\\n\\nThe country will start receiving deportees from this month but has not said how many they will accept.\\n\\n2 hrs ago\\n\\nWorld\\n\\n## US Secret Service investigates reports of gunfire near White House\\n\\nOfficials said \\\"a heightened security posture is in place\\\", but no injuries were reported and no suspects had been identified.\\n\\n14 hrs ago\\n\\nUS & Canada\\n\\n## Trump declares victory after rescue but threats to US operation in Iran still loom\\n\\nThe rescue could impact how Trump views a ground operation to take Kharg Island or to seize enriched uranium sites.\\n\\n15 hrs ago\\n\\nWorld\\n\\n## 'Really feeling the love' - Savannah Guthrie returns to NBC as search for mother goes on\\n\\nNancy Guthrie disappeared from her home in Tucson, Arizona, in what authorities believe was an abduction.\\n\\n3 hrs ago\\n\\nUS & Canada\\n\\n## Emergency jabs after 100 children die of suspected measles in a month in Bangladesh\\n\\nMore than 100 people, mostly children, have been killed by measles since mid-March, officials suspect.\\n\\n5 hrs ago\\n\\nAsia\\n\\n## Young gray whale dies after swimming up river in Washington state\\n\\nHunger is a likely reason the whale, dubbed Willapa Willy, travelled inland, experts say.\\n\\n## Nigerian army rescues 31 held after Easter church attack\\n\\nFive civilians were killed by the gunmen and their bodies were recovered at the scene, the army said.\\n\\n## Hungary alleges plot to blow up gas pipeline ahead of election\\n\\nIt comes a week before votes are cast and follows warnings of so-called false flag operations blamed on Ukraine.\\n\\n## Pope Leo calls for global leaders to choose peace in his first Easter Mass\\n\\nPope Leo XIV addressed thousands of worshippers gathered in St Peter's Square on Easter Sunday in his first address as pontiff.\\n\\n## German males under 45 may need military approval for long stays abroad\\n\\nUnder the law, travel approvals must generally be granted and it remains unclear how the rule would be enforced if breached.\\n\\n## Features\\n\\n## Artemis's stunning Moon pictures - science or holiday photos?\\n\\nThe story behind the beautiful pictures beamed back to Earth from the Artemis II astronauts.\\n\\n## Two protests, two elections: How Nepal's Gen Z succeeded where Bangladesh's stumbled\\n\\nHow did a youth movement triumph in one country but fall so short in another?\\n\\n## 'I adore her now': Mother learns to cope with child's autism in a country with little help\\n\\nMalawian Martha\\n\\n<error>Content truncated. Call the fetch tool with a start_index of 3000 to get more content.</error>\",\"type\":\"text\"}]}"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "temperature":1
+  },
+  "last_sse":{
+    "__verbose":{
+      "id_slot":2,
+      "generation_settings":{
+        "n_keep":0,
+        "reasoning_format":"deepseek",
+        "reasoning_in_content":false,
+        "generation_prompt":"<|start|>assistant",
+        "stop":[],
+        "speculative.n_max":16,
+        "speculative.n_min":0,
+        "speculative.p_min":0.75,
+        "speculative.type":"none",
+        "speculative.ngram_size_n":1024,
+        "speculative.ngram_size_m":1024,
+        "grammar":"boolean ::= (\"true\" | \"false\") space\nchar ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (\",\" space json-value)* space \"]\") space\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)?  space\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\") space\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\" space\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\" space\ntool-apply-patch ::= (\" to=functions.\" \"apply_patch\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-apply-patch-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"apply_patch\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-apply-patch-schema\ntool-apply-patch-schema ::= \"{\" space tool-apply-patch-schema-patch-kv \"}\" space\ntool-apply-patch-schema-patch-kv ::= \"\\\"patch\\\"\" space \":\" space string\ntool-call ::= tool-fetch | tool-run-process | tool-apply-patch | tool-semantic-grep\ntool-fetch ::= (\" to=functions.\" \"fetch\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-fetch-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"fetch\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-fetch-schema\ntool-fetch-schema ::= \"{\" space tool-fetch-schema-url-kv ( \",\" space ( tool-fetch-schema-start-index-kv tool-fetch-schema-start-index-rest | tool-fetch-schema-raw-kv tool-fetch-schema-raw-rest | tool-fetch-schema-max-length-kv ) )? \"}\" space\ntool-fetch-schema-max-length ::= ([1-9] | ([1-8] [0-9] | [9] [0-9]) | ([1-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9])) | ([1-8] [0-9]{3} | [9] ([0-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9]))) | ([1-8] [0-9]{4} | [9] ([0-8] [0-9]{3} | [9] ([0-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9])))) | ([1-8] [0-9]{5} | [9] ([0-8] [0-9]{4} | [9] ([0-8] [0-9]{3} | [9] ([0-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9])))))) space\ntool-fetch-schema-max-length-kv ::= \"\\\"max_length\\\"\" space \":\" space tool-fetch-schema-max-length\ntool-fetch-schema-raw-kv ::= \"\\\"raw\\\"\" space \":\" space boolean\ntool-fetch-schema-raw-rest ::= ( \",\" space tool-fetch-schema-max-length-kv )?\ntool-fetch-schema-start-index ::= ([0] | [1-9] [0-9]{0,15}) space\ntool-fetch-schema-start-index-kv ::= \"\\\"start_index\\\"\" space \":\" space tool-fetch-schema-start-index\ntool-fetch-schema-start-index-rest ::= ( \",\" space tool-fetch-schema-raw-kv )? tool-fetch-schema-raw-rest\ntool-fetch-schema-url ::= \"\\\"\" char+ \"\\\"\" space\ntool-fetch-schema-url-kv ::= \"\\\"url\\\"\" space \":\" space tool-fetch-schema-url\ntool-run-process ::= (\" to=functions.\" \"run_process\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-process-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"run_process\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-process-schema\ntool-run-process-schema ::= \"{\" space  (tool-run-process-schema-stdin-text-kv tool-run-process-schema-stdin-text-rest | tool-run-process-schema-cwd-kv tool-run-process-schema-cwd-rest | tool-run-process-schema-command-line-kv tool-run-process-schema-command-line-rest | tool-run-process-schema-timeout-ms-kv tool-run-process-schema-timeout-ms-rest | tool-run-process-schema-argv-kv )? \"}\" space\ntool-run-process-schema-argv ::= \"[\" space string (\",\" space string)* \"]\" space\ntool-run-process-schema-argv-kv ::= \"\\\"argv\\\"\" space \":\" space tool-run-process-schema-argv\ntool-run-process-schema-command-line-kv ::= \"\\\"command_line\\\"\" space \":\" space string\ntool-run-process-schema-command-line-rest ::= ( \",\" space tool-run-process-schema-timeout-ms-kv )? tool-run-process-schema-timeout-ms-rest\ntool-run-process-schema-cwd-kv ::= \"\\\"cwd\\\"\" space \":\" space string\ntool-run-process-schema-cwd-rest ::= ( \",\" space tool-run-process-schema-command-line-kv )? tool-run-process-schema-command-line-rest\ntool-run-process-schema-stdin-text-kv ::= \"\\\"stdin_text\\\"\" space \":\" space string\ntool-run-process-schema-stdin-text-rest ::= ( \",\" space tool-run-process-schema-cwd-kv )? tool-run-process-schema-cwd-rest\ntool-run-process-schema-timeout-ms-kv ::= \"\\\"timeout_ms\\\"\" space \":\" space number\ntool-run-process-schema-timeout-ms-rest ::= ( \",\" space tool-run-process-schema-argv-kv )?\ntool-semantic-grep ::= (\" to=functions.\" \"semantic_grep\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-semantic-grep-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"semantic_grep\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-semantic-grep-schema\ntool-semantic-grep-schema ::= \"{\" space tool-semantic-grep-schema-query-kv ( \",\" space ( tool-semantic-grep-schema-filetype-kv tool-semantic-grep-schema-filetype-rest | tool-semantic-grep-schema-embed-top-k-kv tool-semantic-grep-schema-embed-top-k-rest | tool-semantic-grep-schema-top-k-kv tool-semantic-grep-schema-top-k-rest | tool-semantic-grep-schema-instruct-kv ) )? \"}\" space\ntool-semantic-grep-schema-embed-top-k-kv ::= \"\\\"embed_top_k\\\"\" space \":\" space number\ntool-semantic-grep-schema-embed-top-k-rest ::= ( \",\" space tool-semantic-grep-schema-top-k-kv )? tool-semantic-grep-schema-top-k-rest\ntool-semantic-grep-schema-filetype-kv ::= \"\\\"filetype\\\"\" space \":\" space string\ntool-semantic-grep-schema-filetype-rest ::= ( \",\" space tool-semantic-grep-schema-embed-top-k-kv )? tool-semantic-grep-schema-embed-top-k-rest\ntool-semantic-grep-schema-instruct-kv ::= \"\\\"instruct\\\"\" space \":\" space string\ntool-semantic-grep-schema-query-kv ::= \"\\\"query\\\"\" space \":\" space string\ntool-semantic-grep-schema-top-k-kv ::= \"\\\"top_k\\\"\" space \":\" space number\ntool-semantic-grep-schema-top-k-rest ::= ( \",\" space tool-semantic-grep-schema-instruct-kv )?\n",
+        "timings_per_token":false,
+        "post_sampling_probs":false,
+        "backend_sampling":false,
+        "lora":[],
+        "speculative.ngram_m_hits":1024,
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "xtc_threshold":0.10000000149012,
+        "preserved_tokens":[200003,200005,200006,200007,200008],
+        "seed":4294967295,
+        "dynatemp_range":0,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "top_k":40,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "top_p":1,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "temperature":1,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "n_predict":8192,
+        "ignore_eos":false,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "n_discard":0,
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "value":"^\\s+to$",
+            "type":2
+          },{
+            "value":"^<\\|channel\\|>(?:commentary|analysis)\\s+to=functions$",
+            "type":2
+          },{
+            "value":"<\\|start\\|>assistant(\\s+to)",
+            "type":2
+          },{
+            "value":"<\\|start\\|>assistant(<\\|channel\\|>(?:commentary|analysis)\\s+to)",
+            "type":2
+          }],
+        "repeat_penalty":1,
+        "dry_penalty_last_n":131072,
+        "mirostat":0,
+        "max_tokens":8192,
+        "stream":true,
+        "chat_format":"peg-native"
+      },
+      "stop_type":"eos",
+      "truncated":false,
+      "timings":{
+        "predicted_per_second":233.47347316544,
+        "predicted_n":698,
+        "prompt_per_second":5573.2963788636,
+        "predicted_ms":2989.633,
+        "predicted_per_token_ms":4.2831418338109,
+        "cache_n":3109,
+        "prompt_n":740,
+        "prompt_per_token_ms":0.17942702702703,
+        "prompt_ms":132.776
+      },
+      "prompt":"<|start|>system<|message|>You are ChatGPT, a large language model trained by OpenAI.\nKnowledge cutoff: 2024-06\nCurrent date: 2026-04-06\n\nReasoning: medium\n\n# Valid channels: analysis, commentary, final. Channel must be included for every message.\nCalls to these tools must go to the commentary channel: 'functions'.<|end|><|start|>developer<|message|># Instructions\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nFor tool use, never modify files outside of the current working directory unless the user requested it:\n~/repos/github/g0t4/mcp-server-commands\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Include \"Co-Authored-By: gptoss120b\"\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n\n\n# Tools\n\n## functions\n\nnamespace functions {\n\n// Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.\ntype fetch = (_: {\n// On return output starting at this character index, useful if a previous fetch was truncated and more context is required.\nstart_index?: number, // default: 0,\n// URL to fetch\nurl: string,\n// Get the actual HTML content of the requested page, without simplification.\nraw?: boolean, // default: false,\n// Maximum number of characters to return.\nmax_length?: number, // default: 5000,\n}) => any;\n\n// Run a process on this darwin machine\ntype run_process = (_: {\n// Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\nstdin_text?: string,\n// Optional to set working directory\ncwd?: string,\n// Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\ncommand_line?: string,\n// Optional timeout in milliseconds, defaults to 30,000ms\ntimeout_ms?: number,\n// Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\nargv?: string[],\n}) => any;\n\n// Patch a file\ntype apply_patch = (_: {\n// file changes in custom diff format\npatch: string,\n}) => any;\n\n// Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\ntype semantic_grep = (_: {\n// limit matches to a vim compatible filetype. default includes all filetypes\nfiletype?: string,\n// number of embeddings matches to consider for reranking\nembed_top_k?: number,\n// number of matches to return (post reranking)\ntop_k?: number,\n// query text, what you are looking for\nquery: string,\n// instructions for the query, explain the type of query\ninstruct?: string,\n}) => any;\n\n} // namespace functions<|end|><|start|>user<|message|>## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n<|end|><|start|>user<|message|>## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n<|end|><|start|>user<|message|>/tools tell me the current world news, top stories<|end|><|start|>assistant<|channel|>analysis<|message|>The user asks: \"/tools tell me the current world news, top stories\". They want current world news. We have tool fetch. Use fetch to get news. Maybe use a news site like BBC, CNN, Reuters. Let's fetch top stories. Use fetch with URL. We'll fetch from e.g., https://www.reuters.com/world/. Use fetch.<|end|><|start|>assistant<|channel|>commentary to=functions.fetch <|constrain|>json<|message|>{\"url\": \"https://www.reuters.com/world/\", \"max_length\": 3000}<|call|><|start|>functions.fetch to=assistant<|channel|>commentary<|message|>{\"isError\":true,\"content\":[{\"text\":\"Failed to fetch https://www.reuters.com/world/ - status code 401\",\"type\":\"text\"}]}<|end|><|start|>assistant<|channel|>analysis<|message|>403/401 maybe need a different source. Try BBC world news.<|end|><|start|>assistant<|channel|>commentary to=functions.fetch <|constrain|>json<|message|>{\"url\": \"https://www.bbc.com/news/world\", \"max_length\": 3000}<|call|><|start|>functions.fetch to=assistant<|channel|>commentary<|message|>{\"isError\":false,\"content\":[{\"text\":\"Contents of https://www.bbc.com/news/world:\\n<p>World | Latest News & Updates | BBC News</p>Skip to contentWatch LiveWatch Live\\n# World\\n\\nLIVE\\n## Israel attacks major Iranian petrochemical site after Trump's infrastructure threats\\n\\nIsrael claims the site produces half of Iran's petrochemical output. The Israeli attack follows Donald Trump threatening more US attacks if the Strait of Hormuz is not open by Tuesday.\\n\\n## How rescue of US airman in remote part of Iran unfolded\\n\\nThe operation to extract him from the ground in hostile territory was hugely complex and involved multiple US government agencies.\\n\\n3 hrs ago\\n\\nWorld\\n\\n## DR Congo agrees to take deportees from the US\\n\\nThe country will start receiving deportees from this month but has not said how many they will accept.\\n\\n2 hrs ago\\n\\nWorld\\n\\n## US Secret Service investigates reports of gunfire near White House\\n\\nOfficials said \\\"a heightened security posture is in place\\\", but no injuries were reported and no suspects had been identified.\\n\\n14 hrs ago\\n\\nUS & Canada\\n\\n## Trump declares victory after rescue but threats to US operation in Iran still loom\\n\\nThe rescue could impact how Trump views a ground operation to take Kharg Island or to seize enriched uranium sites.\\n\\n15 hrs ago\\n\\nWorld\\n\\n## 'Really feeling the love' - Savannah Guthrie returns to NBC as search for mother goes on\\n\\nNancy Guthrie disappeared from her home in Tucson, Arizona, in what authorities believe was an abduction.\\n\\n3 hrs ago\\n\\nUS & Canada\\n\\n## Emergency jabs after 100 children die of suspected measles in a month in Bangladesh\\n\\nMore than 100 people, mostly children, have been killed by measles since mid-March, officials suspect.\\n\\n5 hrs ago\\n\\nAsia\\n\\n## Young gray whale dies after swimming up river in Washington state\\n\\nHunger is a likely reason the whale, dubbed Willapa Willy, travelled inland, experts say.\\n\\n## Nigerian army rescues 31 held after Easter church attack\\n\\nFive civilians were killed by the gunmen and their bodies were recovered at the scene, the army said.\\n\\n## Hungary alleges plot to blow up gas pipeline ahead of election\\n\\nIt comes a week before votes are cast and follows warnings of so-called false flag operations blamed on Ukraine.\\n\\n## Pope Leo calls for global leaders to choose peace in his first Easter Mass\\n\\nPope Leo XIV addressed thousands of worshippers gathered in St Peter's Square on Easter Sunday in his first address as pontiff.\\n\\n## German males under 45 may need military approval for long stays abroad\\n\\nUnder the law, travel approvals must generally be granted and it remains unclear how the rule would be enforced if breached.\\n\\n## Features\\n\\n## Artemis's stunning Moon pictures - science or holiday photos?\\n\\nThe story behind the beautiful pictures beamed back to Earth from the Artemis II astronauts.\\n\\n## Two protests, two elections: How Nepal's Gen Z succeeded where Bangladesh's stumbled\\n\\nHow did a youth movement triumph in one country but fall so short in another?\\n\\n## 'I adore her now': Mother learns to cope with child's autism in a country with little help\\n\\nMalawian Martha\\n\\n<error>Content truncated. Call the fetch tool with a start_index of 3000 to get more content.</error>\",\"type\":\"text\"}]}<|end|><|start|>assistant",
+      "stop":true,
+      "has_new_line":true,
+      "tokens_cached":4546,
+      "stopping_word":"",
+      "index":0,
+      "tokens":[],
+      "model":"ggml-org/gpt-oss-120b-GGUF",
+      "tokens_predicted":698,
+      "tokens_evaluated":3849,
+      "content":""
+    },
+    "timings":{
+      "predicted_per_second":233.47347316544,
+      "predicted_n":698,
+      "prompt_per_second":5573.2963788636,
+      "predicted_ms":2989.633,
+      "predicted_per_token_ms":4.2831418338109,
+      "cache_n":3109,
+      "prompt_n":740,
+      "prompt_per_token_ms":0.17942702702703,
+      "prompt_ms":132.776
+    },
+    "id":"chatcmpl-sz9kPjFBN8UwEYT3hMq49IeIP5NWykGW",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1775487851,
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b8656-9062d4e84"
+  }
+}
