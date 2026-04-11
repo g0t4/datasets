@@ -1,0 +1,63 @@
+{
+  "request_body":{
+    "model":"",
+    "temperature":1,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "messages":[{
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/install/macos/luarocks.fish:0-6\n#!/usr/bin/env fish\n\nluarocks install fun\nluarocks install lua-cjson\nluarocks install luasocket\nluarocks install luv\nluarocks install rxlua\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/files-search-specific.fish:321-328\nfunction _abbr_expand_rgu\n    if command_line_after_cursor_is_not_an_option_dash\n        echo rg -u\n        return\n    end\n\n    echo rg -u '\"%\"'\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/python-specific.fish:120-139\n\nabbr uvr 'uv run'\nabbr uvt 'uv tree'\nabbr uvtree 'uv tree --outdated'\nabbr uvv 'uv venv'\n#\n# FYI cannot configure no-description/readme by default, so just use them here in my abbr instead\n#   unfortunately I cannot tell it no hello.py too\nabbr uvi_bootstrap 'uv init --no-description --no-readme && uv add yapf rope ipython rich' # bootstrap my preferred deps (i.e. formatter, ipython REPL)... things I inevitably add to all my python projects\n#   todo add `ipykernel` or `ipython` to all projects too? I like to run code adhoc in nvim with iron.nvim, that requires ipython at a minimum\n#   also I prefer the ipython REPL over python's builtin REPL\nabbr uvi 'uv init --no-description --no-readme'\nabbr uvinw 'uv init --no-description --no-readme --no-workspace'\n# ipykernel is for ipython\nabbr uvi_common 'uv init --no-description --no-readme && uv add ipython ipykernel yapf rope rich httpx'\nabbr uvi_cli 'uv init --no-description --no-readme && uv add ipython ipykernel yapf rope rich httpx typer'\nabbr uvi_web 'uv init --no-description --no-readme && uv add ipython ipykernel yapf rope rich httpx fastapi'\n#\nabbr uvp 'uv pip'\nabbr uvpi 'uv pip install'\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/files-specific.fish:0-19\n# *** ls\nabbr lat \"ls -alht\" # -t == sort by time\nabbr las \"ls -alhS\" # -S == sort by size\nabbr la \"ls -alh\" # use fish builtin `la` and pass -h by default now\n\nif status is-interactive\n    function ls\n        # if command -q eza\n        #     eza --group-directories-first $argv\n        # try lsd for a bit, as daily primary, fallback to eza if not happy\n        if command -q lsd\n            # version 0.19 on pacman (arch) only has --group-dirs\n            # mac version 1.2 has both --group-dirs and --group-directories-first\n            # thus use crossover\n            lsd --group-dirs first $argv\n        else\n            echo \"lsd is not installed... fall back to ls... get it installed!\"\n            command ls $argv\n        end\n    end\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/files-specific.fish:30-49\n# cd-\nabbr --add cd- 'cd -'\n\n# TODO impl cp-  or cph (like dirh, interactive to pick recent dir?)\n#   see dir stack / history : https://fishshell.com/docs/current/interactive.html#id13\n# function _cp-\n#     echo cp \"$dirprev\"\n# end\n#\n# abbr --add cp- --regex 'cp-' --function _cp-\n\n## *** ask-openai related\n\nabbr ask_status \"git -C (z --echo dotfiles) status; git -C (z --echo ask-openai.nvim) status; git -C (z --echo devtools.nvim) status\"\n\n## *** fish related\n\nfunction _reload_config\n    source ~/.config/fish/config.fish\nend\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"add luarocks 5.4 version abbrs to match the 5.1 abbrs\n\nHere is the code I selected:\n```fish/load_last_interactive_only/misc-specific.fish:2292-2311\n    abbr lr luarocks\n    abbr lrl luarocks list # global and local, for newest lua version\n    abbr lrll luarocks list --local # only local\n    abbr lrl1 luarocks list --lua-version=5.1 # nvim uses 5.1\n    abbr lrl4 luarocks list --lua-version=5.4 # hammerspoon uses this + its the current release\n\n    # abbr lrd luarocks doc # show docs for package\n\n    abbr lri luarocks install\n    abbr lri1 luarocks install --lua-version=5.1\n\n    abbr lrrm luarocks remove\n    abbr lrrm1 luarocks remove --lua-version=5.1\n\n    abbr lrs luarocks search\n    abbr lrs1 luarocks search --lua-version=5.1\n\n    abbr lrshow luarocks show\n    abbr lrshow1 luarocks show --lua-version=5.1\n\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      }],
+    "max_tokens":8192,
+    "top_p":1
+  },
+  "last_sse":{
+    "id":"chatcmpl-hragDyhiY8AcIn1HwB3ihw6sTOlJWxgP",
+    "created":1775892166,
+    "timings":{
+      "prompt_n":1217,
+      "prompt_ms":542.56,
+      "prompt_per_token_ms":0.4458175842235,
+      "predicted_ms":2487.199,
+      "predicted_per_token_ms":4.2013496621622,
+      "cache_n":1313,
+      "predicted_per_second":238.01875121371,
+      "predicted_n":592,
+      "prompt_per_second":2243.0698908876
+    },
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "system_fingerprint":"b8656-9062d4e84",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"    abbr lr luarocks\n    abbr lrl luarocks list # global and local, for newest lua version\n    abbr lrll luarocks list --local # only local\n    abbr lrl1 luarocks list --lua-version=5.1 # nvim uses 5.1\n    abbr lrl4 luarocks list --lua-version=5.4 # hammerspoon uses this + its the current release\n\n    # abbr lrd luarocks doc # show docs for package\n\n    abbr lri luarocks install\n    abbr lri1 luarocks install --lua-version=5.1\n    abbr lri4 luarocks install --lua-version=5.4\n\n    abbr lrrm luarocks remove\n    abbr lrrm1 luarocks remove --lua-version=5.1\n    abbr lrrm4 luarocks remove --lua-version=5.4\n\n    abbr lrs luarocks search\n    abbr lrs1 luarocks search --lua-version=5.1\n    abbr lrs4 luarocks search --lua-version=5.4\n\n    abbr lrshow luarocks show\n    abbr lrshow1 luarocks show --lua-version=5.1\n    abbr lrshow4 luarocks show --lua-version=5.4",
+    "reasoning_content":"The user wants to \"add luarocks 5.4 version abbrs to match the 5.1 abbrs\". Already there is lr, lrl, lrll, lrl1, lrl4 (5.4). Then lri, lri1, lrrm, lrrm1, lrs, lrs1, lrshow, lrshow1. Need to add equivalents for 5.4 where missing: lri4, lrrm4, lrs4, lrshow4 perhaps. Also maybe lrd? They have lrl4 already. So we should add abbrs for install, remove, search, show for lua-version=5.4. Also possibly lrd for docs? But not required. Keep indentation. Insert after existing ones. We'll preserve indentation and context.\n\nThus modify file misc-specific.fish lines 2292-2311 adding:\n\n    abbr lri4 luarocks install --lua-version=5.4\n    abbr lrrm4 luarocks remove --lua-version=5.4\n    abbr lrs4 luarocks search --lua-version=5.4\n    abbr lrshow4 luarocks show --lua-version=5.4\n\nMake sure ordering similar to 5.1 entries. Also maybe add lri for default (already). Already have lrl4 for list. So add after lri1 etc.\n\nWill output only the changed code snippet.\n\n",
+    "role":"assistant",
+    "_logged":true
+  }
+}
