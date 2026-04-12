@@ -1,0 +1,55 @@
+{
+  "request_body":{
+    "max_tokens":16384,
+    "stream":true,
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"high"
+    },
+    "temperature":1,
+    "messages":[{
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"spell\n\nHere is the code I selected:\n```README.md:1\nthorougly impressed here\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      }],
+    "model":""
+  },
+  "last_sse":{
+    "timings":{
+      "cache_n":0,
+      "predicted_per_second":213.21245185156,
+      "predicted_n":349,
+      "prompt_per_second":3444.0793476938,
+      "prompt_per_token_ms":0.29035335689046,
+      "predicted_ms":1636.865,
+      "predicted_per_token_ms":4.6901575931232,
+      "prompt_n":283,
+      "prompt_ms":82.17
+    },
+    "system_fingerprint":"b8656-9062d4e84",
+    "id":"chatcmpl-zG4VBSBjjNV3Ujjtw1oxNo3ab30q9Xrc",
+    "created":1775979114,
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"```README.md:1\nthoroughly impressed here\n```",
+    "reasoning_content":"The user says:\n\n\"spell\n\nHere is the code I selected:\n```README.md:1\nthorougly impressed here\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!\"\n\nUser wants help with \"spell\". Likely they want to correct the spelling of \"thorougly\". Should be \"thoroughly\". So we need to rewrite the code (the README.md line) correcting the spelling.\n\nWe must preserve indentation (there is none). The code snippet is a line in README.md: \"thorougly impressed here\". Should be \"thoroughly impressed here\". So we output the corrected snippet.\n\nGiven the guidelines: \"When rewriting code, leave unrelated code and unrelated comments as is.\" Here only one line. So we rewrite that line.\n\nThus answer: \n\n```README.md\nthoroughly impressed here\n```? The original snippet had \"README.md:1\" after triple backticks. Typically they show file name and line number. The correct format is to show file content. But the user gave the snippet: \"```README.md:1 ...```\". We should respond with corrected code block. Possibly we can keep the same \"README.md:1\" label.\n\nWe can output:\n\n```README.md:1\nthoroughly impressed here\n```\n\nThus correct. The user wants preserve indentation; there is none. So just output the corrected line.\n\nThe user asked \"spell\". Likely they want to fix spelling. So we do that. No extra explanation.\n\nThus final answer: code block with corrected line.",
+    "role":"assistant",
+    "_logged":true
+  }
+}
