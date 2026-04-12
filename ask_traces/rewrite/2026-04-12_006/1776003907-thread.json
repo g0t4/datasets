@@ -1,0 +1,67 @@
+{
+  "request_body":{
+    "top_p":1,
+    "temperature":1,
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Recent yanks (copy to clipboard):\n```lua/ask-openai/tools/mcp/init.lua\n            \"--ignore-robots-txt\", -- DO NOT WASTE TIME QUERYING robots.txt... YIKES (s/b default off IMO) ... if I can presonally browse to a website, my AI assistant can do it for me too\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/test_setup.lua:13-15\nlocal function add_devtools_to_package_path()\n    add_plugin_to_package_path(os.getenv(\"HOME\") .. \"/repos/github/g0t4/devtools.nvim/lua/\")\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/router.lua:8-36\nfunction M.openai_tools()\n    local tools = {}\n\n    -- * inject system message instructions based on available tools\n    local system_instructs = {}\n    for name, mcp_tool in pairs(mcp.tools_available) do\n        table.insert(tools, openai_tool(mcp_tool))\n        local tool_instructs = mcp.get_system_message_instructions(name)\n        if tool_instructs then\n            table.insert(system_instructs, tool_instructs)\n        end\n    end\n    for _, inprocess_tool in pairs(inprocess.tools_available) do\n        -- PRN push this into inprocess module like mcp/init.lua above?\n\n        if inprocess_tool[\"function\"].name == \"semantic_grep\" then\n            -- somewhat strange but neovim invocations are rooted in the current buffer, so I have to use that to dictate some tool availability even though agent like requests are buffer independent... since my LS client is tied to a buffer in neovim, gotta roll with it! NBD TBH\n            if client.is_lsp_client_available() then\n                table.insert(tools, inprocess_tool)\n            end\n        else\n            table.insert(tools, inprocess_tool)\n            if inprocess_tool[\"function\"].name == \"apply_patch\" then\n                table.insert(system_instructs, apply_patch_tool.get_system_message_instructions())\n            end\n        end\n    end\n    return tools, system_instructs\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/questions/frontend.lua:89-108\n    QuestionsFrontend.abort_last_request()\n    use_tools = context.includes.use_tools or false\n\n    local system = get_file(\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/questions/prompts/system_message.md\")\n    -- PRN \"NEVER add copyright or license headers unless specifically requested.\"\n\n    local tool_definitions\n    if use_tools then\n        -- PRN build out more detailed guidance: review Claude Code and Codex prompts\n        local tool_instructs = get_file(\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/questions/prompts/tools.md\")\n        -- * repo root vs cwd prompt instructions\n        local cwd = vim.fn.getcwd()\n        local cwd_text = \"Current directory: \" .. cwd\n        local git_root_output = vim.fn.systemlist('git rev-parse --show-toplevel')\n        if vim.v.shell_error == 0 and #git_root_output > 0 then\n            local repo_root = vim.fn.trim(git_root_output[1])\n            if repo_root ~= cwd then\n                vim.notify(\"FYI you are in a nested directory of the repo and that tends to cause issues with gptoss making requests to change things\", vim.log.levels.WARN)\n                -- PRN path compare instead of text comparison? add this if you run into a problem\n                cwd_text = cwd_text .. \"\\nRepository root: \" .. repo_root\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/backends/fim_backend.lua:207-210\nfunction FimBackend:get_repo_name()\n    -- TODO confirm repo naming? is it just basename of repo root? or GH link? or org/repo?\n    return vim.fn.getcwd():match(\"([^/]+)$\")\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/init.lua:127-137\nfunction M.ask_openai()\n    local cmdline = vim.fn.getcmdline()\n    print(\"asking...\") -- overwrites showing luaeval(\"...\") in cmdline\n\n    local stdin_text = ' env: nvim (neovim) command mode (return a valid command w/o the leading : ) \\n question: ' ..\n        cmdline\n\n    local suggest = require(\"ask-openai.suggest\")\n    local result = suggest.get_vim_command_suggestion(stdin_text)\n    return trim_null_characters(result)\nend\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"use os.getenv home\n\nHere is the code I selected:\n```lua/ask-openai/tools/mcp/init.lua:30\n            \"~/repos/github/g0t4/mcp-servers/src/fetch\",\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true
+      }],
+    "model":"",
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"high"
+    },
+    "max_tokens":16384
+  },
+  "response_message":{
+    "content":"            os.getenv(\"HOME\") .. \"/repos/github/g0t4/mcp-servers/src/fetch\",",
+    "finish_reason":"stop",
+    "reasoning_content":"The user wants to \"use os.getenv home\" and gave a code snippet location: in file `lua/ask-openai/tools/mcp/init.lua` line 30: `\"~/repos/github/g0t4/mcp-servers/src/fetch\",`. They want to replace the hardcoded absolute path with something that uses `os.getenv(\"HOME\")`. They likely want to compute the path relative to the home directory.\n\nThe code snippet context is not fully given, but we can assume that there is a table of paths (maybe a list) in the init.lua file that includes a path to the fetch script. We need to edit that line to use `os.getenv(\"HOME\") .. \"/repos/github/g0t4/mcp-servers/src/fetch\"` or similar.\n\nThe user wants \"use os.getenv home\". So we need to replace the string literal `\"~/repos/github/g0t4/mcp-servers/src/fetch\"` with something like `os.getenv(\"HOME\") .. \"/repos/github/g0t4/mcp-servers/src/fetch\"`.\n\nWe need to preserve indentation. Also need to preserve any surrounding code. The user wants just the code change.\n\nThus, we need to locate the line and replace it accordingly.\n\nWe need to output the revised code snippet. The user says \"Preserve indentation!\". So we need to output the updated line with same indentation: it seems the line starts with 12 spaces? Actually it's shown as 12 spaces before the string? The snippet shows: `            \"~/...` which is 12 spaces (maybe a tab?). We'll replicate exactly.\n\nWe should also add proper quoting. Since the line originally is a string literal in a table, we need to produce something like:\n\n`            os.getenv(\"HOME\") .. \"/repos/github/g0t4/mcp-servers/src/fetch\",`\n\nWe need to ensure that the expression is not a string literal, so no quotes around the whole thing, just the concatenation expression.\n\nThus, output just the changed line.\n\nThe user wants code only, no markdown, no explanation. So we output just that line.\n\nBut we might need to provide the context? They said \"Here is the code I selected: ...\". They want to update that line. Probably they want the entire file updated? The instruction says preserve indentation, but not to include the rest of the file? Probably just provide the updated line.\n\nBetter to show the line with the change.\n\nThus, output:\n\n`            os.getenv(\"HOME\") .. \"/repos/github/g0t4/mcp-servers/src/fetch\",`\n\nMake sure no extra spaces beyond indentation. The indentation before is 12 spaces; we keep that.\n\nThus final answer.",
+    "role":"assistant",
+    "_logged":true
+  },
+  "last_sse":{
+    "id":"chatcmpl-14Y0frtUKhhdUpnmJFviv90ccUtXNXW0",
+    "timings":{
+      "predicted_per_second":181.19130695878,
+      "predicted_n":595,
+      "prompt_per_second":3157.4188803343,
+      "prompt_ms":426.931,
+      "prompt_per_token_ms":0.31671439169139,
+      "predicted_ms":3283.822,
+      "predicted_per_token_ms":5.5190285714286,
+      "prompt_n":1348,
+      "cache_n":182
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk",
+    "created":1776003883,
+    "system_fingerprint":"b8656-9062d4e84",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }]
+  }
+}
