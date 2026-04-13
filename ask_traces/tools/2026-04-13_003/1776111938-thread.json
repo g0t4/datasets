@@ -1,0 +1,448 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-osFKs9eyii78kdCSgPweFXZG10hoKBwd",
+    "timings":{
+      "cache_n":17690,
+      "predicted_per_second":199.05608886891,
+      "predicted_n":31,
+      "prompt_per_second":1966.0991066656,
+      "prompt_n":206,
+      "prompt_ms":104.776,
+      "prompt_per_token_ms":0.5086213592233,
+      "predicted_ms":155.735,
+      "predicted_per_token_ms":5.0237096774194
+    },
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1776112024,
+    "system_fingerprint":"b8656-9062d4e84"
+  },
+  "response_message":{
+    "timings":{
+      "cache_n":17690,
+      "predicted_per_second":199.05608886891,
+      "predicted_n":31,
+      "prompt_per_second":1966.0991066656,
+      "prompt_n":206,
+      "prompt_ms":104.776,
+      "prompt_per_token_ms":0.5086213592233,
+      "predicted_ms":155.735,
+      "predicted_per_token_ms":5.0237096774194
+    },
+    "role":"assistant",
+    "finish_reason":"stop",
+    "content":"Implemented the removal of explanatory comments while retaining type hints for `get_reasoning_level`. The function now starts directly with its type annotations."
+  },
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"high"
+    },
+    "stream":true,
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Recent yanks (copy to clipboard):\n```lua/ask-openai/questions/models/params.lua\ncontext\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/context/prompt_parser.tests.lua:76-80\n                                                 function()\n            local top_k, prompt = prompt_parser.strip_patterns_from_prompt(\"foo bar\")\n            assert.is_nil(top_k)\n            assert.are_equal(\"foo bar\", prompt)\n        end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/context/init.lua:0-19\nlocal yanks = require(\"ask-openai.frontends.context.yanks\")\nlocal ctags = require(\"ask-openai.frontends.context.ctags\")\n-- local changelists = require(\"ask-openai.frontends.context.changelists\")\n-- local inspect = require(\"ask-openai.frontends.context.inspect\")\nlocal git_diff = require(\"ask-openai.frontends.context.git_diff\")\nlocal matching_ctags = require(\"ask-openai.frontends.context.matching_ctags\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\nlocal project = require(\"ask-openai.frontends.context.project\")\nlocal messages = require(\"devtools.messages\")\nlocal cmds = require(\"ask-openai.frontends.context.cmds\")\n-- local learn_diagnostics = require(\"ask-openai.frontends.context.coc.learn.diagnostics\")\n-- local coc_context = require(\"ask-openai.frontends.context.coc.context\")\n\n-- TODO move this out of just predictions dir\n\n---@class CurrentContext\n---\n---@field yanks ContextItem\n---@field commits ContextItem[]\n---@field ctags ContextItem\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/gptoss/fim_harmony.lua:20-39\n\n\n--- system message (harmony spec):\n--- - specify reasoning effort\n--- - meta information like\n---   - knowledge cutoff\n---   - built-in tools\n---@return HarmonyFimPromptBuilder self\nfunction HarmonyFimPromptBuilder:system()\n    -- reasoning level: high/medium/low - https://arxiv.org/html/2508.10925v1#S2.SS5.SSS2\n    -- I could add a streamdeck button/toggle to switch level\n    -- - And instead of forcing instant response, I could start the thoughts section and let it finish it.\n    --   i.e. prompt it to finish thoughts about the specific code in the example\n    --   \"Ok now I should review the code itself and take some notes...\"\n    -- - Just keep in mind, if you want thinking, you can always use AskRewrite or AskQuestion too (make sure those aren't a fit before modifying FIM for this)\n    --   with thinking I can't imagine you're not talking about an Edit Prediction (less FIM)\n\n    local message = [[\nYou are ChatGPT, a large language model trained by OpenAI.\nKnowledge cutoff: 2024-06\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/questions/frontend.lua:15-34\nlocal model_params = require(\"ask-openai.questions.models.params\")\nlocal LinesBuilder = require(\"ask-openai.questions.lines_builder\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal formatters = require(\"ask-openai.questions.chat.formatters\")\nlocal ToolCallOutput = require(\"ask-openai.questions.chat.tool_call_output\")\nlocal CurlRequestForThread = require(\"ask-openai.questions.curl_request_for_thread\")\nlocal RxAccumulatedMessage = require(\"ask-openai.questions.chat.messages.rx\")\nlocal ToolCall = require(\"ask-openai.questions.chat.tool_call\")\nlocal rag_instructions = require(\"ask-openai.frontends.prompts.rag_instructions\")\n\nrequire(\"ask-openai.helpers.buffers\")\n\n---@class QuestionsFrontend : StreamingFrontend\nlocal QuestionsFrontend = {}\n\nlocal first_turn_ns_id\n\nlocal cached_files = {}\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/context/prompt_parser.tests.lua:82-84\n                                                      function()\n            local top_k, prompt = prompt_parser.strip_patterns_from_prompt(\"foo/k=3 bar\")\n        end\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"I want to change the current file ... add a function to get nil if none are set, otherwise return high/medium/low for reasoning level\n\nFYI, here is my current buffer in Neovim. Use this as context for my request:\n```lua/ask-openai/frontends/context/prompt_parser.lua\n\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal skills = require(\"ask-openai.frontends.skills\")\n---@class ParseIncludesResult\n---@field all boolean\n---@field yanks boolean\n---@field commits boolean\n---@field current_file boolean\n---@field open_files boolean\n---@field ctags? boolean\n---@field matching_ctags? boolean\n---@field norag? boolean\n---@field project? boolean\n---@field git_diff? boolean\n---@field rendered_prompt string\n---@field use_tools? boolean\n---@field apply_template_only? boolean\n---@field include_selection? boolean\n---@field top_k? integer\n---@field readonly? boolean\n---@field reasoning_low? boolean\n---@field reasoning_medium? boolean\n---@field reasoning_high? boolean\n---@field reasoning_none? boolean\nlocal M = {}\n\n---@param prompt string\n---@return integer?, string\nfunction M.strip_patterns_from_prompt(prompt)\n    -- i.e. /k=10\n    local top_k = nil\n    local function strip(match)\n        top_k = tonumber(match)\n        return \"\" -- strip\n    end\n    -- FYI CANNOT HAVE /k= butted up against ANYTHING but whitespace\n    prompt = prompt:gsub(\"^%s*/k=(%d+)%s*\", strip) -- start (specific)\n    prompt = prompt:gsub(\"%s*/k=(%d+)%s*$\", strip) -- end (specific)\n    prompt = prompt:gsub(\"%s*/k=(%d+)%s*\", function(match)\n        top_k = tonumber(match)\n        return \" \" -- replace w/ one space\n    end) -- middle matches (spaces on both sides)\n    return top_k, prompt\nend\n\n-- expose the slash commands list publicly for reuse elsewhere\nM.slash_commands = {\n    YANKS            = \"/yanks\",\n    ALL              = \"/all\",\n    COMMITS          = \"/commits\",\n    FILE             = \"/file\",\n    OPEN_FILES       = \"/WIP_open_files\",\n    TOOLS            = \"/tools\",\n    SELECTION        = \"/selection\",\n    TEMPLATE_ONLY    = \"/WIP_template\",\n    NORAG            = \"/norag\",\n    READONLY         = \"/readonly\",\n\n    -- reasoning levels\n    REASONING_LOW    = \"/low\",\n    REASONING_MEDIUM = \"/medium\",\n    REASONING_HIGH   = \"/high\",\n    REASONING_NONE   = \"/none\",\n}\n\n--- Completion function for slash commands used by user commands.\n-- Returns a list of completions matching the lead entered.\n---@param arglead string The current argument lead typed by the user.\n---@param cmdline string The full command line.\n---@param cursorpos number The cursor position.\n---@return string[] List of matching completions.\nfunction M.SlashCommandCompletion(arglead, cmdline, cursorpos)\n    local result = {}\n    local escaped = vim.pesc(arglead)\n\n    -- * static slash commands\n    for _, cmd in pairs(M.slash_commands) do\n        if cmd:find('^' .. escaped) then\n            table.insert(result, cmd)\n        end\n    end\n\n    -- * add skill prompts\n    -- FYI first load will happen on first completion, s/b fine for slight delay\n    for _, cmd in ipairs(skills.get_skill_commands()) do\n        if cmd:find('^' .. escaped) then\n            table.insert(result, \"/\" .. cmd)\n        end\n    end\n    return result\nend\n\n---@param prompt string\n---@param command string\n---@return boolean, string\nlocal function strip_slash_command_from_prompt(prompt, command)\n    -- The original implementation removed only a single occurrence of a command\n    -- (start, end, or middle) which caused failures when the same slash command\n    -- appeared multiple times in the prompt. To support duplicate commands we\n    -- repeatedly apply the removal patterns until the prompt stabilises.\n    local final_prompt = prompt\n    while true do\n        local start_of_iteration_prompt = final_prompt\n        -- Remove command at the start (optional leading whitespace, mandatory\n        -- trailing whitespace to separate from following text).\n        final_prompt = final_prompt:gsub(\"^%s*\" .. command .. \"%s+\", \"\")\n        -- Remove command at the end (preceded by whitespace, optional trailing\n        -- whitespace before end of string).\n        final_prompt = final_prompt:gsub(\"%s+\" .. command .. \"%s*$\", \"\")\n        -- Remove command surrounded by whitespace on both sides, preserving a\n        -- single space where the command was.\n        final_prompt = final_prompt:gsub(\"(%s+)\" .. command .. \"%s+\", \"%1\")\n        if final_prompt == start_of_iteration_prompt then\n            break\n        end\n    end\n    local any_removed = final_prompt ~= prompt\n    if any_removed then\n        log:info(\"original prompt: `\" .. prompt .. \"`\")\n        log:info(\"         detect: `\" .. command .. \"`\")\n        log:info(\"     new prompt: `\" .. final_prompt .. \"`\")\n    end\n    return any_removed, final_prompt\nend\n\n---@param prompt? string\n---@return ParseIncludesResult\nfunction M.render(prompt)\n    prompt = prompt or \"\"\n\n    -- * inject skills first\n    local skill_contents = {}\n    local rendered_prompt = prompt\n    for _, skill_name in pairs(skills.get_skill_commands()) do\n        local cmd = \"/\" .. skill_name\n        found, rendered_prompt = strip_slash_command_from_prompt(rendered_prompt, cmd)\n        if found then\n            local content = skills.load_skill(skill_name)\n            if content then\n                table.insert(skill_contents, content)\n            end\n        end\n    end\n    if #skill_contents > 0 then\n        rendered_prompt = rendered_prompt .. \"\\n\" .. table.concat(skill_contents, \"\\n\")\n    end\n\n    -- * detect pattern based fields\n    local top_k, rendered_prompt = M.strip_patterns_from_prompt(rendered_prompt)\n\n    ---@type table<string, string>\n    M.slash_command_to_field = {\n        [M.slash_commands.ALL] = \"all\",\n        [M.slash_commands.YANKS] = \"yanks\",\n        [M.slash_commands.COMMITS] = \"commits\",\n        [M.slash_commands.FILE] = \"current_file\",\n        [M.slash_commands.OPEN_FILES] = \"open_files\",\n        [M.slash_commands.TOOLS] = \"use_tools\",\n        [M.slash_commands.READONLY] = \"readonly\",\n        [M.slash_commands.TEMPLATE_ONLY] = \"apply_template_only\",\n        [M.slash_commands.SELECTION] = \"include_selection\",\n        [M.slash_commands.NORAG] = \"norag\",\n\n        -- reasoning levels\n        [M.slash_commands.REASONING_LOW] = \"reasoning_low\",\n        [M.slash_commands.REASONING_MEDIUM] = \"reasoning_medium\",\n        [M.slash_commands.REASONING_HIGH] = \"reasoning_high\",\n        [M.slash_commands.REASONING_NONE] = \"reasoning_none\",\n    }\n\n    ---@type ParseIncludesResult\n    local includes = {\n        -- patterns:\n        top_k = top_k,\n    }\n    -- * detect static commands\n    for _, command in pairs(M.slash_commands) do\n        local found\n        found, rendered_prompt = strip_slash_command_from_prompt(rendered_prompt, command)\n        local field = M.slash_command_to_field[command]\n        if field then\n            includes[field] = found\n        else\n            vim.notify(\"missing field for slash command: \" .. command, vim.log.levels.ERROR)\n            log:error(\"missing field for slash command: \" .. command)\n        end\n    end\n\n    -- propagate the effect of /all\n    if includes.all then\n        -- defaults for /all:\n        includes.yanks = true\n        includes.commits = true\n        includes.current_file = true\n        includes.open_files = true\n    end\n\n    includes.rendered_prompt = rendered_prompt\n    log:info(\"includes\", vim.inspect(includes))\n    return includes\nend\n\nreturn M\n\n```"
+      },{
+        "reasoning_content":"We need to parse the user request. The user says:\n\n\"I want to change the current file ... add a function to get nil if none are set, otherwise return high/medium/low for reasoning level\"\n\nWe have a file `lua/ask-openai/frontends/context/prompt_parser.lua` with various functions: strip_patterns_from_prompt, slash commands, etc. There is a reasoning level support: slash commands REASONING_LOW, REASONING_MEDIUM, REASONING_HIGH, REASONING_NONE.\n\nUser wants a new function that \"get nil if none are set, otherwise return high/medium/low for reasoning level\". Likely they want a function to query the reasoning level from includes result: e.g., based on includes.reasoning_low, includes.reasoning_medium, includes.reasoning_high, includes.reasoning_none. Or maybe they want a function that takes includes (the result from M.render) and returns nil if none are set, else a string \"high\", \"medium\", \"low\"? Or maybe a function that returns nil if no reasoning command was present (or none set), else returns appropriate level string. Let's examine the code for includes. In M.render, after detection, they populate includes with fields: includes[field] = found. For reasoning commands, they map slash command to field names \"reasoning_low\", etc. Then later they set includes.rendered_prompt and return includes.\n\nThus, the includes table includes fields: reasoning_low, reasoning_medium, reasoning_high, reasoning_none (maybe nil if not present?). In detection they set includes[field] = found (true/false). So if none of those are found, they'll all be false (or nil?). Actually they initialize includes only with top_k, and later they assign includes[field] = found. For each slash command, found will be boolean (true if removed). If no slash command, found will be false? Actually strip_slash_command_from_prompt returns any_removed (boolean) and final_prompt. It returns true if any_removed (prompt changed). So for commands that are not present, it returns false, and final_prompt unchanged. So includes[field] will be false for each command not present. So includes will have fields like reasoning_low = true/false.\n\nBut the user wants a function that returns nil if none are set, else return high/medium/low. That could be based on includes table: if reasoning_low true => return \"low\"? But there might be multiple present? Probably only one at a time. So a function like get_reasoning_level(includes) that returns nil if no reasoning flags are set (including reasoning_none maybe?), else return \"low\"/\"medium\"/\"high\". The function could be added to the module M, maybe named `M.get_reasoning_level` or something. The user didn't specify name but said \"add a function to get nil if none are set, otherwise return high/medium/low for reasoning level\". Might also need to handle includes.reasoning_none? If reasoning_none is present, maybe return nil? Actually reasoning_none might be a command to explicitly set no reasoning. But maybe they want that if none set (i.e., all false), return nil; else if low/medium/high set, return that string.\n\nThus, we need to add a function, maybe after render function. The function signature: `---@param includes ParseIncludesResult @return string?` Something like:\n\n```lua\n---@param includes ParseIncludesResult\n---@return \"low\"|\"medium\"|\"high\"|nil\nfunction M.get_reasoning_level(includes)\n    if includes.reasoning_low then\n        return \"low\"\n    elseif includes.reasoning_medium then\n        return \"medium\"\n    elseif includes.reasoning_high then\n        return \"high\"\n    else\n        return nil\n    end\nend\n```\n\nAlternatively, it could accept the fields directly, but better accept includes result. Or could be separate: maybe they want a function that reads from includes and returns the level. Let's search for usage. Use semantic_grep?",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"lkuPu3liSbrKQVLuiVRpRJHJL9Qrz6dr",
+            "function":{
+              "arguments":"{\n  \"query\": \"reasoning_low\",\n  \"filetype\": \"lua\",\n  \"top_k\": 20\n}",
+              "name":"semantic_grep"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"lkuPu3liSbrKQVLuiVRpRJHJL9Qrz6dr",
+        "content":"{\"matches\":[{\"id\":\"547b7eef2f62f488\",\"rerank_score\":0.982421875,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":2,\"signature\":\"function M.cycle_rewrite_reasoning_level()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"start_line_base0\":268,\"id_int\":\"6087598887078655112\",\"embed_score\":0.6417360901832581,\"type\":\"ts\",\"end_line_base0\":282,\"rerank_rank\":0,\"text\":\"function M.cycle_rewrite_reasoning_level()\\n    local current = M.get_rewrite_reasoning_level()\\n    local next_level = \\\"\\\"\\n    if current == M.GptOssReasoningLevel.off then\\n        next_level = M.GptOssReasoningLevel.low\\n    elseif current == M.GptOssReasoningLevel.low then\\n        next_level = M.GptOssReasoningLevel.medium\\n    elseif current == M.GptOssReasoningLevel.medium then\\n        next_level = M.GptOssReasoningLevel.high\\n    else\\n        next_level = M.GptOssReasoningLevel.off\\n    end\\n    M.set_rewrite_reasoning_level(next_level)\\n    return next_level\\nend\"},{\"id\":\"5aa7892ba0e8c80f\",\"rerank_score\":0.9794921875,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":9,\"signature\":\"function M.get_rewrite_reasoning_level()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"start_line_base0\":262,\"id_int\":\"6532340605000402959\",\"embed_score\":0.6079421043395996,\"type\":\"ts\",\"end_line_base0\":266,\"rerank_rank\":1,\"text\":\"function M.get_rewrite_reasoning_level()\\n    local cfg = get()\\n    cfg.gptoss = cfg.gptoss or {}\\n    return cfg.gptoss.rewrite_reasoning_level or M.GptOssReasoningLevel.low\\nend\"},{\"id\":\"94f7b550814fba62\",\"rerank_score\":0.9736328125,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":1,\"signature\":\"function M.get_fim_reasoning_level()\\n    -- TODO rename to get_fim_reasoning_level (and related code too)\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"start_line_base0\":228,\"id_int\":\"1510875557377587810\",\"embed_score\":0.655440628528595,\"type\":\"ts\",\"end_line_base0\":234,\"rerank_rank\":2,\"text\":\"---@return GptOssReasoningLevel\\nfunction M.get_fim_reasoning_level()\\n    -- TODO rename to get_fim_reasoning_level (and related code too)\\n    local cfg = get()\\n    cfg.gptoss = cfg.gptoss or {}\\n    return cfg.gptoss.fim_reasoning_level or M.GptOssReasoningLevel.low\\nend\"},{\"id\":\"2d84433400c82f13\",\"rerank_score\":0.96728515625,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":0,\"signature\":\"function M.cycle_fim_reasoning_level()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"start_line_base0\":236,\"id_int\":\"3279820319263043347\",\"embed_score\":0.6584279537200928,\"type\":\"ts\",\"end_line_base0\":250,\"rerank_rank\":3,\"text\":\"function M.cycle_fim_reasoning_level()\\n    local current = M.get_fim_reasoning_level()\\n    local next_level = \\\"\\\"\\n    if current == M.GptOssReasoningLevel.off then\\n        next_level = M.GptOssReasoningLevel.low\\n    elseif current == M.GptOssReasoningLevel.low then\\n        next_level = M.GptOssReasoningLevel.medium\\n    elseif current == M.GptOssReasoningLevel.medium then\\n        next_level = M.GptOssReasoningLevel.high\\n    else\\n        next_level = M.GptOssReasoningLevel.off\\n    end\\n    M.set_fim_reasoning_level(next_level)\\n    return next_level\\nend\"},{\"type\":\"uncovered\",\"id\":\"bee0eba2f14070e4\",\"embed_rank\":14,\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/gptoss/fim_harmony.lua\",\"start_line_base0\":20,\"id_int\":\"4530880310199480548\",\"rerank_score\":0.9482421875,\"embed_score\":0.5534927845001221,\"end_line_base0\":39,\"rerank_rank\":4,\"text\":\"\\n\\n--- system message (harmony spec):\\n--- - specify reasoning effort\\n--- - meta information like\\n---   - knowledge cutoff\\n---   - built-in tools\\n---@return HarmonyFimPromptBuilder self\\nfunction HarmonyFimPromptBuilder:system()\\n    -- reasoning level: high/medium/low - https://arxiv.org/html/2508.10925v1#S2.SS5.SSS2\\n    -- I could add a streamdeck button/toggle to switch level\\n    -- - And instead of forcing instant response, I could start the thoughts section and let it finish it.\\n    --   i.e. prompt it to finish thoughts about the specific code in the example\\n    --   \\\"Ok now I should review the code itself and take some notes...\\\"\\n    -- - Just keep in mind, if you want thinking, you can always use AskRewrite or AskQuestion too (make sure those aren't a fit before modifying FIM for this)\\n    --   with thinking I can't imagine you're not talking about an Edit Prediction (less FIM)\\n\\n    local message = [[\\nYou are ChatGPT, a large language model trained by OpenAI.\\nKnowledge cutoff: 2024-06\\n\"},{\"type\":\"uncovered\",\"id\":\"c2cd225f2650bd3a\",\"embed_rank\":4,\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"start_line_base0\":218,\"id_int\":\"4813541368788991290\",\"rerank_score\":0.93359375,\"embed_score\":0.6315790414810181,\"end_line_base0\":227,\"rerank_rank\":5,\"text\":\"\\n\\n---@enum GptOssReasoningLevel\\nM.GptOssReasoningLevel = {\\n    off = \\\"off\\\",\\n    low = \\\"low\\\",\\n    medium = \\\"medium\\\",\\n    high = \\\"high\\\"\\n}\\n\\n\"},{\"id\":\"184ad913e1b6da67\",\"rerank_score\":0.89404296875,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":7,\"signature\":\"function M.set_fim_reasoning_level(level)\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua\",\"start_line_base0\":50,\"id_int\":\"1750450084601322087\",\"embed_score\":0.6193010807037354,\"type\":\"ts\",\"end_line_base0\":53,\"rerank_rank\":6,\"text\":\"-- * reasoning level (universal - FIM, Ask*)\\nfunction M.set_fim_reasoning_level(level)\\n    config.local_share.set_fim_reasoning_level(level)\\nend\"},{\"id\":\"8d57dee3a8c2ba45\",\"rerank_score\":0.8857421875,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":11,\"signature\":\"function M.set_rewrite_reasoning_level(level)\\n    -- FYI I wanted a separate setting largely because I intend to leave this normally on a different level vs FIM...\\n    --  FIM will normally be low/off, Rewrite/Questions will be medium/high\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"start_line_base0\":252,\"id_int\":\"961482114837166661\",\"embed_score\":0.5692070126533508,\"type\":\"ts\",\"end_line_base0\":260,\"rerank_rank\":7,\"text\":\"-- * separate reasoning level for RewriteFrontend and QuestionsFrontend\\nfunction M.set_rewrite_reasoning_level(level)\\n    -- FYI I wanted a separate setting largely because I intend to leave this normally on a different level vs FIM...\\n    --  FIM will normally be low/off, Rewrite/Questions will be medium/high\\n    local cfg = get()\\n    cfg.gptoss = cfg.gptoss or {}\\n    cfg.gptoss.rewrite_reasoning_level = level\\n    save()\\nend\"},{\"id\":\"c07ee9c7c9d5b651\",\"rerank_score\":0.87744140625,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":8,\"signature\":\"function M.set_fim_reasoning_level(level)\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"start_line_base0\":211,\"id_int\":\"4647408909786920529\",\"embed_score\":0.6183896064758301,\"type\":\"ts\",\"end_line_base0\":218,\"rerank_rank\":8,\"text\":\"-- * gptoss FIM reasoning level\\n-- thinking model's reasoning level (for thinking models, including FIM)\\nfunction M.set_fim_reasoning_level(level)\\n    local cfg = get()\\n    cfg.gptoss = cfg.gptoss or {}\\n    cfg.gptoss.fim_reasoning_level = level\\n    save()\\nend\"},{\"type\":\"uncovered\",\"id\":\"2886dbe022e3f559\",\"embed_rank\":17,\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/context/prompt_parser.lua\",\"start_line_base0\":15,\"id_int\":\"2920263164100867417\",\"rerank_score\":0.841796875,\"embed_score\":0.5190511345863342,\"end_line_base0\":24,\"rerank_rank\":9,\"text\":\"---@field apply_template_only? boolean\\n---@field include_selection? boolean\\n---@field top_k? integer\\n---@field readonly? boolean\\n---@field reasoning_low? boolean\\n---@field reasoning_medium? boolean\\n---@field reasoning_high? boolean\\n---@field reasoning_none? boolean\\nlocal M = {}\\n\\n\"},{\"id\":\"4a772e58114e694f\",\"rerank_score\":0.66552734375,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":13,\"signature\":\"function M.set_rewrite_reasoning_level(level)\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua\",\"start_line_base0\":55,\"id_int\":\"5365808436817586511\",\"embed_score\":0.5580642223358154,\"type\":\"ts\",\"end_line_base0\":58,\"rerank_rank\":10,\"text\":\"-- Set the reasoning level for the Rewrite frontend (separate from the universal setting).\\nfunction M.set_rewrite_reasoning_level(level)\\n    config.local_share.set_rewrite_reasoning_level(level)\\nend\"},{\"id\":\"11548b8c973f3f95\",\"rerank_score\":0.56982421875,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":3,\"signature\":\"function Prediction:get_reasoning()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/prediction.lua\",\"start_line_base0\":76,\"id_int\":\"1248776432637656981\",\"embed_score\":0.6405149698257446,\"type\":\"ts\",\"end_line_base0\":78,\"rerank_rank\":11,\"text\":\"function Prediction:get_reasoning()\\n    return table.concat(self.reasoning_chunks, \\\"\\\")\\nend\"},{\"id\":\"e0808d9af03b7dab\",\"rerank_score\":0.51953125,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":10,\"signature\":\"function M.cycle_rewrite_reasoning_level()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua\",\"start_line_base0\":72,\"id_int\":\"6953713521254956459\",\"embed_score\":0.5827785730361938,\"type\":\"ts\",\"end_line_base0\":74,\"rerank_rank\":12,\"text\":\"function M.cycle_rewrite_reasoning_level()\\n    return config.local_share.cycle_rewrite_reasoning_level()\\nend\"},{\"id\":\"bde38bbb40fb2f3d\",\"rerank_score\":0.5,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":5,\"signature\":\"function M.get_fim_reasoning_level()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua\",\"start_line_base0\":60,\"id_int\":\"4459561692392271677\",\"embed_score\":0.6312955617904663,\"type\":\"ts\",\"end_line_base0\":62,\"rerank_rank\":13,\"text\":\"function M.get_fim_reasoning_level()\\n    return config.local_share.get_fim_reasoning_level()\\nend\"},{\"id\":\"fe46103e04fb947f\",\"rerank_score\":0.49609375,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":12,\"signature\":\"function M.get_rewrite_reasoning_level()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua\",\"start_line_base0\":64,\"id_int\":\"9098977955706279039\",\"embed_score\":0.5608710646629333,\"type\":\"ts\",\"end_line_base0\":66,\"rerank_rank\":14,\"text\":\"function M.get_rewrite_reasoning_level()\\n    return config.local_share.get_rewrite_reasoning_level()\\nend\"},{\"id\":\"032d9be223516955\",\"rerank_score\":0.37744140625,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":6,\"signature\":\"function M.cycle_fim_reasoning_level()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua\",\"start_line_base0\":68,\"id_int\":\"229010551623215445\",\"embed_score\":0.6239354014396667,\"type\":\"ts\",\"end_line_base0\":70,\"rerank_rank\":15,\"text\":\"function M.cycle_fim_reasoning_level()\\n    return config.local_share.cycle_fim_reasoning_level()\\nend\"},{\"type\":\"uncovered\",\"id\":\"93da04121361a703\",\"embed_rank\":15,\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/gptoss/fim_harmony.lua\",\"start_line_base0\":249,\"id_int\":\"1430460307324643075\",\"rerank_score\":0.0192718505859375,\"embed_score\":0.5246067047119141,\"end_line_base0\":268,\"rerank_rank\":16,\"text\":\"\\n\\nHarmonyFimPromptBuilder.gptoss = {\\n    sentinel_tokens = {}\\n}\\n\\n---@param request FimBackend\\nfunction HarmonyFimPromptBuilder.gptoss.RETIRED_get_fim_raw_prompt_no_thinking(request)\\n    -- FYI this builder might be useful if I want to work with raw prompts for another use case...\\n    --  but I found prefill in llama-cpp (llama-server) so I don't need raw anymore for FIM w/o thinking purposes\\n\\n    -- TODO experiment 2 - combination of fixed thinking start + partial thinking finish\\n    --   add my thinking reflections from above...\\n    --   then let the model finish thinking?\\n    --   use new harmony parser for raw /completions output parsing\\n\\n    -- TODO if I allow the model to finish the reasoning... that might be best!\\n    --   Ask it to practice its change before it decides\\n    -- I could update my example too:\\n    -- {CHANNEL}analysis{MESSAGE}\\n\"},{\"id\":\"5097f23985de6e7b\",\"rerank_score\":0.01031494140625,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":16,\"signature\":\"function HarmonyFimPromptBuilder.gptoss.RETIRED_get_fim_raw_prompt_no_thinking(request)\\n    -- FYI this builder might be useful if I want to work with raw prompts for another use case...\\n    --  but I found prefill in llama-cpp (llama-server) so I don't need raw anymore for FIM w/o thinking purposes\\n\\n    -- TODO experiment 2 - combination of fixed thinking start + partial thinking finish\\n    --   add my thinking reflections from above...\\n    --   then let the model finish thinking?\\n    --   use new harmony parser for raw /completions output parsing\\n\\n    -- TODO if I allow the model to finish the reasoning... that might be best!\\n    --   Ask it to practice its change before it decides\\n    -- I could update my example too:\\n    -- {CHANNEL}analysis{MESSAGE}\\n    -- Let's practice the change first.\\n    -- I need to insert a variable name between 'return' and '+ b'.\\n    -- Candidate: a\\n    -- Check: would that make 'return a + b'? Yes.\\n    -- So the correct insertion is 'a'.\\n    -- {CHANNEL}final{MESSAGE}\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/gptoss/fim_harmony.lua\",\"start_line_base0\":255,\"id_int\":\"5807376573390548603\",\"embed_score\":0.5217500925064087,\"type\":\"ts\",\"end_line_base0\":288,\"rerank_rank\":17,\"text\":\"---@param request FimBackend\\nfunction HarmonyFimPromptBuilder.gptoss.RETIRED_get_fim_raw_prompt_no_thinking(request)\\n    -- FYI this builder might be useful if I want to work with raw prompts for another use case...\\n    --  but I found prefill in llama-cpp (llama-server) so I don't need raw anymore for FIM w/o thinking purposes\\n\\n    -- TODO experiment 2 - combination of fixed thinking start + partial thinking finish\\n    --   add my thinking reflections from above...\\n    --   then let the model finish thinking?\\n    --   use new harmony parser for raw /completions output parsing\\n\\n    -- TODO if I allow the model to finish the reasoning... that might be best!\\n    --   Ask it to practice its change before it decides\\n    -- I could update my example too:\\n    -- {CHANNEL}analysis{MESSAGE}\\n    -- Let's practice the change first.\\n    -- I need to insert a variable name between 'return' and '+ b'.\\n    -- Candidate: a\\n    -- Check: would that make 'return a + b'? Yes.\\n    -- So the correct insertion is 'a'.\\n    -- {CHANNEL}final{MESSAGE}\\n\\n    local builder = HarmonyFimPromptBuilder.new()\\n        -- FYI MUST use role=developer explicitly since I am building the full prompt\\n        --   when using messages then the jinja template for gptoss will map role=system => role=developer\\n        --   but that won't happen here! as there is no template!\\n        :developer()\\n        :user(HarmonyFimPromptBuilder.context_user_msg(request))\\n        :user(rag_instructions.semantic_grep_user_message(request.rag_matches))\\n        :user(HarmonyFimPromptBuilder.fim_prompt(request))\\n        :set_thinking()\\n        :start_assistant_final_response() -- this forces the model to respond w/o any further thinking\\n\\n    return builder:build_raw_prompt()\\nend\"}]}"
+      },{
+        "reasoning_content":"We need to add a function to get the reasoning level based on includes. Let's locate the file prompt_parser.lua lines near the end.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"WkTxXDKGpgfpBcOHshvrruKeyPx3zQfK",
+            "function":{
+              "arguments":"{\n  \"patch\": \"*** Begin Patch\\n*** Update File: lua/ask-openai/frontends/context/prompt_parser.lua\\n@@\\n function M.render(prompt)\\n@@\\n     includes.rendered_prompt = rendered_prompt\\n     log:info(\\\"includes\\\", vim.inspect(includes))\\n     return includes\\n end\\n+\\n+--- Return the reasoning level string based on the includes result.\\n+-- If none of the reasoning flags are set, returns nil.\\n+-- If multiple are set, the first one in the order low, medium, high is returned.\\n+---@param includes ParseIncludesResult\\n+---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\n+function M.get_reasoning_level(includes)\\n+    if includes.reasoning_low then\\n+        return \\\"low\\\"\\n+    elseif includes.reasoning_medium then\\n+        return \\\"medium\\\"\\n+    elseif includes.reasoning_high then\\n+        return \\\"high\\\"\\n+    else\\n+        return nil\\n+    end\\n+end\\n*** End Patch\"\n}",
+              "name":"apply_patch"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"WkTxXDKGpgfpBcOHshvrruKeyPx3zQfK",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Success. Updated the following files:\\nM lua/ask-openai/frontends/context/prompt_parser.lua\\n\"}]}"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"assistant\nThe user also says \"add a function to get nil if none are set, otherwise return high/medium/low for reasoning level\". My function returns low/medium/high based on includes. That matches. They said \"high/medium/low\" order. I returned low first. But the user said \"otherwise return high/medium/low for reasoning level\". This could be interpreted as returning \"high\" if high is set, else medium if medium set, else low if low set. Or return whichever is set, not a particular order. In typical usage, slash commands are exclusive; they might not allow multiple reasoning flags. So the order is not crucial. But the phrase \"return high/medium/low\" might just be listing possibilities. In typical reasoning levels, they might want the level string matching the slash command. Perhaps they'd like to return the level that is set. My function checks low first, then medium, then high. That returns low if both low and high are set (though that should not happen). But to be safe, perhaps they want to check for high first, then medium, then low (i.e., prioritize high). Let's consider typical scenario: user types \"/high\" slash command; includes.high is true, low and medium false. The function returns low? No, it checks low first; low false, then medium false, then high true -> returns \"high\". So fine.\n\nBut if multiple flags are present, it's ambiguous; we could decide to prioritize high. But likely they won't have multiple. The code works.\n\nBut maybe they want a function that reads from the includes and returns nil if none are set, else returns the level string. We added that. However, they might want a function that returns nil if none of the reasoning flags are set, otherwise return the level as a string. But maybe they also want a function to parse reasoning level from includes or from the parsed includes result. It's fine.\n\nBut they might want this function in M that could be used elsewhere. Already added to M.\n\nPotentially need to add function to the module's return. Since the module returns M at bottom, it's fine.\n\nCheck that we used correct type annotation for ParseIncludesResult: It is defined earlier as a class with fields reasoning_low? boolean, reasoning_medium? boolean, reasoning_high? boolean, reasoning_none? boolean. So includes param type is correct.\n\nBut maybe they want to consider reasoning_none? The slash command REASONING_NONE presumably indicates no reasoning. The includes table will have includes.reasoning_none true if the /none command is present. The function we added does not consider that; it will return nil if reasoning_none is set (since all other flags false). That may be acceptable: reasoning_none is essentially \"none\". So returning nil indicates no reasoning. Good.\n\nOne might want to check includes.reasoning_none and return nil explicitly, but nil is\ncontinue"
+      },{
+        "reasoning_content":"Now, confirm the function is inserted correctly: It is after the return includes line but before the final return M at end of file. Let's view file snippet to ensure proper placement.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"5VhC8XqdroMi4H9be6rmGKPHdvvCx3PL",
+            "function":{
+              "arguments":"{\"patch\":\"*** Begin Patch\\n*** Update File: lua/ask-openai/frontends/context/prompt_parser.lua\\n@@\\n-    includes.rendered_prompt = rendered_prompt\\n-    log:info(\\\"includes\\\", vim.inspect(includes))\\n-    return includes\\n-end\\n-\\n-return M\\n+    includes.rendered_prompt = rendered_prompt\\n+    log:info(\\\"includes\\\", vim.inspect(includes))\\n+    return includes\\n+end\\n+\\n+--- Return the reasoning level string based on the includes result.\\n+-- If none of the reasoning flags are set, returns nil.\\n+-- If multiple are set, the first one in the order low, medium, high is returned.\\n+---@param includes ParseIncludesResult\\n+---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\n+function M.get_reasoning_level(includes)\\n+    if includes.reasoning_low then\\n+        return \\\"low\\\"\\n+    elseif includes.reasoning_medium then\\n+        return \\\"medium\\\"\\n+    elseif includes.reasoning_high then\\n+        return \\\"high\\\"\\n+    else\\n+        return nil\\n+    end\\n+end\\n+\\n+return M\\n*** End Patch\"}",
+              "name":"apply_patch"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"5VhC8XqdroMi4H9be6rmGKPHdvvCx3PL",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Failed to find expected lines in lua/ask-openai/frontends/context/prompt_parser.lua:\\n    includes.rendered_prompt = rendered_prompt\\n    log:info(\\\"includes\\\", vim.inspect(includes))\\n    return includes\\nend\\n\\nreturn M\\nTraceback (most recent call last):\\n  File \\\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/apply_patch_wrapper.py\\\", line 83, in <module>\\n    main()\\n  File \\\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/apply_patch_wrapper.py\\\", line 60, in main\\n    subprocess.run([apply_patch_rs], input=content, text=True, check=True)\\n  File \\\"/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py\\\", line 571, in run\\n    raise CalledProcessError(retcode, process.args,\\nsubprocess.CalledProcessError: Command '[PosixPath('~/repos/github/openai/codex/codex-rs/target/release/apply_patch')]' returned non-zero exit status 1.\\n\"},{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"1\"}]}"
+      },{
+        "reasoning_content":"It failed to find the exact lines because the file might have changed since we applied earlier patch. We need to view the file to see its content. Let's open the file.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"HvAVSfPeAYkCojTaeEkwcVG5DsWD6H7S",
+            "function":{
+              "arguments":"{\"patch\":\"*** Begin Patch\\n*** Update File: lua/ask-openai/frontends/context/prompt_parser.lua\\n@@\\n-    includes.rendered_prompt = rendered_prompt\\n-    log:info(\\\"includes\\\", vim.inspect(includes))\\n-    return includes\\n-end\\n-\\n-return M\\n+    includes.rendered_prompt = rendered_prompt\\n+    log:info(\\\"includes\\\", vim.inspect(includes))\\n+    return includes\\n+end\\n+\\n+--- Return the reasoning level string based on the includes result.\\n+-- If none of the reasoning flags are set, returns nil.\\n+-- If multiple are set, the first one in the order low, medium, high is returned.\\n+---@param includes ParseIncludesResult\\n+---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\n+function M.get_reasoning_level(includes)\\n+    if includes.reasoning_low then\\n+        return \\\"low\\\"\\n+    elseif includes.reasoning_medium then\\n+        return \\\"medium\\\"\\n+    elseif includes.reasoning_high then\\n+        return \\\"high\\\"\\n+    else\\n+        return nil\\n+    end\\n+end\\n+\\n+return M\\n*** End Patch\"}",
+              "name":"apply_patch"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"HvAVSfPeAYkCojTaeEkwcVG5DsWD6H7S",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Failed to find expected lines in lua/ask-openai/frontends/context/prompt_parser.lua:\\n    includes.rendered_prompt = rendered_prompt\\n    log:info(\\\"includes\\\", vim.inspect(includes))\\n    return includes\\nend\\n\\nreturn M\\nTraceback (most recent call last):\\n  File \\\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/apply_patch_wrapper.py\\\", line 83, in <module>\\n    main()\\n  File \\\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/apply_patch_wrapper.py\\\", line 60, in main\\n    subprocess.run([apply_patch_rs], input=content, text=True, check=True)\\n  File \\\"/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py\\\", line 571, in run\\n    raise CalledProcessError(retcode, process.args,\\nsubprocess.CalledProcessError: Command '[PosixPath('~/repos/github/openai/codex/codex-rs/target/release/apply_patch')]' returned non-zero exit status 1.\\n\"},{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"1\"}]}"
+      },{
+        "reasoning_content":"We need to see the actual content of the file to know where to insert. Let's read the file.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"25i7aCOy9nR6v1gtpoOdSp5pjjH1aIVV",
+            "function":{
+              "arguments":"{\"cwd\":\"~/repos/github/g0t4/ask-openai.nvim\",\"command_line\":\"sed -n '1,200p' lua/ask-openai/frontends/context/prompt_parser.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"25i7aCOy9nR6v1gtpoOdSp5pjjH1aIVV",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"},{\"type\":\"text\",\"name\":\"STDOUT\",\"text\":\"local log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal skills = require(\\\"ask-openai.frontends.skills\\\")\\n---@class ParseIncludesResult\\n---@field all boolean\\n---@field yanks boolean\\n---@field commits boolean\\n---@field current_file boolean\\n---@field open_files boolean\\n---@field ctags? boolean\\n---@field matching_ctags? boolean\\n---@field norag? boolean\\n---@field project? boolean\\n---@field git_diff? boolean\\n---@field rendered_prompt string\\n---@field use_tools? boolean\\n---@field apply_template_only? boolean\\n---@field include_selection? boolean\\n---@field top_k? integer\\n---@field readonly? boolean\\n---@field reasoning_low? boolean\\n---@field reasoning_medium? boolean\\n---@field reasoning_high? boolean\\n---@field reasoning_none? boolean\\nlocal M = {}\\n\\n---@param prompt string\\n---@return integer?, string\\nfunction M.strip_patterns_from_prompt(prompt)\\n    -- i.e. /k=10\\n    local top_k = nil\\n    local function strip(match)\\n        top_k = tonumber(match)\\n        return \\\"\\\" -- strip\\n    end\\n    -- FYI CANNOT HAVE /k= butted up against ANYTHING but whitespace\\n    prompt = prompt:gsub(\\\"^%s*/k=(%d+)%s*\\\", strip) -- start (specific)\\n    prompt = prompt:gsub(\\\"%s*/k=(%d+)%s*$\\\", strip) -- end (specific)\\n    prompt = prompt:gsub(\\\"%s*/k=(%d+)%s*\\\", function(match)\\n        top_k = tonumber(match)\\n        return \\\" \\\" -- replace w/ one space\\n    end) -- middle matches (spaces on both sides)\\n    return top_k, prompt\\nend\\n\\n-- expose the slash commands list publicly for reuse elsewhere\\nM.slash_commands = {\\n    YANKS            = \\\"/yanks\\\",\\n    ALL              = \\\"/all\\\",\\n    COMMITS          = \\\"/commits\\\",\\n    FILE             = \\\"/file\\\",\\n    OPEN_FILES       = \\\"/WIP_open_files\\\",\\n    TOOLS            = \\\"/tools\\\",\\n    SELECTION        = \\\"/selection\\\",\\n    TEMPLATE_ONLY    = \\\"/WIP_template\\\",\\n    NORAG            = \\\"/norag\\\",\\n    READONLY         = \\\"/readonly\\\",\\n\\n    -- reasoning levels\\n    REASONING_LOW    = \\\"/low\\\",\\n    REASONING_MEDIUM = \\\"/medium\\\",\\n    REASONING_HIGH   = \\\"/high\\\",\\n    REASONING_NONE   = \\\"/none\\\",\\n}\\n\\n--- Completion function for slash commands used by user commands.\\n-- Returns a list of completions matching the lead entered.\\n---@param arglead string The current argument lead typed by the user.\\n---@param cmdline string The full command line.\\n---@param cursorpos number The cursor position.\\n---@return string[] List of matching completions.\\nfunction M.SlashCommandCompletion(arglead, cmdline, cursorpos)\\n    local result = {}\\n    local escaped = vim.pesc(arglead)\\n\\n    -- * static slash commands\\n    for _, cmd in pairs(M.slash_commands) do\\n        if cmd:find('^' .. escaped) then\\n            table.insert(result, cmd)\\n        end\\n    end\\n\\n    -- * add skill prompts\\n    -- FYI first load will happen on first completion, s/b fine for slight delay\\n    for _, cmd in ipairs(skills.get_skill_commands()) do\\n        if cmd:find('^' .. escaped) then\\n            table.insert(result, \\\"/\\\" .. cmd)\\n        end\\n    end\\n    return result\\nend\\n\\n---@param prompt string\\n---@param command string\\n---@return boolean, string\\nlocal function strip_slash_command_from_prompt(prompt, command)\\n    -- The original implementation removed only a single occurrence of a command\\n    -- (start, end, or middle) which caused failures when the same slash command\\n    -- appeared multiple times in the prompt. To support duplicate commands we\\n    -- repeatedly apply the removal patterns until the prompt stabilises.\\n    local final_prompt = prompt\\n    while true do\\n        local start_of_iteration_prompt = final_prompt\\n        -- Remove command at the start (optional leading whitespace, mandatory\\n        -- trailing whitespace to separate from following text).\\n        final_prompt = final_prompt:gsub(\\\"^%s*\\\" .. command .. \\\"%s+\\\", \\\"\\\")\\n        -- Remove command at the end (preceded by whitespace, optional trailing\\n        -- whitespace before end of string).\\n        final_prompt = final_prompt:gsub(\\\"%s+\\\" .. command .. \\\"%s*$\\\", \\\"\\\")\\n        -- Remove command surrounded by whitespace on both sides, preserving a\\n        -- single space where the command was.\\n        final_prompt = final_prompt:gsub(\\\"(%s+)\\\" .. command .. \\\"%s+\\\", \\\"%1\\\")\\n        if final_prompt == start_of_iteration_prompt then\\n            break\\n        end\\n    end\\n    local any_removed = final_prompt ~= prompt\\n    if any_removed then\\n        log:info(\\\"original prompt: `\\\" .. prompt .. \\\"`\\\")\\n        log:info(\\\"         detect: `\\\" .. command .. \\\"`\\\")\\n        log:info(\\\"     new prompt: `\\\" .. final_prompt .. \\\"`\\\")\\n    end\\n    return any_removed, final_prompt\\nend\\n\\n---@param prompt? string\\n---@return ParseIncludesResult\\nfunction M.render(prompt)\\n    prompt = prompt or \\\"\\\"\\n\\n    -- * inject skills first\\n    local skill_contents = {}\\n    local rendered_prompt = prompt\\n    for _, skill_name in pairs(skills.get_skill_commands()) do\\n        local cmd = \\\"/\\\" .. skill_name\\n        found, rendered_prompt = strip_slash_command_from_prompt(rendered_prompt, cmd)\\n        if found then\\n            local content = skills.load_skill(skill_name)\\n            if content then\\n                table.insert(skill_contents, content)\\n            end\\n        end\\n    end\\n    if #skill_contents > 0 then\\n        rendered_prompt = rendered_prompt .. \\\"\\\\n\\\" .. table.concat(skill_contents, \\\"\\\\n\\\")\\n    end\\n\\n    -- * detect pattern based fields\\n    local top_k, rendered_prompt = M.strip_patterns_from_prompt(rendered_prompt)\\n\\n    ---@type table<string, string>\\n    M.slash_command_to_field = {\\n        [M.slash_commands.ALL] = \\\"all\\\",\\n        [M.slash_commands.YANKS] = \\\"yanks\\\",\\n        [M.slash_commands.COMMITS] = \\\"commits\\\",\\n        [M.slash_commands.FILE] = \\\"current_file\\\",\\n        [M.slash_commands.OPEN_FILES] = \\\"open_files\\\",\\n        [M.slash_commands.TOOLS] = \\\"use_tools\\\",\\n        [M.slash_commands.READONLY] = \\\"readonly\\\",\\n        [M.slash_commands.TEMPLATE_ONLY] = \\\"apply_template_only\\\",\\n        [M.slash_commands.SELECTION] = \\\"include_selection\\\",\\n        [M.slash_commands.NORAG] = \\\"norag\\\",\\n\\n        -- reasoning levels\\n        [M.slash_commands.REASONING_LOW] = \\\"reasoning_low\\\",\\n        [M.slash_commands.REASONING_MEDIUM] = \\\"reasoning_medium\\\",\\n        [M.slash_commands.REASONING_HIGH] = \\\"reasoning_high\\\",\\n        [M.slash_commands.REASONING_NONE] = \\\"reasoning_none\\\",\\n    }\\n\\n    ---@type ParseIncludesResult\\n    local includes = {\\n        -- patterns:\\n        top_k = top_k,\\n    }\\n    -- * detect static commands\\n    for _, command in pairs(M.slash_commands) do\\n        local found\\n        found, rendered_prompt = strip_slash_command_from_prompt(rendered_prompt, command)\\n        local field = M.slash_command_to_field[command]\\n        if field then\\n            includes[field] = found\\n        else\\n            vim.notify(\\\"missing field for slash command: \\\" .. command, vim.log.levels.ERROR)\\n            log:error(\\\"missing field for slash command: \\\" .. command)\\n        end\\n    end\\n\\n    -- propagate the effect of /all\\n    if includes.all then\\n        -- defaults for /all:\\n        includes.yanks = true\\n        includes.commits = true\\n        includes.current_file = true\\n        includes.open_files = true\\n    end\\n\\n    includes.rendered_prompt = rendered_prompt\\n    log:info(\\\"includes\\\", vim.inspect(includes))\\n    return includes\\nend\\n\"}]}"
+      },{
+        "reasoning_content":"The file ends at the return includes; but there is no `return M` at bottom. Indeed after the function `M.render`, the file ends? Let's scroll further to see if there's more.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"6ouGdATVKAyb4iqVlzBCtOTJg1Bz1O92",
+            "function":{
+              "arguments":"{\"cwd\": \"~/repos/github/g0t4/ask-openai.nvim\", \"command_line\": \"sed -n '200,400p' lua/ask-openai/frontends/context/prompt_parser.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"6ouGdATVKAyb4iqVlzBCtOTJg1Bz1O92",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"},{\"type\":\"text\",\"name\":\"STDOUT\",\"text\":\"end\\n\\n--- Return the reasoning level string based on the includes result.\\n-- If none of the reasoning flags are set, returns nil.\\n-- If multiple are set, the first one in the order low, medium, high is returned.\\n---@param includes ParseIncludesResult\\n---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\nfunction M.get_reasoning_level(includes)\\n    if includes.reasoning_low then\\n        return \\\"low\\\"\\n    elseif includes.reasoning_medium then\\n        return \\\"medium\\\"\\n    elseif includes.reasoning_high then\\n        return \\\"high\\\"\\n    else\\n        return nil\\n    end\\nend\\n\\nreturn M\\n\"}]}"
+      },{
+        "reasoning_content":"It appears the file already includes our added function and return M at the bottom, after the earlier patch we applied. The earlier patch added the function after return includes but before return M, but we attempted to reapply patch but got errors because file changed. However, we saw the file already includes the function and return M.\n\nThus the patch succeeded earlier, but our second attempt failed because the file already contains the function. The first patch added the function after M.render. Let's inspect the file from top to bottom to verify correct placement.\n\nScrolling again from start to end to see the entire file content.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"j5uigIzxQ3nLQ3UljgP4vWxJWGRZXKMD",
+            "function":{
+              "arguments":"{\"cwd\": \"~/repos/github/g0t4/ask-openai.nvim\", \"command_line\": \"sed -n '1,500p' lua/ask-openai/frontends/context/prompt_parser.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"j5uigIzxQ3nLQ3UljgP4vWxJWGRZXKMD",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"},{\"type\":\"text\",\"name\":\"STDOUT\",\"text\":\"local log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal skills = require(\\\"ask-openai.frontends.skills\\\")\\n---@class ParseIncludesResult\\n---@field all boolean\\n---@field yanks boolean\\n---@field commits boolean\\n---@field current_file boolean\\n---@field open_files boolean\\n---@field ctags? boolean\\n---@field matching_ctags? boolean\\n---@field norag? boolean\\n---@field project? boolean\\n---@field git_diff? boolean\\n---@field rendered_prompt string\\n---@field use_tools? boolean\\n---@field apply_template_only? boolean\\n---@field include_selection? boolean\\n---@field top_k? integer\\n---@field readonly? boolean\\n---@field reasoning_low? boolean\\n---@field reasoning_medium? boolean\\n---@field reasoning_high? boolean\\n---@field reasoning_none? boolean\\nlocal M = {}\\n\\n---@param prompt string\\n---@return integer?, string\\nfunction M.strip_patterns_from_prompt(prompt)\\n    -- i.e. /k=10\\n    local top_k = nil\\n    local function strip(match)\\n        top_k = tonumber(match)\\n        return \\\"\\\" -- strip\\n    end\\n    -- FYI CANNOT HAVE /k= butted up against ANYTHING but whitespace\\n    prompt = prompt:gsub(\\\"^%s*/k=(%d+)%s*\\\", strip) -- start (specific)\\n    prompt = prompt:gsub(\\\"%s*/k=(%d+)%s*$\\\", strip) -- end (specific)\\n    prompt = prompt:gsub(\\\"%s*/k=(%d+)%s*\\\", function(match)\\n        top_k = tonumber(match)\\n        return \\\" \\\" -- replace w/ one space\\n    end) -- middle matches (spaces on both sides)\\n    return top_k, prompt\\nend\\n\\n-- expose the slash commands list publicly for reuse elsewhere\\nM.slash_commands = {\\n    YANKS            = \\\"/yanks\\\",\\n    ALL              = \\\"/all\\\",\\n    COMMITS          = \\\"/commits\\\",\\n    FILE             = \\\"/file\\\",\\n    OPEN_FILES       = \\\"/WIP_open_files\\\",\\n    TOOLS            = \\\"/tools\\\",\\n    SELECTION        = \\\"/selection\\\",\\n    TEMPLATE_ONLY    = \\\"/WIP_template\\\",\\n    NORAG            = \\\"/norag\\\",\\n    READONLY         = \\\"/readonly\\\",\\n\\n    -- reasoning levels\\n    REASONING_LOW    = \\\"/low\\\",\\n    REASONING_MEDIUM = \\\"/medium\\\",\\n    REASONING_HIGH   = \\\"/high\\\",\\n    REASONING_NONE   = \\\"/none\\\",\\n}\\n\\n--- Completion function for slash commands used by user commands.\\n-- Returns a list of completions matching the lead entered.\\n---@param arglead string The current argument lead typed by the user.\\n---@param cmdline string The full command line.\\n---@param cursorpos number The cursor position.\\n---@return string[] List of matching completions.\\nfunction M.SlashCommandCompletion(arglead, cmdline, cursorpos)\\n    local result = {}\\n    local escaped = vim.pesc(arglead)\\n\\n    -- * static slash commands\\n    for _, cmd in pairs(M.slash_commands) do\\n        if cmd:find('^' .. escaped) then\\n            table.insert(result, cmd)\\n        end\\n    end\\n\\n    -- * add skill prompts\\n    -- FYI first load will happen on first completion, s/b fine for slight delay\\n    for _, cmd in ipairs(skills.get_skill_commands()) do\\n        if cmd:find('^' .. escaped) then\\n            table.insert(result, \\\"/\\\" .. cmd)\\n        end\\n    end\\n    return result\\nend\\n\\n---@param prompt string\\n---@param command string\\n---@return boolean, string\\nlocal function strip_slash_command_from_prompt(prompt, command)\\n    -- The original implementation removed only a single occurrence of a command\\n    -- (start, end, or middle) which caused failures when the same slash command\\n    -- appeared multiple times in the prompt. To support duplicate commands we\\n    -- repeatedly apply the removal patterns until the prompt stabilises.\\n    local final_prompt = prompt\\n    while true do\\n        local start_of_iteration_prompt = final_prompt\\n        -- Remove command at the start (optional leading whitespace, mandatory\\n        -- trailing whitespace to separate from following text).\\n        final_prompt = final_prompt:gsub(\\\"^%s*\\\" .. command .. \\\"%s+\\\", \\\"\\\")\\n        -- Remove command at the end (preceded by whitespace, optional trailing\\n        -- whitespace before end of string).\\n        final_prompt = final_prompt:gsub(\\\"%s+\\\" .. command .. \\\"%s*$\\\", \\\"\\\")\\n        -- Remove command surrounded by whitespace on both sides, preserving a\\n        -- single space where the command was.\\n        final_prompt = final_prompt:gsub(\\\"(%s+)\\\" .. command .. \\\"%s+\\\", \\\"%1\\\")\\n        if final_prompt == start_of_iteration_prompt then\\n            break\\n        end\\n    end\\n    local any_removed = final_prompt ~= prompt\\n    if any_removed then\\n        log:info(\\\"original prompt: `\\\" .. prompt .. \\\"`\\\")\\n        log:info(\\\"         detect: `\\\" .. command .. \\\"`\\\")\\n        log:info(\\\"     new prompt: `\\\" .. final_prompt .. \\\"`\\\")\\n    end\\n    return any_removed, final_prompt\\nend\\n\\n---@param prompt? string\\n---@return ParseIncludesResult\\nfunction M.render(prompt)\\n    prompt = prompt or \\\"\\\"\\n\\n    -- * inject skills first\\n    local skill_contents = {}\\n    local rendered_prompt = prompt\\n    for _, skill_name in pairs(skills.get_skill_commands()) do\\n        local cmd = \\\"/\\\" .. skill_name\\n        found, rendered_prompt = strip_slash_command_from_prompt(rendered_prompt, cmd)\\n        if found then\\n            local content = skills.load_skill(skill_name)\\n            if content then\\n                table.insert(skill_contents, content)\\n            end\\n        end\\n    end\\n    if #skill_contents > 0 then\\n        rendered_prompt = rendered_prompt .. \\\"\\\\n\\\" .. table.concat(skill_contents, \\\"\\\\n\\\")\\n    end\\n\\n    -- * detect pattern based fields\\n    local top_k, rendered_prompt = M.strip_patterns_from_prompt(rendered_prompt)\\n\\n    ---@type table<string, string>\\n    M.slash_command_to_field = {\\n        [M.slash_commands.ALL] = \\\"all\\\",\\n        [M.slash_commands.YANKS] = \\\"yanks\\\",\\n        [M.slash_commands.COMMITS] = \\\"commits\\\",\\n        [M.slash_commands.FILE] = \\\"current_file\\\",\\n        [M.slash_commands.OPEN_FILES] = \\\"open_files\\\",\\n        [M.slash_commands.TOOLS] = \\\"use_tools\\\",\\n        [M.slash_commands.READONLY] = \\\"readonly\\\",\\n        [M.slash_commands.TEMPLATE_ONLY] = \\\"apply_template_only\\\",\\n        [M.slash_commands.SELECTION] = \\\"include_selection\\\",\\n        [M.slash_commands.NORAG] = \\\"norag\\\",\\n\\n        -- reasoning levels\\n        [M.slash_commands.REASONING_LOW] = \\\"reasoning_low\\\",\\n        [M.slash_commands.REASONING_MEDIUM] = \\\"reasoning_medium\\\",\\n        [M.slash_commands.REASONING_HIGH] = \\\"reasoning_high\\\",\\n        [M.slash_commands.REASONING_NONE] = \\\"reasoning_none\\\",\\n    }\\n\\n    ---@type ParseIncludesResult\\n    local includes = {\\n        -- patterns:\\n        top_k = top_k,\\n    }\\n    -- * detect static commands\\n    for _, command in pairs(M.slash_commands) do\\n        local found\\n        found, rendered_prompt = strip_slash_command_from_prompt(rendered_prompt, command)\\n        local field = M.slash_command_to_field[command]\\n        if field then\\n            includes[field] = found\\n        else\\n            vim.notify(\\\"missing field for slash command: \\\" .. command, vim.log.levels.ERROR)\\n            log:error(\\\"missing field for slash command: \\\" .. command)\\n        end\\n    end\\n\\n    -- propagate the effect of /all\\n    if includes.all then\\n        -- defaults for /all:\\n        includes.yanks = true\\n        includes.commits = true\\n        includes.current_file = true\\n        includes.open_files = true\\n    end\\n\\n    includes.rendered_prompt = rendered_prompt\\n    log:info(\\\"includes\\\", vim.inspect(includes))\\n    return includes\\nend\\n\\n--- Return the reasoning level string based on the includes result.\\n-- If none of the reasoning flags are set, returns nil.\\n-- If multiple are set, the first one in the order low, medium, high is returned.\\n---@param includes ParseIncludesResult\\n---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\nfunction M.get_reasoning_level(includes)\\n    if includes.reasoning_low then\\n        return \\\"low\\\"\\n    elseif includes.reasoning_medium then\\n        return \\\"medium\\\"\\n    elseif includes.reasoning_high then\\n        return \\\"high\\\"\\n    else\\n        return nil\\n    end\\nend\\n\\nreturn M\\n\"}]}"
+      },{
+        "reasoning_content":"The function is correctly added after M.render. The code now includes the function and `return M`. All good.\n\nPotential concerns: The function `M.get_reasoning_level` expects a ParseIncludesResult, but may be used elsewhere. It currently checks only low, medium, high. It ignores reasoning_none; if that is true, it will return nil, which is appropriate.\n\nOne might want to also consider that includes.reasoning_low etc could be nil or false. The check `if includes.reasoning_low then` works because nil and false will be false.\n\nThus patch is correct.\n\nNow commit changes. The tool hasn't performed a commit; we need to commit. Use `git add`? Actually apply_patch already changes file but not committed. We need to commit with git. Use run_process to commit with correct author.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"1to6RhzZYKS6EQmyetRJL9nIZrypIsSX",
+            "function":{
+              "arguments":"{\"cwd\": \"~/repos/github/g0t4/ask-openai.nvim\", \"command_line\": \"git add lua/ask-openai/frontends/context/prompt_parser.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"1to6RhzZYKS6EQmyetRJL9nIZrypIsSX",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"}]}"
+      },{
+        "reasoning_content":"Now commit with message and author.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"qeFmOyd8Sr5JWyGrJC8dHuf4se5ySJyk",
+            "function":{
+              "arguments":"{\"cwd\": \"~/repos/github/g0t4/ask-openai.nvim\", \"command_line\": \"git commit -m \\\"Add get_reasoning_level function to prompt_parser\\\" --author=\\\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\\\"\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"qeFmOyd8Sr5JWyGrJC8dHuf4se5ySJyk",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"},{\"type\":\"text\",\"name\":\"STDOUT\",\"text\":\"[master 9c0b02d38] Add get_reasoning_level function to prompt_parser\\n Author: gptoss120b <wes.mcclure+gptoss120b@gmail.com>\\n 1 file changed, 17 insertions(+)\\n\"},{\"type\":\"text\",\"name\":\"STDERR\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\"}]}"
+      },{
+        "reasoning_content":"Now the changes are committed. Let's double-check the file diff.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"lcpud6t4rLH8QYs6XmSyDqOPUpR19wjd",
+            "function":{
+              "arguments":"{\"cwd\": \"~/repos/github/g0t4/ask-openai.nvim\", \"command_line\": \"git diff HEAD~1 HEAD -- lua/ask-openai/frontends/context/prompt_parser.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"lcpud6t4rLH8QYs6XmSyDqOPUpR19wjd",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"},{\"type\":\"text\",\"name\":\"STDOUT\",\"text\":\"diff --git a/lua/ask-openai/frontends/context/prompt_parser.lua b/lua/ask-openai/frontends/context/prompt_parser.lua\\nindex 6f92e89a5..842eb9d86 100644\\n--- a/lua/ask-openai/frontends/context/prompt_parser.lua\\n+++ b/lua/ask-openai/frontends/context/prompt_parser.lua\\n@@ -199,4 +199,21 @@ function M.render(prompt)\\n     return includes\\n end\\n \\n+--- Return the reasoning level string based on the includes result.\\n+-- If none of the reasoning flags are set, returns nil.\\n+-- If multiple are set, the first one in the order low, medium, high is returned.\\n+---@param includes ParseIncludesResult\\n+---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\n+function M.get_reasoning_level(includes)\\n+    if includes.reasoning_low then\\n+        return \\\"low\\\"\\n+    elseif includes.reasoning_medium then\\n+        return \\\"medium\\\"\\n+    elseif includes.reasoning_high then\\n+        return \\\"high\\\"\\n+    else\\n+        return nil\\n+    end\\n+end\\n+\\n return M\\n\"}]}"
+      },{
+        "reasoning_content":"All good.\n\nPotential improvement: Might want to add function to M at top or after definitions. Already added after M.render.\n\nThe user requested \"add a function to get nil if none are set, otherwise return high/medium/low for reasoning level\". Our function returns nil if no reasoning flags set. It returns low, medium, high based on flags. It does not return \"none\" as a string, but returns nil for none. That matches request.\n\nPotentially they'd want to prioritize high first; but not critical.\n\nNow produce final answer.",
+        "role":"assistant",
+        "tool_calls":[],
+        "_logged":true,
+        "content":"Implemented `M.get_reasoning_level` in `prompt_parser.lua`:\n\n- Returns `\"low\"`, `\"medium\"`, or `\"high\"` based on which reasoning flag is set.\n- Returns `nil` when none are set.\n- Added proper annotations and returned `M` unchanged."
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"nix your new comments, keep the type hints though "
+      },{
+        "reasoning_content":"The user wants to \"nix your new comments, keep the type hints though\". Means they want to remove the comments added in the patch (the comment lines above the function). However, keep the type hints (EmmyLua annotations) as they are. So we need to remove the comment lines that are normal comments (starting with `---` maybe) that explain the function, but keep the `---@param` and `---@return` type hint lines.\n\nCurrently we have:\n\n```lua\n--- Return the reasoning level string based on the includes result.\n-- If none of the reasoning flags are set, returns nil.\n-- If multiple are set, the first one in the order low, medium, high is returned.\n---@param includes ParseIncludesResult\n---@return \"low\"|\"medium\"|\"high\"|nil\nfunction M.get_reasoning_level(includes)\n    if includes.reasoning_low then\n        return \"low\"\n    elseif includes.reasoning_medium then\n        return \"medium\"\n    elseif includes.reasoning_high then\n        return \"high\"\n    else\n        return nil\n    end\nend\n```\n\nWe need to remove the three comment lines at the top, i.e.:\n\n- `--- Return the reasoning level string based on the includes result.`\n- `-- If none of the reasoning flags are set, returns nil.`\n- `-- If multiple are set, the first one in the order low, medium, high is returned.`\n\nBut keep the `---@param` and `---@return` lines. Also perhaps we need to keep the function code.\n\nWe need to apply a patch to modify the file accordingly. Let's create a patch that updates the file, removing those comment lines.\n\nWe need to check the exact line numbers or context. Use apply_patch to delete those comment lines.\n\nFirst, let's view the region around the function.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"9Cks3ygqd7NUXuVWCLUQfjKehIzqITvp",
+            "function":{
+              "arguments":"{\"cwd\": \"~/repos/github/g0t4/ask-openai.nvim\", \"command_line\": \"sed -n '190,230p' lua/ask-openai/frontends/context/prompt_parser.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"9Cks3ygqd7NUXuVWCLUQfjKehIzqITvp",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"},{\"type\":\"text\",\"name\":\"STDOUT\",\"text\":\"        -- defaults for /all:\\n        includes.yanks = true\\n        includes.commits = true\\n        includes.current_file = true\\n        includes.open_files = true\\n    end\\n\\n    includes.rendered_prompt = rendered_prompt\\n    log:info(\\\"includes\\\", vim.inspect(includes))\\n    return includes\\nend\\n\\n--- Return the reasoning level string based on the includes result.\\n-- If none of the reasoning flags are set, returns nil.\\n-- If multiple are set, the first one in the order low, medium, high is returned.\\n---@param includes ParseIncludesResult\\n---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\nfunction M.get_reasoning_level(includes)\\n    if includes.reasoning_low then\\n        return \\\"low\\\"\\n    elseif includes.reasoning_medium then\\n        return \\\"medium\\\"\\n    elseif includes.reasoning_high then\\n        return \\\"high\\\"\\n    else\\n        return nil\\n    end\\nend\\n\\nreturn M\\n\"}]}"
+      },{
+        "reasoning_content":"Now we need to remove the comment lines. The comment lines start with `---` and `--`. The lines are:\n\n1. `--- Return the reasoning level string based on the includes result.`\n2. `-- If none of the reasoning flags are set, returns nil.`\n3. `-- If multiple are set, the first one in the order low, medium, high is returned.`\n\nWe should keep the type hint lines (`---@param includes ParseIncludesResult` and `---@return \"low\"|\"medium\"|\"high\"|nil`).\n\nThus, the patch will remove lines 1-3. Use update patch with hunks.\n\nPatch format: `*** Begin Patch` etc.\n\nWe need to locate the lines exactly. We'll use the context lines. We'll replace the block with only the type hints and function.\n\nThus patch:\n\n```diff\n@@\n--- Return the reasoning level string based on the includes result.\n-- If none of the reasoning flags are set, returns nil.\n-- If multiple are set, the first one in the order low, medium, high is returned.\n---@param includes ParseIncludesResult\n---@return \"low\"|\"medium\"|\"high\"|nil\nfunction M.get_reasoning_level(includes)\n...\n```\n\nWe want to delete the first three lines. So the hunk will show removal of those lines.\n\nWe'll apply a patch to remove them.\n\n",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"pkv6WbzyGfRw2LHgmlyWT8z6v06QYRXV",
+            "function":{
+              "arguments":"{\"patch\":\"*** Begin Patch\\n*** Update File: lua/ask-openai/frontends/context/prompt_parser.lua\\n@@\\n---- Return the reasoning level string based on the includes result.\\n--- If none of the reasoning flags are set, returns nil.\\n--- If multiple are set, the first one in the order low, medium, high is returned.\\n@@\\n function M.get_reasoning_level(includes)\\n*** End Patch\"}",
+              "name":"apply_patch"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"pkv6WbzyGfRw2LHgmlyWT8z6v06QYRXV",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Success. Updated the following files:\\nM lua/ask-openai/frontends/context/prompt_parser.lua\\n\"}]}"
+      },{
+        "reasoning_content":"Now check file to ensure comments removed.",
+        "role":"assistant",
+        "tool_calls":[{
+            "type":"function",
+            "id":"Gp6SvA5hsW40stvlvAPfkJHlXxQuw0AQ",
+            "function":{
+              "arguments":"{\"cwd\": \"~/repos/github/g0t4/ask-openai.nvim\", \"command_line\": \"sed -n '190,230p' lua/ask-openai/frontends/context/prompt_parser.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "_logged":true,
+        "content":""
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"Gp6SvA5hsW40stvlvAPfkJHlXxQuw0AQ",
+        "content":"{\"content\":[{\"type\":\"text\",\"name\":\"EXIT_CODE\",\"text\":\"0\"},{\"type\":\"text\",\"name\":\"STDOUT\",\"text\":\"        -- defaults for /all:\\n        includes.yanks = true\\n        includes.commits = true\\n        includes.current_file = true\\n        includes.open_files = true\\n    end\\n\\n    includes.rendered_prompt = rendered_prompt\\n    log:info(\\\"includes\\\", vim.inspect(includes))\\n    return includes\\nend\\n\\n---@param includes ParseIncludesResult\\n---@return \\\"low\\\"|\\\"medium\\\"|\\\"high\\\"|nil\\nfunction M.get_reasoning_level(includes)\\n    if includes.reasoning_low then\\n        return \\\"low\\\"\\n    elseif includes.reasoning_medium then\\n        return \\\"medium\\\"\\n    elseif includes.reasoning_high then\\n        return \\\"high\\\"\\n    else\\n        return nil\\n    end\\nend\\n\\nreturn M\\n\"}]}"
+      }],
+    "top_p":1,
+    "temperature":1,
+    "model":"",
+    "tools":[{
+        "function":{
+          "name":"fetch",
+          "parameters":{
+            "required":["url"],
+            "properties":{
+              "start_index":{
+                "title":"Start Index",
+                "type":"integer",
+                "description":"On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+                "minimum":0,
+                "default":0
+              },
+              "max_length":{
+                "description":"Maximum number of characters to return.",
+                "title":"Max Length",
+                "type":"integer",
+                "default":5000,
+                "exclusiveMaximum":1000000,
+                "exclusiveMinimum":0
+              },
+              "url":{
+                "title":"Url",
+                "type":"string",
+                "description":"URL to fetch",
+                "minLength":1,
+                "format":"uri"
+              },
+              "raw":{
+                "type":"boolean",
+                "description":"Get the actual HTML content of the requested page, without simplification.",
+                "default":false,
+                "title":"Raw"
+              }
+            },
+            "type":"object"
+          },
+          "description":"Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that."
+        },
+        "type":"function"
+      },{
+        "function":{
+          "name":"run_process",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "argv":{
+                "type":"array",
+                "items":{
+                  "type":"string"
+                },
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "minItems":1
+              }
+            }
+          },
+          "description":"Run a process on this darwin machine"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              },
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              }
+            },
+            "required":["query"]
+          },
+          "name":"semantic_grep"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "name":"apply_patch",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "patch":{
+                "type":"string",
+                "description":"file changes in custom diff format"
+              }
+            },
+            "required":["patch"]
+          },
+          "description":"Patch a file"
+        },
+        "type":"function"
+      }],
+    "max_tokens":16384
+  }
+}
