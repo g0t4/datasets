@@ -1,0 +1,66 @@
+{
+  "request_body":{
+    "temperature":1,
+    "top_p":1,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"high"
+    },
+    "max_tokens":16384,
+    "model":"",
+    "messages":[{
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true,
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"make a list\n\nHere is the code I selected:\n```.rag.yaml:1-6\ninclude:\n  lua:\n  py:\n  fish:\n  md:\n  txt:\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true,
+        "role":"user"
+      }]
+  },
+  "last_sse":{
+    "id":"chatcmpl-5nDDy9uqydIZKozsTyMdngJplAmX5X47",
+    "timings":{
+      "predicted_per_token_ms":4.6881875,
+      "predicted_n":400,
+      "cache_n":0,
+      "predicted_per_second":213.30204903281,
+      "prompt_per_second":3816.4791801637,
+      "prompt_n":324,
+      "prompt_ms":84.895,
+      "prompt_per_token_ms":0.26202160493827,
+      "predicted_ms":1875.275
+    },
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "object":"chat.completion.chunk",
+    "created":1776115749,
+    "system_fingerprint":"b8656-9062d4e84",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  },
+  "response_message":{
+    "reasoning_content":"The user wants \"make a list\" based on the given code snippet. They show a YAML snippet with \"include:\" and then entries \"lua:\", \"py:\", \"fish:\", \"md:\", \"txt:\". The user says \"make a list\". Possibly they want to convert this into a proper list format, maybe a YAML list instead of mapping with empty values? Or maybe they want a Lua list? Not sure. The snippet is from a .rag.yaml file (some config). It currently shows:\n\n```.rag.yaml:1-6\ninclude:\n  lua:\n  py:\n  fish:\n  md:\n  txt:\n```\n\nIn YAML, this defines a mapping \"include\" with keys lua, py, fish, md, txt, each with null value. The user wants \"make a list\". Perhaps they want to convert the mapping to a list: like:\n\n```\ninclude:\n  - lua\n  - py\n  - fish\n  - md\n  - txt\n```\n\nThus making a list of strings under \"include\". That seems plausible.\n\nUser says \"Preserve indentation!\". So we must preserve indentation of original code: 2 spaces before each list item? The original had 2 spaces before each key, so we will use same indentation. Provide only code, no explanations, no markdown fences. So answer will be the code snippet showing the list.\n\nThus:\n\ninclude:\n  - lua\n  - py\n  - fish\n  - md\n  - txt\n\nMake sure to include proper indentation. No comments. No extra text. Just output the code snippet.\n\nPotentially also include file name? The snippet originally had a header .rag.yaml:1-6. But user just wants \"make a list\". Probably just provide the corrected snippet.\n\nThus answer: (no markdown).",
+    "role":"assistant",
+    "timings":{
+      "predicted_per_token_ms":4.6881875,
+      "predicted_n":400,
+      "cache_n":0,
+      "predicted_per_second":213.30204903281,
+      "prompt_per_second":3816.4791801637,
+      "prompt_n":324,
+      "prompt_ms":84.895,
+      "prompt_per_token_ms":0.26202160493827,
+      "predicted_ms":1875.275
+    },
+    "_logged":true,
+    "content":"include:\n  - lua\n  - py\n  - fish\n  - md\n  - txt",
+    "finish_reason":"stop"
+  }
+}
