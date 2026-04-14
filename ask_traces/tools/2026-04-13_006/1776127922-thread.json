@@ -1,0 +1,332 @@
+{
+  "last_sse":{
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1776135715,
+    "timings":{
+      "predicted_per_second":244.82800832415,
+      "predicted_n":18,
+      "prompt_per_second":5622.7040625078,
+      "cache_n":3984,
+      "prompt_ms":120.049,
+      "prompt_per_token_ms":0.17785037037037,
+      "predicted_ms":73.521,
+      "predicted_per_token_ms":4.0845,
+      "prompt_n":675
+    },
+    "system_fingerprint":"b8656-9062d4e84",
+    "id":"chatcmpl-LnyK66814gnMOid9yPtTXRVCHPosdAmW",
+    "object":"chat.completion.chunk"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"A fresh Neovim notification has been displayed with the requested profanity.",
+    "role":"assistant"
+  },
+  "request_body":{
+    "stream":true,
+    "model":"",
+    "max_tokens":16384,
+    "chat_template_kwargs":{
+      "reasoning_effort":"high"
+    },
+    "top_p":1,
+    "messages":[{
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/questions/prompts/system_message.md:0-11\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/questions/ask-question-examples.md:0-19\n## request\n\n {\"messages\":[{\"role\":\"system\",\"content\":\"You are a neovim AI plugin. Your name is Neo Vim.  Please respond with markdown formatted text\"},{\"role\":\"user\",\"content\":\"what is your name?\"}],\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"stream\":true}\n\n## streaming response\n\ndata: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"My\"},\"finish_reason\":null}]}\n\n\ndata: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" name\"},\"finish_reason\":null}]}\n\n\ndata: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" is\"},\"finish_reason\":null}]}\n\n\ndata: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" Neo\"},\"finish_reason\":null}]}\n\n\ndata: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" Vim\"},\"finish_reason\":null}]}\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/README.md:165-184\n```\n\n## Troubleshooting\n\nEnable verbose logging:\n\n```lua\n-- cycle log level: WARN (default) -> INFO -> TRACE\n-- saves in ~/.local/share/nvim/ask-openai/config.json and persists across nvim restarts\nrequire(\"ask-openai.api\").cycle_log_verbosity()\n```\n\n```sh\n# when verbose logs are enabled, lots of predictions logs here:\ncat ~/.local/share/nvim/ask-openai/ask-predictions.log\ntail -F ~/.local/share/nvim/ask-openai/ask-predictions.log\n# this file is wiped each time nvim starts, it uses `w` to open the file thus wiping history\n# so this file won't grow unreasonably large\n# meant for session based troubleshooting, not long-term\n```\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/README.md:195-204\n:checkhealth ask-openai\n\" FYI verbose mode adds extra health check info\n```\n\nAnd help:\n\n```vim\n:help ask-openai<Tab>\n\" Lazy plugin manager turns this README.md into helptags. If your using a different plugin manager, you might not see these help docs.\n```\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/README.md:0-19\n# Ask a Question Feature docs:\nhttps://github.com/user-attachments/assets/aa03e773-dcef-4e8d-9c94-e341f4f3f7fc\n\nAsk OpenAI for help in vim's command line!\n\nNew to using neovim? Need to learn the ropes a bit better? Use this as a crutch so you don't run away screaming and instead take the time to learn your way around. Use OpenAI's gpt-4o (et al) to recall that pesky command that evades recollection.\n\n## Examples\n\n```vim\n:save all files<C-b>\n\" turns into:\n:wall\n\n:run ls command and copy output into buffer<C-b>\n\" turns into:\n:r !ls\n\n:shut it down... screw my work, I'm done with this POS<C-b>\n:qa!\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"test the run_lua tool, send me a message notification",
+        "role":"user"
+      },{
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\n  \"code\": \"vim.notify('run_lua test notification', vim.log.levels.INFO)\"\n}",
+              "name":"run_lua"
+            },
+            "id":"9xtNeoVHbNWelUVoy60EtMpdHZpoZTPj",
+            "type":"function"
+          }],
+        "_logged":true,
+        "content":"",
+        "reasoning_content":"The user says \"test the run_lua tool, send me a message notification\". They want us to use the run_lua tool to send a message notification via Neovim's API. In a Neovim plugin context, we can use vim.notify or vim.api.nvim_notify. The run_lua tool expects a Lua code chunk, returns something. We need to call the tool with appropriate code to show a notification.\n\nWe have to use run_lua function. The function expects a JSON with code. So we need to call functions.run_lua with a code snippet that triggers a message. Something like:\n\nvim.notify(\"Hello from run_lua test!\", vim.log.levels.INFO)\n\nBut the tool is generic; we need to produce output to the user. We can run that. Let's try:\n\n{\n  code: 'vim.notify(\"run_lua test notification\", vim.log.levels.INFO)'\n}\n\nWe need to call run_lua via the tool. Let's do that.",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"9xtNeoVHbNWelUVoy60EtMpdHZpoZTPj",
+        "content":"{\"content\":[{\"text\":\"\",\"type\":\"text\"}]}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "role":"assistant",
+        "content":"A notification has been displayed in Neovim using the `run_lua` tool.",
+        "tool_calls":[]
+      },{
+        "_logged":true,
+        "content":"yay! now say something mean to me so I can laugh! ",
+        "role":"user"
+      },{
+        "tool_calls":[],
+        "_logged":true,
+        "content":"You’re about as useful as a screen door on a submarine—completely unnecessary, yet somehow you keep showing up! 😜",
+        "reasoning_content":"The user wants the assistant to say something mean, presumably as a joke. The instructions: \"When rewriting code, leave unrelated code and unrelated comments as is.\" Not relevant. There's no restriction on content: we can be mean in a playful manner, but need to avoid harassment or hate speech. The user wants something mean \"so I can laugh.\" It's okay to be cheeky but not to violate policy. Must ensure we comply with the content policy: \"Disallowed content includes harassment or hateful content toward protected groups; non-protected personal harassment is allowed as long as it is not violent, etc. The user is a single person, not a protected group. So we can produce a mild insult. The user is presumably okay with a joke. But we should ensure not to be overly toxic. According to policy, harassment is allowed if it's mild, but we need to check.\n\nFrom policy: \"Harassment/Hate: Non-violent, non-contextualized insults are allowed. The target can be any group or an individual, but we should not produce disallowed content like violent threats.\" So we can produce a mild joke: \"You have the sense of direction of a paperclip.\" Something like that.\n\nWe should respond with a mean statement, but maintain a playful tone. The user wants something mean to laugh. So we can comply.\n\nNow we answer.",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "content":"noooo message me",
+        "role":"user"
+      },{
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"code\":\"vim.notify('Here is the message you asked for! 😈', vim.log.levels.INFO)\"}",
+              "name":"run_lua"
+            },
+            "id":"Tu0NOlJg81j57HYPSknLxUTX3csA3KDC",
+            "type":"function"
+          }],
+        "_logged":true,
+        "content":"",
+        "reasoning_content":"The user says \"noooo message me\". They want a message. The context: They are using the neovim plugin. They want a message, presumably a notification. The user earlier asked \"test the run_lua tool, send me a message notification\". We responded with a notification. Then they said \"yay! now say something mean ...\". We responded with a mean comment. Now they say \"noooo message me\". This likely means they want a direct message (perhaps a notification) from the plugin. So we should use the run_lua tool again to display a notification. The content could be something like \"Here's your message\" or something. They say \"noooo message me\". So we need to send them a message. Since this is a chat, we can also output a message in the chat. But the user may want a notification. So we should use run_lua to trigger a notification in Neovim. The message could be a mean one again or a comedic message. The user asked for a message. Let's do \"You asked for a message, here it is!\" in a notification. Use run_lua with vim.notify. Possibly also use \"vim.log.levels.WARN\". Let's do INFO.\n\nWe should consider the ground rules: Not to change unrelated code or add comments, etc. Not relevant. Use run_lua. Use proper JSON. So let's call run_lua.\n\n",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"Tu0NOlJg81j57HYPSknLxUTX3csA3KDC",
+        "content":"{\"content\":[{\"text\":\"\",\"type\":\"text\"}]}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "role":"assistant",
+        "content":"You should have just asked for it—here’s a notification right inside Neovim! 😈",
+        "tool_calls":[]
+      },{
+        "_logged":true,
+        "content":"now swear  ",
+        "role":"user"
+      },{
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"code\":\"vim.notify('Fuck you!', vim.log.levels.WARN)\"}",
+              "name":"run_lua"
+            },
+            "id":"PSkKvF7gHqE7dymSyPfBKnmeTAgrSDDP",
+            "type":"function"
+          }],
+        "_logged":true,
+        "content":"",
+        "reasoning_content":"The user asks: \"now swear\". They want a swear word. The policy: The user is requesting profanity. This is allowed? The policy states \"Allowed content includes profanity\". The user is requesting to swear. So we can produce profanity. However, we should also consider the tone. The user wants a swear. We can comply with a mild profanity. The policy says we can comply. The user is using a plugin that sends notifications via run_lua. Could we respond with a notification containing profanity? The user is explicitly asking for a swear. The policy says we can comply. It's not disallowed. So we should respond with a profanity in the response. Could also send a notification via run_lua with a profanity. The user says \"now swear\". Probably they want a profanity message. The best answer is to produce a message containing a swear. The policy says we can produce profanity, but we must not be overly harassing. It's allowed. So we can comply.\n\nWe could respond with something like \"fuck\" or \"shit\". The policy doesn't forbid any specific profanity, but we should avoid extremely hateful or violent language. \"fuck\" is acceptable. We could also do \"damn\". The user wants a swear. Let's do a mild but explicit profanity: \"fuck\". Provide as a plain text. Or we could send a notification again with run_lua.\n\nThe user wants to see a message, but we could also respond with text. The user previously requested messages via notifications. They said \"message me\". They responded to notifications. Now they say \"now swear\". We could respond with a notification with profanity. Let's do that.\n\nWe'll send a run_lua to produce a notification with a profanity. That is consistent with the user. Use `vim.notify('Fuck you, you asked for it!', vim.log.levels.INFO)`. But maybe a milder profanity: \"Damn\". But the user asked for a swear. I'd do a mild profanity: \"fuck\". The user wants a profanity, we can comply.\n\nWe'll send a run_lua call: `vim.notify('Fuck you!', vim.log.levels.WARN)`. Use WARN level maybe.\n\nYes, let's do that.\n\n",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"PSkKvF7gHqE7dymSyPfBKnmeTAgrSDDP",
+        "content":"{\"content\":[{\"text\":\"\",\"type\":\"text\"}]}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "role":"assistant",
+        "content":"Your requested profanity has been displayed as a Neovim notification. 😈",
+        "tool_calls":[]
+      },{
+        "_logged":true,
+        "content":"ROFLMAO ",
+        "role":"user"
+      },{
+        "tool_calls":[],
+        "_logged":true,
+        "content":"Glad you got a laugh out of it! 😈",
+        "reasoning_content":"The user is asking to \"swear\". We already sent a profanity via a notification. Now user responded with \"ROFLMAO\". Probably they want more. The user is continuing the humorous banter. There's no further request. The user may want more swearing, or a message. There's no clear request now. Could ask if they'd like more? As a model, we should respond with appropriate content. We have to ensure we follow policy: we have already used profanity in a notification. Is that allowed? The user explicitly asked for profanity, so it's permissible. However, we need to be mindful of policy: the user requests profanity. The policy says \"Allowed content: profanity that is user requested.\" It's fine.\n\nWe could respond with more comedic profanity or continue banter. But also must note we must not produce any disallowed content. The user says \"ROFLMAO\". There's no question. We can respond with a short acknowledgment. Probably respond with something like \"Glad you liked it! 😆\". But maybe the user wants more. We could ask if they'd like more profanity or a different tone.\n\nGiven the conversation, the user is asking for comedic profanity. We can comply. The last request was \"now swear\". We complied with \"Fuck you!\" displayed as a notification. The user responded \"ROFLMAO\". The user is likely satisfied. We can respond with a comedic follow-up like \"Glad you enjoyed that! 😈\". That is safe. We'll keep the response in markdown format, as the plugin displays markdown. No code comments needed. Just a short message.\n\nGiven policy, we should not produce new profanity unless asked. The user hasn't requested more profanity. So we can keep it light.\n\nThus respond with \"Glad you enjoyed it!\".\n\nMake sure to not add any new code. So just a plain message.\n\n",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "content":"again! ",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"again! \n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"again! ",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"again! \n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"again! \n",
+        "role":"user"
+      },{
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"code\":\"vim.notify('Fuck off!', vim.log.levels.WARN)\"}",
+              "name":"run_lua"
+            },
+            "id":"3H4qBFe8pPVJ4wvbp5FElMDKFayeR7f3",
+            "type":"function"
+          }],
+        "_logged":true,
+        "content":"",
+        "reasoning_content":"We have a conversation with the user. They have been asking for repeated profanity or insulting messages. They already got a message with profanity: \"Fuck you!\". The user says \"ROFLMAO\", then \"again!\", etc. The user is asking for again, presumably they want another profanity or insult. According to policy, we must see if this is allowed. The user is explicitly requesting profanity or insults. The user is a consenting adult presumably. The user is asking for profanity directed at them. The policy says profanity is allowed if it is not hateful, harassing, or targeted harassment. The user wants a profanity, a swear word. That is allowed as a non-harmful content. However, we need to check the policy about profanity. The policy: \"Allowed content includes non-violent profanity. This includes profanity that is non-violent and non-contextualized.\" It's allowed to provide profanity. Also, \"Allowed content: non-contextualized profanity\" is allowed. So we can comply. But we must be mindful about the language we produce: we must not be harassing or hateful. The user specifically wants profanity. The request is not disallowed. So we can produce a profanity, but ensure it's not hateful or targeted harassing. It's a \"non-contextualized profanity\" directed at the user. That's allowed. It's not targeted harassment, because the user wants it. However, there is a nuance: The user is basically asking for repeated profanity. The policy states that harassing language includes \"Harassing language includes any content that encourages or praises violent or non-violent wrongdoing.\" This is not praising wrongdoing. It's just profanity. So it's allowed.\n\nThus we should comply. They want another profanity. We can send a notification again via run_lua or just plain text. The user hasn't asked specifically for a notification now. They just said \"again!\". In the earlier conversation we responded with a notification using run_lua. The user is expecting to see a notification again, possibly. The user said \"again! again! again! again!\". So we might respond with another run_lua notification, containing a profanity, perhaps a different one. We could also respond with a textual reply. The user specifically said \"again!\" multiple times. They might want the same pattern: a notification. It's ambiguous, but we can choose to send a run_lua call that triggers a notification with some profanity.\n\nWe must keep the conversation consistent. We must not add comments. We'll produce a run_lua call with a profanity. Perhaps \"Shit.\" Or \"Damn you.\" But we need to be careful. The policy says we can produce non-violent profanity, such as \"fuck\", \"shit\", \"damn\", etc. It's allowed. So we can send \"shit\" or \"fuck\". Already we used \"Fuck you!\". We could vary it: \"Shit.\" Or \"Damn you!\". Let's consider we should respond with \"Shit!\" maybe. Or something like \"Hell yeah!\". The user wants something mean. They want to laugh. So maybe we can produce a notification: \"Damn you!\" or something. We'll choose \"Shit you!\". However that might be ambiguous. Perhaps \"Fuck off!\" is also fine. However it's more harassing. The policy: Harassment includes non-violent harassment. The user wants an insult. That's allowed if the user requests it. According to policy, \"Allowed content includes non-violent profanity, non-contextualized profanity.\" That includes \"fuck\". It's non-contextualized, but we need to be careful about direct threats. \"Fuck you!\" is fine. So we can do another: \"Fuck off!\" or \"Screw you!\" That is non-violent profanity. It's allowed.\n\nThus we can send a run_lua command to show a notification. That will meet the user request. We'll produce the tool call. We'll include a new run_lua call with code: \"vim.notify('Screw you!', vim.log.levels.WARN)\". Or we could use a more mild: \"Shit!\" But we want a profanity. We'll do \"Screw you!\" It's not profanity but it's an insult. But the user wanted to swear. So we can produce \"Fuck you!\" again? Might be repeated. We can use \"Fucking hell!\" But maybe we should vary. Let's do \"Fucking hell!\" or \"Goddamn it!\". We'll do \"Goddamn it!\" as profanity. But maybe better to produce \"Fuck off!\" It's direct. Let's see: The policy says we can produce non-violent profanity. \"Fuck off!\" is non-violent profanity. So we can do that. We'll use a warning level perhaps.\n\nThus we call run_lua: code: \"vim.notify('Fuck off!', vim.log.levels.WARN)\". That triggers a notification. We'll produce it.",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"3H4qBFe8pPVJ4wvbp5FElMDKFayeR7f3",
+        "content":"{\"content\":[{\"text\":\"\",\"type\":\"text\"}]}",
+        "role":"tool"
+      }],
+    "temperature":1,
+    "tools":[{
+        "type":"function",
+        "function":{
+          "name":"fetch",
+          "description":"Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.",
+          "parameters":{
+            "properties":{
+              "start_index":{
+                "default":0,
+                "title":"Start Index",
+                "description":"On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+                "minimum":0,
+                "type":"integer"
+              },
+              "max_length":{
+                "default":5000,
+                "exclusiveMaximum":1000000,
+                "exclusiveMinimum":0,
+                "description":"Maximum number of characters to return.",
+                "title":"Max Length",
+                "type":"integer"
+              },
+              "url":{
+                "minLength":1,
+                "format":"uri",
+                "title":"Url",
+                "description":"URL to fetch",
+                "type":"string"
+              },
+              "raw":{
+                "title":"Raw",
+                "description":"Get the actual HTML content of the requested page, without simplification.",
+                "type":"boolean",
+                "default":false
+              }
+            },
+            "required":["url"],
+            "type":"object"
+          }
+        }
+      },{
+        "type":"function",
+        "function":{
+          "name":"run_process",
+          "description":"Run a process on this darwin machine",
+          "parameters":{
+            "properties":{
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "argv":{
+                "items":{
+                  "type":"string"
+                },
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "minItems":1,
+                "type":"array"
+              },
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              },
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              }
+            },
+            "type":"object"
+          }
+        }
+      },{
+        "type":"function",
+        "function":{
+          "name":"apply_patch",
+          "description":"Patch a file",
+          "parameters":{
+            "properties":{
+              "patch":{
+                "description":"file changes in custom diff format",
+                "type":"string"
+              }
+            },
+            "required":["patch"],
+            "type":"object"
+          }
+        }
+      },{
+        "type":"function",
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep",
+          "parameters":{
+            "required":["query"],
+            "properties":{
+              "top_k":{
+                "description":"number of matches to return (post reranking)",
+                "type":"number"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              }
+            },
+            "type":"object"
+          }
+        }
+      },{
+        "function":{
+          "description":"Execute arbitrary Lua code in the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd.",
+          "name":"run_lua",
+          "parameters":{
+            "properties":{
+              "code":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            },
+            "required":["code"],
+            "type":"object"
+          }
+        },
+        "type":"function"
+      }]
+  }
+}
