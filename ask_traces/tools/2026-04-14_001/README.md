@@ -7,3 +7,7 @@ complaint => twice in a row assistant printed apply_patch patch file contents in
 
 task:
     change format of tok/sec extmarks in AskRewrite to use arrow to condense and hopefully to make visually intuitive vs reading in/out
+
+praise:
+- might be first time gptoss voluntarily asked me for input! (which arrow to use)
+  I love the back and forth design/decisions
