@@ -1,0 +1,284 @@
+{
+  "request_body":{
+    "stream":true,
+    "messages":[{
+        "_logged":true,
+        "role":"system",
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:\n\n*** Begin Patch\n[ one or more file sections ]\n*** End Patch\n\nWithin that envelope, you get a sequence of file operations.\nYou MUST include a header to specify the action you are taking.\nEach operation starts with one of three headers:\n\n*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - patch an existing file in place (optionally with a rename).\n\nIf you want to rename the file too, immediately follow with:\n*** Move to: <new path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\nWithin a hunk each line starts with:\n\n- for inserted text,\n* for removed text, or\n  space ( ) for context.\n  At the end of a truncated hunk you can emit *** End of File.\n\nHere is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\nA full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\nIt is important to remember:\n\n- You must include a header with your intended action (Add/Delete/Update)\n- You must prefix new lines with `+` even when creating a new file\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/prompts/system_message.md:0-11\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/fetch/fetch.md:0-5\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/README.md:30-49\n:what key in normal mode copies 2 lines<C-b>\n:normal 2yy\n\n:what clear search highlights<C-b>\n:nohlsearch\n\n:test<C-b>\n:echo \"hello world\"\n\" don't forget, there's often more than one way to do something\n\n```\n\nLet me know if there are other ways you'd like to ask for help, beyond the command line. And no, I'm not talking about vscode.\n\n## Installation\n\nThis works with any plugin manager. The plugin repo name `g0t4/ask-openai.nvim` is all you need to use this.\n\n### Using lazy.nvim\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/ask.notes.md:0-19\n## old model notes in AskAgent\n\ntaken from AgentsFrontend right before sending a new question trace\n**put notes here instead of bloating the code**\n\n```lua\n    ---@type ChatParams\n    local qwen25_body_overrides = ChatParams:new({\n        messages = messages,\n        -- avoid num_ctx (s/b set server side), instead use max_tokens to cap request:\n        max_tokens = 20000, -- PRN what level for rewrites?\n        -- temperature = ?\n    })\n\n        -- model = \"qwen2.5-coder:7b-instruct-q8_0\", -- btw -base- does terrible here :) -- instruct works at random... seems to be a discrepency in published template and what it was actually trained with? (for tool calls)\n        --\n        -- * qwen3 related\n        -- model = \"qwen3:8b\", -- btw as of Qwen3, no tag == \"-instruct\", and for base you'll use \"-base\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\n        -- model = \"qwen3-coder:30b-a3b-q4_K_M\",\n        -- model = \"qwen3-coder:30b-a3b-q8_0\",\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/ask.notes.md:45-54\n  - i.e. using `ApiAgentTrace` that has a different `next_body()`...\n\nPreviously I used this when it was single turn Question/Answer:\n\nlocal qwen_legacy_body = {\n    model = \"qwen2.5-coder:7b-instruct-q8_0\", -- btw -base- does terrible here :)\n    prompt = system_prompt .. \"\\n\" .. user_message,\n}\n\n\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"modify the agent INSTRUCTS loader to load from the current repo root, in addition to the global ~/.agents/instructs ... so repo_root/.agents/instructs ... that way I can have repo specific instructions for compositional prompts that inject text as well as toggle settings like reasoning level!"
+      },{
+        "timings":{
+          "prompt_n":3014,
+          "prompt_ms":366.46,
+          "prompt_per_token_ms":0.12158593231586,
+          "predicted_ms":241.182,
+          "predicted_n":45,
+          "prompt_per_second":8224.6357037603,
+          "cache_n":0,
+          "predicted_per_second":186.58108814091,
+          "predicted_per_token_ms":5.3596
+        },
+        "content":"",
+        "_logged":true,
+        "tool_calls":[{
+            "id":"voWok2T5r1ZOhdzKC2wNCbBVI0vo6AXm",
+            "type":"function",
+            "function":{
+              "arguments":"{\n  \"query\": \"INSTRUCTS\",\n  \"top_k\": 20\n}",
+              "name":"semantic_grep"
+            }
+          }],
+        "reasoning_content":"We need to find loader. Search.",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"voWok2T5r1ZOhdzKC2wNCbBVI0vo6AXm",
+        "role":"tool",
+        "content":"{\"matches\":[{\"id\":\"b1ba32e0f015545c\",\"type\":\"uncovered\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/instructs.lua\",\"text\":\"local log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal files = require(\\\"ask-openai.helpers.files\\\")\\n\\n-- global instructs: `~/.agents/instructs`\\n-- per repo: `.agents/instructs`\\n\\nlocal M = {}\\n\\n-- Cache of instruct name -> absolute path of the instruct markdown file\\nM._instruct_paths_by_name = {}\\n-- Cache of instruct name -> instruct md contents\\nM._instruct_contents_by_name = {}\\n\\n\",\"rerank_score\":0.994140625,\"embed_rank\":2,\"rerank_rank\":0,\"embed_score\":0.5959683656692505,\"id_int\":\"3583232395208643676\",\"start_line_base0\":0,\"end_line_base0\":12},{\"id\":\"1fe8b4663514ab04\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/.agents/global/instructs/back_and_forth.md\",\"text\":\"<!--\\nTODO provide example (only show user input + last part of agent final message... show \\\"...\\\" to indicate truncated\\n- use later messages from:\\n   https://g0t4.github.io/ask-openai.nvim/?github=g0t4/datasets/master/ask_traces/tools/2026-04-14_001/1776154398-thread.json\\n   summarize agent responses too (and note that they are summarized)\\n\\nTODO flip side of this INSTRUCT is /AFK (away from keyboard, so don't ask questions, just decide and do!)\\n\\n - FYI can put full example into an asset for the model to review,\\n   or even for a human to review later as \\\"documentation\\\",\\n   to convey what I like about this style...\\n\\n   and gather more (favorites) as I encounter or encourage them?\\n   maybe even use the assets for some fine tunes at some point?\\n-->\\n\",\"rerank_score\":0.98876953125,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":0,\"rerank_rank\":1,\"embed_score\":0.6201045513153076,\"id_int\":\"2299285960842849028\",\"start_line_base0\":30,\"end_line_base0\":44},{\"id\":\"dc0acf2560452aca\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/.agents/global/instructs/back_and_forth.md\",\"text\":\"- Human provides context / decides\\n- Agent starts implementing, runs into a roadblock\\n- Human asks questions and Agent answers (back and forth)\\n- Agent proceeds with implementing\\n- Agent done\\n- Human tests and then asks for small change\\n- Agent implements\\n- Human tests + asks for another tweak\\n- Agent presents choices for tweak\\n- Human picks\\n- Model finishes implementing\\n- Model tests and then asks Human to test\\n- Human tests and reports back\\n- Done!\\n\\n<!--\\nTODO provide example (only show user input + last part of agent final message... show \\\"...\\\" to indicate truncated\\n- use later messages from:\\n   https://g0t4.github.io/ask-openai.nvim/?github=g0t4/datasets/master/ask_traces/tools/2026-04-14_001/1776154398-thread.json\\n   summarize agent responses too (and note that they are summarized)\\n\",\"rerank_score\":0.9873046875,\"end_column_base0\":68,\"start_column_base0\":0,\"embed_rank\":1,\"rerank_rank\":2,\"embed_score\":0.6012856960296631,\"id_int\":\"6632341160692361930\",\"start_line_base0\":15,\"end_line_base0\":34},{\"id\":\"cc73f83df6267f36\",\"type\":\"uncovered\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/inference/server/qwen3_rerank.py\",\"text\":\"\\n\\ndef tokenize_docs(instruct: str, query: str, documents: list[str]):\\n    if instruct is None or instruct.strip() == \\\"\\\":\\n        raise ValueError(\\\"instruct must be provided\\\")\\n\\n    # tokenize common prefix once:\\n    instruct_query = f\\\"<Instruct>: {instruct}\\\\n<Query>: {query}\\\\n<Document>: \\\"\\n    instruct_query_tokens = tokenizer.encode(instruct_query, add_special_tokens=False)\\n\\n    # NOTE layout is optimized for cache reuse! instruction/query are constant across a batch of documents\\n    documents_tokens = tokenizer(\\n        documents,\\n        padding=False,\\n        truncation='longest_first',\\n        return_attention_mask=False,\\n        max_length=max_user_tokens,\\n    )\\n    for i, doc_tokens in enumerate(documents_tokens['input_ids']):\\n        # insert user message contents into the agent trace template (this way I don't have to tokenize the constant parts repeatedly\\n\",\"rerank_score\":0.9873046875,\"embed_rank\":4,\"rerank_rank\":3,\"embed_score\":0.5231297612190247,\"id_int\":\"5509019714210660150\",\"start_line_base0\":66,\"end_line_base0\":85},{\"id\":\"70a71336d93bd6ac\",\"type\":\"ts\",\"signature\":\"def qwen3_format_query(text: str, instruct: Optional[str]) -> str:\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/inference/client/embedder.py\",\"text\":\"def qwen3_format_query(text: str, instruct: Optional[str]) -> str:\\n    if instruct:\\n        return f'Instruct: {instruct}\\\\nQuery:{text}'\\n    return f\\\"Query: {text}\\\"\",\"rerank_score\":0.98583984375,\"end_column_base0\":27,\"start_column_base0\":0,\"embed_rank\":5,\"rerank_rank\":4,\"embed_score\":0.5040664672851562,\"id_int\":\"8117477979652347564\",\"start_line_base0\":45,\"end_line_base0\":48},{\"id\":\"97ffba64c516dc18\",\"type\":\"ts\",\"signature\":\"local function ask_agent_command(opts)\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/frontend.lua\",\"text\":\"---@param opts {args:string}\\nlocal function ask_agent_command(opts)\\n    local user_prompt = opts.args\\n    local always_include = {\\n        yanks = true,\\n        project = true,\\n    }\\n    local context = CurrentContext:items(user_prompt, always_include)\\n    local cleaned_prompt = context.includes.rendered_prompt\\n\\n    -- * /selection (currently needs current window to be code window)\\n    local selection = nil\\n    if context.includes.include_selection then\\n        -- FYI include_selection basically captures if user had selection when they first invoked a keymap to submit this command\\n        --   b/c submitting command switches modes, also user might unselect text on accident (or want to repeat w/ prev selection)\\n        --   thus it is useful to capture intent with /selection early on\\n\\n        -- FYI my Selection helper only works on current window... so I can't put this off I need it way up high:\\n        -- NOT IMPLEMENTED (yet?) local selection = Selection._get_visual_selection_for_window_id(code_win_id)\\n        selection = Selection.get_visual_selection_for_current_window()\\n        if selection:is_empty() then\\n            error(\\\"No /selection found (no current, nor prior, selection).\\\")\\n            return\\n        end\\n        -- TODO once I get Selection working w/ non-current windows, move this code down and cleanup/simplify the spot that uses selection below\\n    end\\n\\n    -- FYI! do not move opening window higher, unless above code supports code_win_id/code_bufnr:\\n    AgentsFrontend.ensure_chat_window_is_open()\\n    --\\n    -- * chat window should always be open, nonetheless check:\\n    local buffer_name = vim.api.nvim_buf_get_name(0)\\n    local chat_window_is_open = buffer_name:match(\\\"AskAgent$\\\")\\n    local code_win_id = vim.api.nvim_get_current_win()\\n    local code_bufnr = 0 -- 0 == current\\n    if chat_window_is_open then\\n        -- * chat window is open, get prior window's code_win_id and code_bufnr\\n        code_win_id = vim.fn.win_getid(vim.fn.winnr('#'))\\n        code_bufnr = vim.api.nvim_win_get_buf(code_win_id)\\n    end\\n    -- log:error(\\\"code_win_id\\\", code_win_id)\\n    -- log:error(\\\"code_bufnr\\\", code_bufnr)\\n\\n    AgentsFrontend.abort_last_request()\\n    use_tools = context.includes.use_tools or false\\n\\n    local system = get_file(\\\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/prompts/system_message.md\\\")\\n    -- PRN \\\"NEVER add copyright or license headers unless specifically requested.\\\"\\n\\n    local tool_definitions\\n    if use_tools then\\n        -- PRN build out more detailed guidance: review Claude Code and Codex prompts\\n        local tool_instructs = get_file(\\\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/prompts/tools.md\\\")\\n        -- * repo root vs cwd prompt instructions\\n        local cwd = vim.fn.getcwd()\\n        local cwd_text = \\\"Current directory: \\\" .. cwd\\n        local git_root_output = vim.fn.systemlist('git rev-parse --show-toplevel')\\n        if vim.v.shell_error == 0 and #git_root_output > 0 then\\n            local repo_root = vim.fn.trim(git_root_output[1])\\n            if repo_root ~= cwd then\\n                vim.notify(\\\"FYI you are in a nested directory of the repo and that tends to cause issues with gptoss making requests to change things\\\", vim.log.levels.WARN)\\n                -- PRN path compare instead of text comparison? add this if you run into a problem\\n                cwd_text = cwd_text .. \\\"\\\\nRepository root: \\\" .. repo_root\\n                -- Determine nesting depth relative to repo root\\n                local relative_path = cwd:sub(#repo_root + 2) -- strip trailing slash\\n                local depth = 0\\n                for _ in string.gmatch(relative_path, \\\"[^/]+\\\") do\\n                    depth = depth + 1\\n                end\\n                -- TODO I need to make sure paths are always relative to current dir, that is the real solution me thinks\\n                -- TODO and warn the user (me) when I am in a nested dir! for now\\n                if depth > 0 then\\n                    -- FYI it is very rare that I run nvim from a nested dir, so the conditional, added overhead in system message is fine here\\n                    local rel = (\\\"../\\\"):rep(depth)\\n                    cwd_text = cwd_text .. \\\"\\\\nYou are \\\" .. depth .. \\\" levels deep, so you need \\\" .. rel .. \\\" to build relative paths from repo root.\\\"\\n                else\\n                    vim.notify(\\\"You aren't in repo root and yet the calculation for number of levels deep returned 0???, check logic for levels deep warning\\\", vim.log.levels.WARN)\\n                end\\n            end\\n        end\\n        tool_instructs = tool_instructs:gsub(\\\"INSERT_CWD\\\", cwd_text)\\n        system = system .. \\\"\\\\n\\\\n\\\" .. tool_instructs\\n\\n        local tool_provided_instructs\\n        tool_definitions, tool_provided_instructs = tool_router.openai_tools()\\n        if tool_provided_instructs then\\n            system = system .. \\\"\\\\n\\\\n\\\" .. table.concat(tool_provided_instructs, \\\"\\\\n\\\")\\n        end\\n\\n        -- If readonly mode, remove editing tools like apply_patch\\n        if context.includes.readonly then\\n            local filtered = {}\\n            for _, tool in ipairs(tool_definitions) do\\n                local name = tool[\\\"function\\\"] and tool[\\\"function\\\"].name or nil\\n                if name ~= \\\"apply_patch\\\" then\\n                    table.insert(filtered, tool)\\n                end\\n            end\\n            tool_definitions = filtered\\n        end\\n    end\\n\\n    -- * display system message in chat window\\n    if not first_turn_ns_id then\\n        first_turn_ns_id = vim.api.nvim_create_namespace(\\\"ask.marks.chat.window.first.turn\\\")\\n    end\\n    local lines = LinesBuilder:new(first_turn_ns_id)\\n    if AgentsFrontend.trace then\\n        -- FYI some previous extmarks are \\\"dropped\\\", fine by me to \\\"turn off the colors\\\"... but, probably want it for all previous chat extmarks\\n        lines:append_styled_lines({ \\\"--- New Trace Started ---\\\" }, HLGroups.SYSTEM_PROMPT)\\n        -- or:   AgentsFrontend.clear_chat_command()\\n    end\\n    lines:mark_next_line(HLGroups.SYSTEM_PROMPT)\\n    lines:append_folded_styled_text(\\\"system\\\\n\\\" .. system, \\\"\\\")\\n\\n\\n    -- * display user message in chat window\\n    lines:append_role_header(\\\"user\\\")\\n    lines:append_text(cleaned_prompt)\\n\\n    local user_message = cleaned_prompt\\n    local code_context = nil\\n    if selection then\\n        local file_name = files.get_file_relative_path(code_bufnr)\\n        -- include line range in the filename like foo.py:10-20\\n        local start_line = selection:start_line_1indexed()\\n        local end_line = selection:end_line_1indexed()\\n        local line_info = start_line == end_line and tostring(start_line) or (start_line .. \\\"-\\\" .. end_line)\\n        local file_display = file_name .. \\\":\\\" .. line_info\\n        code_context =\\n            \\\"Here is the code I selected:\\\" .. \\\"\\\\n```\\\" .. file_display .. \\\"\\\\n\\\" .. selection.original_text .. \\\"\\\\n```\\\"\\n\\n        -- PRN count \\\\n in selection.original_text and only fold if > 10\\n        local fold = false -- = newline_count > 10\\n        if fold then\\n            lines:append_folded_styled_text(code_context, \\\"\\\")\\n        else\\n            lines:append_styled_text(code_context, \\\"\\\")\\n        end\\n        user_message = user_message .. \\\"\\\\n\\\\n\\\" .. code_context\\n    end\\n\\n    if context.includes.current_file then\\n        local entire_file_message = MessageBuilder:new()\\n            :plain_text(\\\"FYI, here is my current buffer in Neovim. Use this as context for my request:\\\")\\n            :md_current_buffer(code_bufnr)\\n            :to_text()\\n\\n        -- skip code_context if entire file selected (user intent matters, entire file is vague)\\n        lines:append_folded_styled_text(entire_file_message, \\\"\\\")\\n        user_message = user_message .. \\\"\\\\n\\\\n\\\" .. entire_file_message\\n    end\\n\\n    lines:append_blank_line()\\n    AgentsFrontend.chat_window:append_styled_lines(lines)\\n\\n    ---@type OpenAIChatCompletion_TxChatMessage[]\\n    local messages = {\\n        TxChatMessage:system(system)\\n    }\\n\\n    -- ? context.includes.open_files\\n    if context.includes.yanks and context.yanks then\\n        -- PRN anything I want to show about auto context? (not just yanks)\\n        table.insert(messages, TxChatMessage:user_context(context.yanks.content))\\n    end\\n    if context.includes.commits and context.commits then\\n        for _, commit in pairs(context.commits) do\\n            table.insert(messages, TxChatMessage:user_context(commit.content))\\n        end\\n    end\\n    if context.includes.project and context.project then\\n        -- TODO does any of this belong in the system_message?\\n        --  ? actually test if repeating some of this here helps\\n        --    i.e. my global project instructions include not touching unrelated code too\\n        --  perhaps leave the system_message for coding instructions specific to AskAgent...?\\n        vim.iter(context.project)\\n            :each(function(value)\\n                table.insert(messages, TxChatMessage:user_context(value.content))\\n            end)\\n    end\\n\\n    local function then_generate_completion(rag_matches)\\n        local rag_message = rag_instructions.semantic_grep_user_message(rag_matches)\\n        if rag_message then\\n            table.insert(messages, rag_message)\\n        end\\n\\n        -- * user request should be last\\n        -- FYI I had this before RAG matches and it was working fine too\\n        table.insert(messages, TxChatMessage:user(user_message))\\n\\n        local base_url = \\\"http://ask.lan:8013\\\"\\n        local body_overrides = model_params.new_gptoss_chat_body_llama_server({\\n            -- local body_overrides = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n            tools = tool_definitions,\\n        }, context)\\n\\n        AgentsFrontend.trace = AgentTrace:new(body_overrides, base_url)\\n        -- log:info(\\\"sending\\\", vim.inspect(AgentsFrontend.trace))\\n        AgentsFrontend.then_send_messages()\\n    end\\n\\n    -- log:error(\\\"context.includes\\\", vim.inspect(context.includes))\\n    if api.is_rag_enabled() and not context.includes.norag and rag_client.is_rag_supported_in_current_file(code_bufnr) then\\n        local this_request_ids, cancel -- declare in advance for closure\\n\\n        ---@param rag_matches LSPRankedMatch[]\\n        function on_rag_response(rag_matches)\\n            log:info(\\\"on_rag_response\\\")\\n            -- * make sure prior (canceled) rag request doesn't still respond\\n            if AgentsFrontend.rag_request_ids ~= this_request_ids then\\n                log:trace(\\\"possibly stale rag results, skipping: \\\" .. vim.inspect({\\n                    global_rag_request_ids = AgentsFrontend.rag_request_ids,\\n                    this_request_ids = this_request_ids,\\n                }))\\n                return\\n            end\\n\\n            if AgentsFrontend.rag_cancel == nil then\\n                log:error(\\\"rag appears canceled, skipping on_rag_response...\\\")\\n                return\\n            end\\n\\n            then_generate_completion(rag_matches)\\n        end\\n\\n        this_request_ids, cancel = rag_client.context_query_for_agents(code_bufnr, cleaned_prompt, code_context, context.includes.top_k, on_rag_response)\\n        AgentsFrontend.rag_cancel = function()\\n            log:warn(\\\"canceling RAG\\\")\\n            AgentsFrontend.rag_cancel = nil\\n            cancel()\\n            AgentsFrontend.rag_request_ids = nil\\n        end\\n        AgentsFrontend.rag_request_ids = this_request_ids\\n    else\\n        AgentsFrontend.rag_cancel = nil\\n        AgentsFrontend.rag_request_ids = nil\\n        then_generate_completion({})\\n    end\\nend\",\"rerank_score\":0.67578125,\"end_column_base0\":3,\"start_column_base0\":0,\"embed_rank\":3,\"rerank_rank\":5,\"embed_score\":0.570060133934021,\"id_int\":\"1729305723899665432\",\"start_line_base0\":46,\"end_line_base0\":288},{\"id\":\"7acf3cea8aaac51f\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/models/qwen2.5-coder/build.fish\",\"text\":\"#!/usr/bin/env fish\\n\\nexport OLLAMA_HOST='ollama:11434'\\n\\nollama create fim_qwen:7b-instruct-q8_0 \\\\\\n    -f 7b-instruct-q8_0.Modelfile\\n\\n\",\"rerank_score\":0.399658203125,\"end_column_base0\":0,\"start_column_base0\":0,\"embed_rank\":7,\"rerank_rank\":6,\"embed_score\":0.4217278361320496,\"id_int\":\"8849358770852775199\",\"start_line_base0\":0,\"end_line_base0\":6},{\"id\":\"d3e53c021a514c13\",\"type\":\"ts\",\"signature\":\"void speak()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/tests/similar-lang/speak-final.cpp\",\"text\":\"void speak() {\\n        std::cout << \\\"Sound\\\\n\\\";\\n    }\",\"rerank_score\":0.08453369140625,\"end_column_base0\":5,\"start_column_base0\":4,\"embed_rank\":16,\"rerank_rank\":7,\"embed_score\":0.3055596053600311,\"id_int\":\"6045304054543895571\",\"start_line_base0\":4,\"end_line_base0\":6},{\"id\":\"4f70570ee08f44fd\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/chunks/grammar.js\",\"text\":\"      $.metadata_block,\\n      $.text_block,\\n    ),\\n\\n    role_header: $ => choice(\\n      seq('user', '\\\\n'),\\n      seq('assistant', '\\\\n'),\\n      seq('system', '\\\\n'),\\n    ),\\n\\n    reasoning_block: $ => seq(\\n      '≡≡≡ reasoning ≡≡≡', // or whatever markers you decide\\n      repeat(choice(/[^\\\\n]*/)),\\n      '≡≡≡ end ≡≡≡',\\n    ),\\n\\n    tool_call_block: $ => seq(\\n      'tool:', /.*/,\\n      repeat($.tool_call_line),\\n    ),\\n\",\"rerank_score\":0.07476806640625,\"end_column_base0\":6,\"start_column_base0\":0,\"embed_rank\":13,\"rerank_rank\":8,\"embed_score\":0.3527737259864807,\"id_int\":\"5724170847796544765\",\"start_line_base0\":15,\"end_line_base0\":34},{\"id\":\"c3d024bc263e9d73\",\"type\":\"ts\",\"signature\":\"void speak()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/tests/similar-lang/speak.cpp\",\"text\":\"void speak() {\\n\\n\\n\\n    }\",\"rerank_score\":0.07427978515625,\"end_column_base0\":5,\"start_column_base0\":4,\"embed_rank\":12,\"rerank_rank\":9,\"embed_score\":0.3575409948825836,\"id_int\":\"4886445986211077491\",\"start_line_base0\":1,\"end_line_base0\":5},{\"id\":\"8306b747c2c8d1e3\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer_web/src/components/MessageView.svelte\",\"text\":\"  <div class=\\\"p-4 bg-gray-800/50\\\">\\n    {#if role === 'tool'}\\n      <ToolResult {content} msgIndex={index} />\\n    {:else}\\n      <!-- Reasoning (for assistant messages with extended thinking) -->\\n      {#if reasoning}\\n        <div class=\\\"mb-4 pl-4 border-l-2 border-gray-600 text-gray-400 italic whitespace-pre-wrap\\\">\\n          {reasoning}\\n        </div>\\n      {/if}\\n\\n      <!-- Main content -->\\n      {#if content}\\n        {#if isSemanticGrepMatches}\\n          <SemanticGrepMatches {content} />\\n        {:else if shouldRenderMarkdown}\\n          <!-- Markdown content with toggle -->\\n          <div class=\\\"space-y-2\\\">\\n            <div class=\\\"flex items-center gap-2 text-sm\\\">\\n              <button\\n\",\"rerank_score\":0.0655517578125,\"end_column_base0\":21,\"start_column_base0\":0,\"embed_rank\":8,\"rerank_rank\":10,\"embed_score\":0.4014341831207275,\"id_int\":\"218063150812549603\",\"start_line_base0\":60,\"end_line_base0\":79},{\"id\":\"9177c0c7d3a7fbd5\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer_web/src/components/MessageView.svelte\",\"text\":\"  <header\\n    class=\\\"group px-4 py-2 font-semibold border-b border-gray-700 flex items-center justify-between cursor-pointer\\\"\\n    class:bg-role-system={role === 'system'}\\n    class:bg-role-developer={role === 'developer'}\\n    class:bg-role-user={role === 'user'}\\n    class:bg-role-assistant={role === 'assistant'}\\n    class:bg-role-tool={role === 'tool'}\\n    style=\\\"--tw-bg-opacity: 0.2\\\"\\n    onclick={() => copy(msgId)}\\n  >\\n    <span class=\\\"text-{colorClass}\\\">{index}: {displayRole}</span>\\n    <LinkButton id={msgId} />\\n  </header>\\n\\n  <!-- Content -->\\n  <div class=\\\"p-4 bg-gray-800/50\\\">\\n    {#if role === 'tool'}\\n      <ToolResult {content} msgIndex={index} />\\n    {:else}\\n      <!-- Reasoning (for assistant messages with extended thinking) -->\\n\",\"rerank_score\":0.052581787109375,\"end_column_base0\":72,\"start_column_base0\":0,\"embed_rank\":11,\"rerank_rank\":11,\"embed_score\":0.3829299211502075,\"id_int\":\"1258686585355369429\",\"start_line_base0\":45,\"end_line_base0\":64},{\"id\":\"61ff15b91a6f9761\",\"type\":\"ts\",\"signature\":\"fn greeting()\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/rust/hello.rs\",\"text\":\"fn greeting() {\\n    println!(\\\"Greetings, user!\\\");\\n}\",\"rerank_score\":0.046051025390625,\"end_column_base0\":1,\"start_column_base0\":0,\"embed_rank\":15,\"rerank_rank\":12,\"embed_score\":0.3063537776470184,\"id_int\":\"7061386625496880993\",\"start_line_base0\":5,\"end_line_base0\":7},{\"id\":\"dbaf508f9975874b\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/chunks/grammar.js\",\"text\":\"// ideas/steps from: https://chatgpt.com/c/69174d02-b1fc-8333-b8a6-6ecace15a383\\n//  a new file type  like askbuffer or askchatbuffer\\n//  folds.scm, highlights.scm... optional: indents.scm, textobjects.scm\\n//  TODO make sections recognize content as markdown\\n\\nmodule.exports = grammar({\\n  name: 'askbuffer',\\n\\n  rules: {\\n    document: $ => repeat($.block),\\n\\n    block: $ => choice(\\n      $.role_header,\\n      $.reasoning_block,\\n      $.tool_call_block,\\n      $.metadata_block,\\n      $.text_block,\\n    ),\\n\\n    role_header: $ => choice(\\n\",\"rerank_score\":0.040557861328125,\"end_column_base0\":29,\"start_column_base0\":0,\"embed_rank\":14,\"rerank_rank\":13,\"embed_score\":0.3518092036247253,\"id_int\":\"6606587756060968779\",\"start_line_base0\":0,\"end_line_base0\":19},{\"id\":\"24846efba73d494f\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/start-rag-server.fish\",\"text\":\"python3 lua/ask-openai/rag/server.py\\n\",\"rerank_score\":0.0281982421875,\"end_column_base0\":36,\"start_column_base0\":0,\"embed_rank\":6,\"rerank_rank\":14,\"embed_score\":0.4996417164802551,\"id_int\":\"2631350109412870479\",\"start_line_base0\":0,\"end_line_base0\":0},{\"id\":\"e07db36ce949cf38\",\"type\":\"lines\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer_web/index.html\",\"text\":\"<!doctype html>\\n<html lang=\\\"en\\\">\\n  <head>\\n    <meta charset=\\\"UTF-8\\\" />\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\" />\\n    <title>Chat Viewer</title>\\n  </head>\\n  <body>\\n    <div id=\\\"app\\\"></div>\\n    <script type=\\\"module\\\" src=\\\"/src/main.ts\\\"></script>\\n  </body>\\n</html>\\n\",\"rerank_score\":0.0235137939453125,\"end_column_base0\":7,\"start_column_base0\":0,\"embed_rank\":17,\"rerank_rank\":15,\"embed_score\":0.2861466705799103,\"id_int\":\"6952910680081682232\",\"start_line_base0\":0,\"end_line_base0\":11},{\"id\":\"b45a36ebff746337\",\"type\":\"uncovered\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/typescript/decorators.ts\",\"text\":\";\\n\\n\",\"rerank_score\":0.0198822021484375,\"embed_rank\":10,\"rerank_rank\":16,\"embed_score\":0.398482620716095,\"id_int\":\"3772388025107243831\",\"start_line_base0\":3,\"end_line_base0\":4},{\"id\":\"3e0166a4ae53c094\",\"type\":\"uncovered\",\"signature\":\"\",\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/typescript/decorators.ts\",\"text\":\";\\n\\n\",\"rerank_score\":0.0189666748046875,\"embed_rank\":9,\"rerank_rank\":17,\"embed_score\":0.398482620716095,\"id_int\":\"4467965162813636756\",\"start_line_base0\":5,\"end_line_base0\":6}]}"
+      },{
+        "timings":{
+          "prompt_n":6829,
+          "prompt_ms":774.18,
+          "prompt_per_token_ms":0.11336652511349,
+          "predicted_ms":435.472,
+          "predicted_n":89,
+          "prompt_per_second":8820.9460332222,
+          "cache_n":3037,
+          "predicted_per_second":204.37594150715,
+          "predicted_per_token_ms":4.8929438202247
+        },
+        "content":"",
+        "_logged":true,
+        "tool_calls":[{
+            "id":"VQIgRBm5pCMBvmgaYsfoUW0RmnSjX4oP",
+            "type":"function",
+            "function":{
+              "arguments":"{\"argv\":[\"bash\",\"-lc\",\"sed -n '1,200p' ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/instructs.lua\"]}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"We need modify instruct loader: file lua/ask-openai/frontends/instructs.lua. Open it.",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"VQIgRBm5pCMBvmgaYsfoUW0RmnSjX4oP",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"local log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal files = require(\\\"ask-openai.helpers.files\\\")\\n\\n-- global instructs: `~/.agents/instructs`\\n-- per repo: `.agents/instructs`\\n\\nlocal M = {}\\n\\n-- Cache of instruct name -> absolute path of the instruct markdown file\\nM._instruct_paths_by_name = {}\\n-- Cache of instruct name -> instruct md contents\\nM._instruct_contents_by_name = {}\\n\\n---@param raw string\\n---@return string cleaned\\nfunction M.clean_contents(raw)\\n    local content = raw\\n\\n    -- Remove YAML front‑matter\\n    if content:match(\\\"^%-%-%-\\\") then\\n        -- Remove everything from the opening '---' to the next closing '---' line,\\n        -- and consume any following whitespace (including CRLF line endings).\\n        content = content:gsub(\\\"^%-%-%-.-%-%-%-%s*\\\", \\\"\\\")\\n    end\\n\\n    -- strip HTML comments (non‑greedy)\\n    content = content:gsub(\\\"<!--.-?-->\\\", \\\"\\\")\\n\\n    content = vim.trim(content)\\n    return content\\nend\\n\\n--- The content is cached after the first read.\\n---@param name string The name of the instruct\\n---@return string|nil The instruct contents after stripping HTML comments and YAML front‑matter,\\n---                or nil if the instruct cannot be found.\\nfunction M.load_instruct(name)\\n    if not name or name == \\\"\\\" then\\n        error(\\\"instruct name is required for load_instruct\\\")\\n    end\\n\\n    if M._instruct_contents_by_name[name] then\\n        return M._instruct_contents_by_name[name]\\n    end\\n\\n    if not M._instruct_paths_by_name[name] then\\n        -- Populate paths (TODO I don't like this.. rename get_instruct_slash_commands or split out some functionality)\\n        M.get_instruct_slash_commands()\\n    end\\n\\n    local path = M._instruct_paths_by_name[name]\\n    if not path or vim.fn.filereadable(path) == 0 then\\n        log:error(string.format(\\\"instruct file not found: %s\\\", name))\\n        return nil\\n    end\\n\\n    local raw = files.read_text(path)\\n    if not raw then\\n        log:error(string.format(\\\"Empty instruct %s in %s\\\", name, path))\\n        return nil\\n    end\\n\\n    local content = M.clean_contents(raw)\\n    M._instruct_contents_by_name[name] = content\\n    return content\\nend\\n\\nM.cached_instruct_slash_commands = nil\\n--- List of slash commands for instructs (cached after first load)\\n---@return string[] List of slash commands (e.g., \\\"/my_instruct\\\")\\nfunction M.get_instruct_slash_commands()\\n    if M.cached_instruct_slash_commands then\\n        return M.cached_instruct_slash_commands\\n    end\\n\\n    local instructs_path = vim.fn.expand(\\\"~/.agents/instructs\\\")\\n    local names = {}\\n    if vim.fn.isdirectory(instructs_path) == 1 then\\n        -- * load instruct directories\\n        local dir_names = files.list_directories(instructs_path)\\n        for _, name in ipairs(dir_names) do\\n            M._instruct_paths_by_name[name] = instructs_path .. \\\"/\\\" .. name .. \\\"/INSTRUCT.md\\\"\\n            table.insert(names, name)\\n        end\\n\\n        -- * plus standalone markdown files\\n        local entries = files.list_entries(instructs_path)\\n        for _, entry in ipairs(entries) do\\n            if entry.type == \\\"file\\\" and entry.name:match(\\\"%.md$\\\") then\\n                local instruct_name = entry.name:gsub(\\\"%.md$\\\", \\\"\\\")\\n                -- FYI this means directory wins over standalone markdown file\\n                if M._instruct_paths_by_name[instruct_name] then\\n                    vim.notify(string.format(\\n                        \\\"Instruct name collision: '%s' already registered from directory %s; ignoring standalone %s\\\",\\n                        instruct_name,\\n                        M._instruct_paths_by_name[instruct_name],\\n                        instructs_path .. \\\"/\\\" .. entry.name\\n                    ), vim.log.levels.WARN)\\n                else\\n                    M._instruct_paths_by_name[instruct_name] = instructs_path .. \\\"/\\\" .. entry.name\\n                    table.insert(names, instruct_name)\\n                end\\n            end\\n        end\\n    end\\n    M.cached_instruct_slash_commands = names\\n    return names\\nend\\n\\nreturn M\\n\",\"name\":\"STDOUT\"}]}"
+      },{
+        "timings":{
+          "prompt_n":1090,
+          "prompt_ms":161.272,
+          "prompt_per_token_ms":0.14795596330275,
+          "predicted_ms":5960.864,
+          "predicted_n":1209,
+          "prompt_per_second":6758.7677960216,
+          "cache_n":9908,
+          "predicted_per_second":202.82294647219,
+          "predicted_per_token_ms":4.9304086021505
+        },
+        "content":"",
+        "_logged":true,
+        "tool_calls":[{
+            "id":"o4b2DuOdCgTwuGbki4jukduX1Hvgxtji",
+            "type":"function",
+            "function":{
+              "arguments":"{\"patch\":\"*** Begin Patch\\n*** Update File: lua/ask-openai/frontends/instructs.lua\\n@@\\n-    local instructs_path = vim.fn.expand(\\\"~/.agents/instructs\\\")\\n+    local instructs_path = vim.fn.expand(\\\"~/.agents/instructs\\\")\\n@@\\n-    if vim.fn.isdirectory(instructs_path) == 1 then\\n-        -- * load instruct directories\\n-        local dir_names = files.list_directories(instructs_path)\\n-        for _, name in ipairs(dir_names) do\\n-            M._instruct_paths_by_name[name] = instructs_path .. \\\"/\\\" .. name .. \\\"/INSTRUCT.md\\\"\\n-            table.insert(names, name)\\n-        end\\n-\\n-        -- * plus standalone markdown files\\n-        local entries = files.list_entries(instructs_path)\\n-        for _, entry in ipairs(entries) do\\n-            if entry.type == \\\"file\\\" and entry.name:match(\\\"%.md$\\\") then\\n-                local instruct_name = entry.name:gsub(\\\"%.md$\\\", \\\"\\\")\\n-                -- FYI this means directory wins over standalone markdown file\\n-                if M._instruct_paths_by_name[instruct_name] then\\n-                    vim.notify(string.format(\\n-                        \\\"Instruct name collision: '%s' already registered from directory %s; ignoring standalone %s\\\",\\n-                        instruct_name,\\n-                        M._instruct_paths_by_name[instruct_name],\\n-                        instructs_path .. \\\"/\\\" .. entry.name\\n-                    ), vim.log.levels.WARN)\\n-                else\\n-                    M._instruct_paths_by_name[instruct_name] = instructs_path .. \\\"/\\\" .. entry.name\\n-                    table.insert(names, instruct_name)\\n-                end\\n-            end\\n-        end\\n-    end\\n+    if vim.fn.isdirectory(instructs_path) == 1 then\\n+        -- global instruct directories\\n+        local dir_names = files.list_directories(instructs_path)\\n+        for _, name in ipairs(dir_names) do\\n+            M._instruct_paths_by_name[name] = instructs_path .. \\\"/\\\" .. name .. \\\"/INSTRUCT.md\\\"\\n+            table.insert(names, name)\\n+        end\\n+\\n+        -- global standalone markdown files\\n+        local entries = files.list_entries(instructs_path)\\n+        for _, entry in ipairs(entries) do\\n+            if entry.type == \\\"file\\\" and entry.name:match(\\\"%.md$\\\") then\\n+                local instruct_name = entry.name:gsub(\\\"%.md$\\\", \\\"\\\")\\n+                if M._instruct_paths_by_name[instruct_name] then\\n+                    vim.notify(string.format(\\n+                        \\\"Instruct name collision: '%s' already registered from directory %s; ignoring global file %s\\\",\\n+                        instruct_name,\\n+                        M._instruct_paths_by_name[instruct_name],\\n+                        instructs_path .. \\\"/\\\" .. entry.name\\n+                    ), vim.log.levels.WARN)\\n+                else\\n+                    M._instruct_paths_by_name[instruct_name] = instructs_path .. \\\"/\\\" .. entry.name\\n+                    table.insert(names, instruct_name)\\n+                end\\n+            end\\n+        end\\n+    end\\n+\\n+    -- repo‑specific instructs: <repo_root>/.agents/instructs\\n+    local repo_root = nil\\n+    local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')[1]\\n+    if vim.v.shell_error == 0 and git_root ~= '' then\\n+        repo_root = vim.fn.trim(git_root)\\n+    end\\n+    if repo_root then\\n+        local repo_instructs_path = repo_root .. '/.agents/instructs'\\n+        if vim.fn.isdirectory(repo_instructs_path) == 1 then\\n+            local dir_names = files.list_directories(repo_instructs_path)\\n+            for _, name in ipairs(dir_names) do\\n+                if not M._instruct_paths_by_name[name] then\\n+                    M._instruct_paths_by_name[name] = repo_instructs_path .. '/' .. name .. '/INSTRUCT.md'\\n+                    table.insert(names, name)\\n+                end\\n+            end\\n+\\n+            local entries = files.list_entries(repo_instructs_path)\\n+            for _, entry in ipairs(entries) do\\n+                if entry.type == 'file' and entry.name:match('%.md$') then\\n+                    local instruct_name = entry.name:gsub('%.md$', '')\\n+                    if not M._instruct_paths_by_name[instruct_name] then\\n+                        M._instruct_paths_by_name[instruct_name] = repo_instructs_path .. '/' .. entry.name\\n+                        table.insert(names, instruct_name)\\n+                    else\\n+                        vim.notify(string.format(\\n+                            \\\"Instruct name collision: '%s' already registered from higher precedence; ignoring repo file %s\\\",\\n+                            instruct_name,\\n+                            repo_instructs_path .. '/' .. entry.name\\n+                        ), vim.log.levels.WARN)\\n+                    end\\n+                end\\n+            end\\n+        end\\n+    end\\n*** End Patch\"}",
+              "name":"apply_patch"
+            }
+          }],
+        "reasoning_content":"Add repo root .agents/instructs loading. Modify get_instruct_slash_commands to also consider repo root. Repo root path via git rev-parse. Use vim.fn.systemlist. Implement similar logic.",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"o4b2DuOdCgTwuGbki4jukduX1Hvgxtji",
+        "role":"tool",
+        "content":"{\"content\":[{\"text\":\"Success. Updated the following files:\\nM lua/ask-openai/frontends/instructs.lua\\n\",\"type\":\"text\"}]}"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "max_tokens":4096,
+    "tools":[{
+        "function":{
+          "description":"Run a process on this darwin machine",
+          "parameters":{
+            "properties":{
+              "argv":{
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "type":"array",
+                "items":{
+                  "type":"string"
+                },
+                "minItems":1
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              },
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_process"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "max_length":{
+                "exclusiveMinimum":0,
+                "description":"Maximum number of characters to return.",
+                "default":5000,
+                "title":"Max Length",
+                "type":"integer",
+                "exclusiveMaximum":1000000
+              },
+              "url":{
+                "description":"URL to fetch",
+                "format":"uri",
+                "type":"string",
+                "minLength":1,
+                "title":"Url"
+              },
+              "raw":{
+                "title":"Raw",
+                "description":"Get the actual HTML content of the requested page, without simplification.",
+                "default":false,
+                "type":"boolean"
+              },
+              "start_index":{
+                "description":"On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+                "default":0,
+                "title":"Start Index",
+                "minimum":0,
+                "type":"integer"
+              }
+            },
+            "required":["url"]
+          },
+          "name":"fetch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Execute arbitrary Lua code in the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd.",
+          "parameters":{
+            "properties":{
+              "code":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            },
+            "type":"object",
+            "required":["code"]
+          },
+          "name":"run_lua"
+        },
+        "type":"function"
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "properties":{
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "top_k":{
+                "description":"number of matches to return (post reranking)",
+                "type":"number"
+              }
+            },
+            "type":"object",
+            "required":["query"]
+          },
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "patch":{
+                "description":"file changes in custom diff format",
+                "type":"string"
+              }
+            },
+            "required":["patch"]
+          },
+          "description":"Patch a file",
+          "name":"apply_patch"
+        }
+      }],
+    "model":"",
+    "temperature":1,
+    "top_p":1
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "role":"assistant",
+    "content":"Implemented enhanced instruct loading:\n\n- Added repository‑specific `.agents/instructs` handling.\n- Integrated global and repo paths with collision warnings.\n- Updated logic to prioritize existing entries and maintain cache."
+  },
+  "last_sse":{
+    "id":"chatcmpl-g1zmSoVZMJJ8xpZ1uUSQwm0wZXs8vTWA",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "system_fingerprint":"b8656-9062d4e84",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "timings":{
+      "prompt_n":1194,
+      "prompt_ms":181.401,
+      "prompt_per_token_ms":0.15192713567839,
+      "predicted_ms":210.892,
+      "predicted_n":43,
+      "prompt_per_second":6582.1026344948,
+      "cache_n":11060,
+      "predicted_per_second":203.89583293819,
+      "predicted_per_token_ms":4.9044651162791
+    },
+    "created":1776199802,
+    "object":"chat.completion.chunk"
+  }
+}
