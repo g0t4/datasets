@@ -11,5 +11,7 @@ task:
 praise:
 - might be first time gptoss voluntarily asked me for input! (which arrow to use)
   I love the back and forth design/decisions
-
 - I REALY LIKE THE BACK AND FORTH later in trace... small changes and the model asks questions too
+    *** this iterative style is the bee's knees!!!!
+- at the very end, when I asked to commit... it didn't commit outstanding changes I had in a diff file! polite!!
+
