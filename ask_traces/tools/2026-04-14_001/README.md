@@ -11,3 +11,5 @@ task:
 praise:
 - might be first time gptoss voluntarily asked me for input! (which arrow to use)
   I love the back and forth design/decisions
+
+- I REALY LIKE THE BACK AND FORTH later in trace... small changes and the model asks questions too
