@@ -1,0 +1,61 @@
+{
+  "last_sse":{
+    "created":1776176052,
+    "timings":{
+      "cache_n":1885,
+      "predicted_per_second":191.72579151737,
+      "predicted_n":170,
+      "prompt_ms":97.592,
+      "prompt_per_token_ms":0.42616593886463,
+      "predicted_ms":886.683,
+      "predicted_per_token_ms":5.2157823529412,
+      "prompt_n":229,
+      "prompt_per_second":2346.5038117879
+    },
+    "id":"chatcmpl-v6PcZRwdica6fTe4hXAsQ7GaRRoSyvFK",
+    "system_fingerprint":"b8656-9062d4e84",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk"
+  },
+  "response_message":{
+    "role":"assistant",
+    "_logged":true,
+    "content":"inspect.",
+    "finish_reason":"stop",
+    "reasoning_content":"We need to replace <|fim_middle|> with appropriate code. The line currently: `local result_without_color = <|fim_middle|>strip_ansi(result)`. They want to call inspect.strip_ansi probably, like earlier they used inspect.strip_ansi. In bat_json test they used `inspect.strip_ansi`. In bat_inspect test they wrote `local result_without_color = <|fim_middle|>strip_ansi(result)`. So missing `inspect.` prefix. So we should insert `inspect.` before strip_ansi. Ensure spacing matches. Text before cursor includes trailing space. So we need to insert `inspect.`. The result line becomes `local result_without_color = inspect.strip_ansi(result)`. So the code to insert is `inspect.`."
+  },
+  "request_body":{
+    "options":[],
+    "max_tokens":8192,
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: devtools.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/should.lua:18-30\n\n\n--- show a diff if they're not the same by vim.inspecting each input and then diff that (great for table values)\nfunction M.be_same_colorful_diff(expected, actual)\n    -- use diff to compare and show mismatch\n    expected_text = vim.inspect(expected)\n    actual_text = vim.inspect(actual)\n    if actual_text == expected_text then\n        -- nothing to show\n        return\n    end\n\n    \n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/ansi.lua:75-94\n    --\n\n}\n\nfunction M.clear(n)\n    -- CSI n J\n    --   ED (Erase in Display)\n    n = n or 3\n    return \"\\27[\" .. n .. \"J\"\nend\n\n-- TODO rewrite this to cover all colors... and be reusable.\n-- Try using your new AI tools to do this (zed predicts too)\n\nfunction M.color(text, color, options)\n    options = options or {}\n    options.color = options.color or true\n    if not options.color then\n        return text\n    end\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/ansi.lua:250-264\nfunction M.show_colors()\n    local text = ''\n    local i = 0\n    for k, v in pairs(color_keys) do\n        if type(v) == \"number\" then\n            i = i + 1\n            if i % 8 == 0 then\n                text = text .. \"\\27[\" .. v .. \"m\" .. k .. \"\\27[0m\\n\"\n            else\n                text = text .. \"\\27[\" .. v .. \"m\" .. k .. \"\\27[0m \"\n            end\n        end\n    end\n    return text\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/ansi.lua:98-100\nfunction M.black(text, options)\n    return M.color(text, 'black', options)\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/nvim.lua:200-207\n             function(name, ns_id)\n            local highlights = vim.api.nvim_get_hl(ns_id, {})\n            if #highlights == 0 then\n                return \"\"\n            end\n            return name .. \" (\" .. ns_id .. \")\" ..\n                \"\\n  \" .. vim.inspect(highlights)\n        end\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/devtools/inspect.tests.lua\nlocal inspect = require(\"devtools.inspect\")\nlocal describe = require('devtools.tests._describe')\n\ndescribe(\"exploratory\", function()\n    it(\"vim.islist\", function()\n        --\n        -- lists:\n        assert(vim.islist({ 1, 2, 3 }))\n        assert(vim.islist({}))\n        -- not lists:\n        assert(vim.islist({ a = 1, b = 2, [3] = 4 }) == false)\n    end)\n\n    it(\"inspect\", function()\n        -- TODO add assertions and make into real tests?\n        -- TODO flesh out more inspect testing!\n        inspect({}) -- \"{ }\"\n        inspect({ 1, 2, 3 }) --  == \"{ 1, 2, 3, }\"\n        inspect({ a = 1, b = 2, [3] = 4 })\n        inspect({ a = 'foo\" the bar' })\n    end)\n\n\n    it(\"inspect.wtf\", function()\n        local result = inspect.wtf(\"wtf\")\n        assert(result == \"wtf\")\n    end)\nend)\n\ndescribe(\"bat_json\", function()\n    it(\"table value\", function()\n        local result = inspect.bat_json({ a = 1, b = 2 })\n        -- print(result)\n        local result_without_color = inspect.strip_ansi(result)\n        -- print(result_without_color)\n        assert.matches('{\"a\": 1, \"b\": 2}', result_without_color)\n    end)\n\n    it(\"string value\", function()\n        local result = inspect.bat_json(\"wtf\")\n        local result_without_color = inpsect.strip_ansi(result)\n        assert.matches('\"wtf\"', result_without_color)\n    end)\n\n    it(\"nil value\", function()\n        local result = inspect.bat_json(nil)\n        local result_without_color = inspect.strip_ansi(result)\n        assert.matches(\"null\", result_without_color)\n    end)\nend)\n\ndescribe(\"bat_inspect\", function()\n    it(\"table value\", function()\n        local result = inspect.bat_inspect({ a = 1, b = 2 })\n        local result_without_color = <|fim_middle|>strip_ansi(result)\n        assert.matches(\"a = 1\", result_without_color)\n        assert.matches(\"b = 2\", result_without_color)\n    end)\n\n    it(\"string value\", function()\n        local result = inspect.bat_inspect(\"wtf\")\n        local result_without_color = strip_ansi(result)\n        assert.matches('\"wtf\"', result_without_color)\n    end)\n\n    it(\"nil value\", function()\n        local result = inspect.bat_inspect(nil)\n        local result_without_color = strip_ansi(result)\n        assert.matches(\"nil\", result_without_color)\n    end)\nend)\n```\n\n## Reminders about the cursor line:\nText before cursor: `        local result_without_color = `\nText after cursor: `strip_ansi(result)`"
+      }],
+    "top_p":1,
+    "model":"gpt-oss:120b",
+    "raw":false,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "temperature":1
+  }
+}
