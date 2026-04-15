@@ -7,3 +7,9 @@ literally the next short option that I was thinking of mapping was `-c`... crazy
 ## 1776285065-trace.json
 
 crazy sauce! next FIM completion literally was `-r` !!!
+
+## 1776285179-trace.json
+
+and again I guessed it! `-C` next
+mind reader... my guesses have been based on likely usage (most popular first)
+- I'd guess alphabetic if I had started with `a` and `b` etc.. but I am not in alphabetic order here so then yeah guessing on usage is best guess
