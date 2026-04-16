@@ -1,0 +1,63 @@
+{
+  "request_body":{
+    "temperature":1,
+    "stream":true,
+    "model":"",
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions. \n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code. \n- If changing existing code, preserve unrelated code and comments. \n- Never add comments to the end of a line. \n- Never add stupid comments.\n- Be considerate with indentation. \n- Prefer readable code over of comments. \n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\nNaming\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n\nType Hints\n- Prefer EmmyLua/LuaLS style annotations\n- Always annotate when type inference would be ambiguous, or for public APIs.\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/semantic_grep.lua:0-19\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal client = require(\"ask-openai.rag.client.client\")\n\nlocal M = {\n    ---@type OpenAITool;\n    ToolDefinition = {\n        [\"function\"] = {\n            description =\n            \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\",\n            name = \"semantic_grep\",\n            parameters = {\n                properties = {\n                    filetype = {\n                        type = \"string\",\n                        description = \"limit matches to a vim compatible filetype. default includes all filetypes\"\n                    },\n                    query = {\n                        type = \"string\",\n                        description = \"query text, what you are looking for\"\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/embedder.lua:95-111\n--- Request embeddings for a batch of strings.\n---@param texts string[]\n---@return table[]|nil, string|nil  -- list of embedding vectors\nfunction M.embed_batch(texts)\n    if type(texts) ~= \"table\" then\n        return nil, \"embed_batch expects a table of strings\"\n    end\n    local tcp, err = connect()\n    if not tcp then return nil, err end\n    local ok, send_err = send_message(tcp, { batch = texts })\n    if not ok then return nil, send_err end\n    local resp, recv_err = receive_message(tcp)\n    tcp:close()\n    if not resp then return nil, recv_err end\n    if resp.error then return nil, resp.error end\n    return resp.embeddings, nil\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:0-19\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal plumbing = require(\"ask-openai.tools.plumbing\")\nlocal safely = require(\"ask-openai.helpers.safely\")\n\nlocal uv = vim.uv\n\nlocal M = {}\n\nM.counter = 1\nM.callbacks = {}\n\n-- TODO! look into Memory tools / RAG, i.e. in Qwen-Agent\n-- TODO! https://github.com/QwenLM/Qwen-Agent/blob/main/qwen_agent/memory/memory.py\n-- also check out other examples in qwen-agent for new ideas:\n--    https://github.com/QwenLM/Qwen-Agent/tree/main/examples\n-- PRN also I wanna test out large qwen models, hosted by Alibaba/groq/others\n\nlocal servers = {\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal completion_logger = require(\"ask-openai.logs.completion_logger\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal AgentWindow = require(\"ask-openai.agents.viewer.window\")\nlocal AgentTrace = require(\"ask-openai.agents.trace\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal LinesBuilder = require(\"ask-openai.agents.viewer.lines_builder\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal formatters = require(\"ask-openai.agents.viewer.formatters\")\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal text_helpers = require(\"ask-openai.helpers.text\")\nlocal thinking = require(\"ask-openai.rewrites.thinking\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal Displayer = require(\"ask-openai.rewrites.displayer\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal human = require(\"devtools.humanize\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal harmony = require(\"ask-openai.backends.models.gptoss.tokenizer\").harmony\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"simplify with vim apis\n\nHere is the code I selected:\n```lua/ask-openai/rag/client/known.lua:21-28\n    local input_texts = {}\n    for _, q in ipairs(queries) do\n        table.insert(input_texts, q)\n    end\n    for _, d in ipairs(documents) do\n        table.insert(input_texts, d)\n    end\n\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "top_p":1,
+    "max_tokens":8192
+  },
+  "response_message":{
+    "reasoning_content":"The user wants to simplify the code using Vim APIs? Actually they say \"simplify with vim apis\". The code snippet builds a list input_texts by inserting each query and each document. Could simplify using vim.tbl_extend? In Neovim, there is vim.tbl_extend('keep', ...) or vim.tbl_flatten? Actually want to combine two arrays. Could do local input_texts = vim.tbl_extend('force', queries, documents) but that merges tables with keys; for array-like tables, it appends values. Using vim.tbl_extend('force', queries, documents) works (preserves order). Or use vim.list_extend? There is vim.list_extend(dst, src). So could do local input_texts = {} vim.list_extend(input_texts, queries) vim.list_extend(input_texts, documents). That replaces loops. Provide code with appropriate annotation? Provide replacement code.\n\nWe need to preserve indentation, just replace snippet. Provide the simplified version. No markdown. Provide code only.\n\nLet's output:\n\n```lua\nlocal input_texts = vim.list_extend(vim.list_extend({}, queries), documents)\n```\n\nOr stepwise:\n\n```lua\nlocal input_texts = {}\nvim.list_extend(input_texts, queries)\nvim.list_extend(input_texts, documents)\n```\n\nProbably second is clearer.\n\nThus final answer: the simplified snippet.",
+    "role":"assistant",
+    "_logged":true,
+    "finish_reason":"stop",
+    "content":"local input_texts = {}\nvim.list_extend(input_texts, queries)\nvim.list_extend(input_texts, documents)"
+  },
+  "last_sse":{
+    "system_fingerprint":"b8656-9062d4e84",
+    "id":"chatcmpl-cBIwOlM7lXQUlAZHkKaTJjbeOt3mSbku",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "object":"chat.completion.chunk",
+    "timings":{
+      "prompt_per_second":8146.1067775235,
+      "prompt_n":1744,
+      "prompt_ms":214.09,
+      "cache_n":0,
+      "predicted_ms":1537.601,
+      "predicted_per_token_ms":5.0084723127036,
+      "prompt_per_token_ms":0.12275802752294,
+      "predicted_per_second":199.66168076113,
+      "predicted_n":307
+    },
+    "created":1776362989
+  }
+}
