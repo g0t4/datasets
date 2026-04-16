@@ -1,6 +1,11 @@
 new approach to detailed prompting => put the instructions into notes inside the file (in this case a new file will be created)...
 - I need to better prompt gptoss120b to pay attention to the notes, to not skip things
 
+loves:
+- let gptoss120b port from python to lua! even w/o numpy over on lua side... it did a bang up job!
+  really there is no good reason these days (beyond learning/practice) to do the migration b/w languages with a human :)
+
+
 complaints:
 - gptoss120b said it added the code in embeddings.lua w/o actually doing it!
   - IN FACT, it had not even drafted the code yet!
