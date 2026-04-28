@@ -1,0 +1,433 @@
+{
+  "request_body":{
+    "stream":true,
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "temperature":1,
+    "tools":[{
+        "function":{
+          "description":"Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.",
+          "parameters":{
+            "required":["url"],
+            "type":"object",
+            "properties":{
+              "start_index":{
+                "type":"integer",
+                "default":0,
+                "description":"On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+                "title":"Start Index",
+                "minimum":0
+              },
+              "max_length":{
+                "type":"integer",
+                "default":5000,
+                "description":"Maximum number of characters to return.",
+                "exclusiveMinimum":0,
+                "title":"Max Length",
+                "exclusiveMaximum":1000000
+              },
+              "url":{
+                "minLength":1,
+                "format":"uri",
+                "description":"URL to fetch",
+                "title":"Url",
+                "type":"string"
+              },
+              "raw":{
+                "description":"Get the actual HTML content of the requested page, without simplification.",
+                "title":"Raw",
+                "default":false,
+                "type":"boolean"
+              }
+            }
+          },
+          "name":"fetch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Run a process on this linux machine",
+          "parameters":{
+            "properties":{
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              },
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "argv":{
+                "minItems":1,
+                "type":"array",
+                "items":{
+                  "type":"string"
+                },
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'."
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_process"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Execute arbitrary Lua code in the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd.",
+          "parameters":{
+            "required":["code"],
+            "properties":{
+              "code":{
+                "description":"Lua code to execute. Should be a valid Lua chunk.",
+                "type":"string"
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_lua"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Patch a file",
+          "parameters":{
+            "required":["patch"],
+            "properties":{
+              "patch":{
+                "description":"file changes in custom diff format",
+                "type":"string"
+              }
+            },
+            "type":"object"
+          },
+          "name":"apply_patch"
+        },
+        "type":"function"
+      }],
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n\n*** Add File: <path> - every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - in-place edits (optionally with a rename).\n\nUpdateFile can be immediately followed by MoveTo to rename the file:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\n- Verify your changes with `git diff foo.json`\n- Nothing wrong with commands too:\n  - `rm foo.json` to delete\n  - `mv foo.json bar.json` to rename\n  - `rename` for bulk rename\n- Don't be that guy that uses DeleteFile followed by AddFile just to rename a file!\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"make my fzf file picker in fish shell, it doens't show symlinked files"
+      },{
+        "_logged":true,
+        "tool_calls":[{
+            "id":"AFDHPoKNQHCaAOe29BFJjNgwVC7eKtGa",
+            "type":"function",
+            "function":{
+              "arguments":"{\n  \"command_line\": \"rg -n \\\"fzf\\\" -t f -t fish\",\n  \"cwd\": \"~/repos/github/g0t4/dotfiles\"\n}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"We need to modify fish script for fzf file picker to include symlinked files. Find relevant file. Use search.",
+        "role":"assistant",
+        "content":"",
+        "timings":{
+          "predicted_per_second":233.49383661696,
+          "predicted_n":82,
+          "prompt_per_second":11276.256832793,
+          "prompt_ms":261.789,
+          "prompt_per_token_ms":0.088681910569106,
+          "predicted_ms":351.187,
+          "predicted_per_token_ms":4.2827682926829,
+          "prompt_n":2952,
+          "cache_n":0
+        }
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"AFDHPoKNQHCaAOe29BFJjNgwVC7eKtGa",
+        "content":"{\"isError\":true,\"content\":[{\"type\":\"text\",\"text\":\"2\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"rg: unrecognized file type: f\\n\",\"name\":\"STDERR\"}]}"
+      },{
+        "_logged":true,
+        "tool_calls":[{
+            "id":"MnLJQ2ejPPHqkR6QD8y7skKe3rEzGOle",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"fzf\\\" -t fish .\",\"cwd\":\"~/repos/github/g0t4/dotfiles\"}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"Let's just search for fzf.",
+        "role":"assistant",
+        "content":"",
+        "timings":{
+          "predicted_per_second":251.0985561833,
+          "predicted_n":58,
+          "prompt_per_second":1987.9518072289,
+          "prompt_ms":49.8,
+          "prompt_per_token_ms":0.5030303030303,
+          "predicted_ms":230.985,
+          "predicted_per_token_ms":3.9825,
+          "prompt_n":99,
+          "cache_n":2991
+        }
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"MnLJQ2ejPPHqkR6QD8y7skKe3rEzGOle",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"./fish/load_last_interactive_only/files-specific.fish:392:47:    #  locate (build db of paths and use with fzf/fasd/etc?)\\n./fish/load_last_interactive_only/files-specific.fish:403:87:        #    cdz /foo/bar    # 3. tried third - any way to just take first match from fzf and cd to it? and only open interactive if NO matches with fzf?\\n./fish/load_last_interactive_only/files-specific.fish:407:14:        #    fzf --query /foo/bar  # 4. interactive selection\\n./fish/load_last_interactive_only/files-specific.fish:417:69:        # tmp idea... get all dirs (of current dir!) and query with fzf...\\n./fish/load_last_interactive_only/files-specific.fish:419:47:        # fallback to interactive cd! with fd+fzf\\n./fish/load_last_interactive_only/files-specific.fish:426:85:        # FYI --select-1 auto selects if only one matching entry instead of showing fzf UI\\n./fish/load_last_interactive_only/files-specific.fish:427:41:        set selected_dir (fd --type d | fzf --select-1 --preview 'ls {}' --query \\\"$argv\\\")\\n./fish/load_last_interactive_only/files-specific.fish:786:7:# *** fzf \\\"pickers\\\" for selecting a file to pass to a command\\n./fish/load_last_interactive_only/files-specific.fish:787:7:# --- fzf per-directory MRU cache --------------------------------------------\\n./fish/load_last_interactive_only/files-specific.fish:789:8:set -g FZF_MRU_DIR ~/.cache/fzf-mru\\n./fish/load_last_interactive_only/files-specific.fish:790:8:set -g FZF_MRU_CAP 30 # per dir limit, only most recent are gonna matter anyways\\n./fish/load_last_interactive_only/files-specific.fish:792:12:function __fzf_mru_key\\n./fish/load_last_interactive_only/files-specific.fish:796:12:function __fzf_mru_file --argument-names picker\\n./fish/load_last_interactive_only/files-specific.fish:797:17:    set -l dir $FZF_MRU_DIR/$picker\\n./fish/load_last_interactive_only/files-specific.fish:800:25:    set -l file $dir/(__fzf_mru_key)\\n./fish/load_last_interactive_only/files-specific.fish:808:12:function __fzf_mru_read --argument-names picker\\n./fish/load_last_interactive_only/files-specific.fish:809:20:    set -l file (__fzf_mru_file $picker)\\n./fish/load_last_interactive_only/files-specific.fish:819:12:function __fzf_mru_write --argument-names picker path\\n./fish/load_last_interactive_only/files-specific.fish:820:118:    # normalize cleans up path ... but, the path should always be the same assuming I only ever save selections from fzf to the cache\\n./fish/load_last_interactive_only/files-specific.fish:825:20:    set -l file (__fzf_mru_file $picker)\\n./fish/load_last_interactive_only/files-specific.fish:831:20:    end | head -n $FZF_MRU_CAP >$temp_new_file\\n./fish/load_last_interactive_only/files-specific.fish:835:12:function __fzf_picker --argument-names picker fd_command\\n./fish/load_last_interactive_only/files-specific.fish:838:12:    set -l fzf_opts --height 50% --border --header \\\"MRU ↑  |  Fresh ↓\\\"\\n./fish/load_last_interactive_only/files-specific.fish:840:46:        # can type `cd foo<alt-shift-d>` and fzf opens with `foo` prefilled\\n./fish/load_last_interactive_only/files-specific.fish:841:76:        #  effectively start filtering before and/or after deciding to use fzf picker\\n./fish/load_last_interactive_only/files-specific.fish:842:13:        set fzf_opts $fzf_opts --query $current_word\\n./fish/load_last_interactive_only/files-specific.fish:847:32:            set -l mru_file (__fzf_mru_file $picker)\\n./fish/load_last_interactive_only/files-specific.fish:848:15:            __fzf_mru_read $picker\\n./fish/load_last_interactive_only/files-specific.fish:850:15:        end | fzf $fzf_opts\\n./fish/load_last_interactive_only/files-specific.fish:854:11:        __fzf_mru_write $picker \\\"$file\\\"\\n./fish/load_last_interactive_only/files-specific.fish:874:11:function _fzf_nested_dir_picker -d \\\"Paste selected directory into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:875:7:    __fzf_picker dirs \\\"fd --type d .\\\"\\n./fish/load_last_interactive_only/files-specific.fish:878:11:function _fzf_nested_file_picker -d \\\"Paste selected file into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:879:7:    __fzf_picker files \\\"fd --type f .\\\"\\n./fish/load_last_interactive_only/files-specific.fish:882:11:function _fzf_nested_file_unrestricted_picker\\n./fish/load_last_interactive_only/files-specific.fish:883:7:    __fzf_picker unrestricted \\\"fd --type f . -u\\\"\\n./fish/load_last_interactive_only/files-specific.fish:886:11:function _fzf_nested_both_file_and_dirs_picker -d \\\"Paste selected file or directory into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:888:7:    __fzf_picker both \\\"fd .\\\"\\n./fish/load_last_interactive_only/files-specific.fish:891:11:function _fzf_nested_git_commit_picker -d \\\"Pick a git commit_hash\\\"\\n./fish/load_last_interactive_only/files-specific.fish:899:11:        | fzf --height 50% --border --ansi --accept-nth=1\\n./fish/load_last_interactive_only/files-specific.fish:906:102:    # TODO porting commit hashes to have MUR? then use this as a refernece for the differences w/ fd+fzf pickers above\\n./fish/load_last_interactive_only/files-specific.fish:910:17:    # function _fzf_nested_file_unrestricted_picker -d \\\"Paste selected file (including hidden) into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:911:43:    #     set -l file (fd --type f . -u | fzf --height 50% --border)\\n./fish/load_last_interactive_only/files-specific.fish:919:49:bind_both_modes_default_and_insert alt-shift-d _fzf_nested_dir_picker\\n./fish/load_last_interactive_only/files-specific.fish:920:49:bind_both_modes_default_and_insert alt-shift-f _fzf_nested_file_picker\\n./fish/load_last_interactive_only/files-specific.fish:921:49:bind_both_modes_default_and_insert alt-shift-u _fzf_nested_file_unrestricted_picker\\n./fish/load_last_interactive_only/files-specific.fish:922:49:bind_both_modes_default_and_insert alt-shift-b _fzf_nested_both_file_and_dirs_picker\\n./fish/load_last_interactive_only/files-specific.fish:924:49:bind_both_modes_default_and_insert alt-shift-g _fzf_nested_git_commit_picker\\n./fish/load_last_interactive_only/files-search-specific.fish:109:46:        set picked (printf '%s\\\\n' $results | fzf --height 50% --border $all_binds)\\n./fish/load_last_interactive_only/files-search-specific.fish:136:49:        set -l picked (printf '%s\\\\n' $results | fzf --height 50% --border --query \\\"$argv\\\")\\n./fish/load_last_interactive_only/files-search-specific.fish:167:14:#  i.e. fd | fzf scenarios\\n./fish/load_last_interactive_only/misc-specific.fish:997:54:        set selection (fd --type dir $argv ~/repos | fzf --query $argv)\\n./fish/load_last_interactive_only/misc-specific.fish:1002:78:        # PRN drop passing $argv to fd (left side) and only filter argv with fzf on right?\\n./fish/load_last_interactive_only/misc-specific.fish:1003:90:        #  dropping fd filter would allow changing the entire query w/o relaunching z/fd+fzf...\\n\",\"name\":\"STDOUT\"}]}"
+      },{
+        "_logged":true,
+        "tool_calls":[{
+            "id":"HGeaEpRTtAxMeK4v6epVbLFZIg2yUj9w",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\": \"rg -n \\\"symlink\\\" -t fish .\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"The file defines _fzf_nested_file_picker using fd --type f . which by default excludes symlinks? fd default follows symlinks? According to fd docs, by default follows symlinks when -L? Actually fd by default does not follow symlinks for directories, but includes symlinked files? Not sure. Might be that symlinked files are omitted because fd excludes hidden? Let's check fd options. The file shows unrestricted version uses -u to include hidden, but still symlinks maybe not. To include symlinks we need fd --type f -H? Actually fd has options: -L to follow symlinks, -a to include hidden and ignored. Let's search for symlink mention.",
+        "role":"assistant",
+        "content":"",
+        "timings":{
+          "predicted_per_second":244.77253119032,
+          "predicted_n":202,
+          "prompt_per_second":11331.756741091,
+          "prompt_ms":172.524,
+          "prompt_per_token_ms":0.088247570332481,
+          "predicted_ms":825.256,
+          "predicted_per_token_ms":4.0854257425743,
+          "prompt_n":1955,
+          "cache_n":3118
+        }
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"HGeaEpRTtAxMeK4v6epVbLFZIg2yUj9w",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"./install/symlinks.fish:6:24:# start moving general symlinks to dotfiles here (consolidate them?)\\n./install/symlinks.fish:18:82:    ln -f -s $dotfiles_dir/.config/hammerspoon/config $HOME/.hammerspoon/. # DIR SYMLINK\\n./install/symlinks.fish:29:40:        # -n means don't follow target symlink (else recreates nested symlink)\\n./install/symlinks.fish:39:25:    # FYI for directory symlinks, use only . on the end, else can end up with a symlink loop (nested symlink is created if exist already)\\n./install/symlinks.fish:40:72:    ln -f -s $dotfiles_dir/.config/nvim/lua $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:41:72:    ln -f -s $dotfiles_dir/.config/nvim/fnl $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:42:76:    ln -f -s $dotfiles_dir/.config/nvim/queries $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:44:79:    # ln -f -s $dotfiles_dir/.config/nvim/ftplugin $HOME/.config/nvim/. # DIR SYMLINK   # USE after/ftplugin\\n./install/symlinks.fish:45:74:    ln -f -s $dotfiles_dir/.config/nvim/after $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:47:77:    ln -f -s $dotfiles_dir/.config/nvim/snippets $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:48:78:    ln -f -s $dotfiles_dir/.config/nvim/UltiSnips $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:77:43:ln -f -s $dotfiles_dir/.grc $HOME/. # DIR SYMLINK\\n./install/symlinks.fish:81:17:# PRN you could symlink all of ~/.config/git and not bother with specific items\\n./install/symlinks.fish:83:68:ln -f -s $dotfiles_dir/.config/git/hooks $HOME/.config/git/. # DIR symlink\\n./install/symlinks.fish:114:65:ln -f -s $dotfiles_dir/.config/ask-openai $HOME/.config/. # DIR symlink\\n./install/symlinks.fish:123:72:ln -f -s $ask_repo_path/.agents/global/instructs $HOME/.agents/. # DIR symlink (just skills for now) => should have skills dir from this repo as ~/.config/skills and NOT ~/.config/skills/skills\\n./fish/load_last_interactive_only/files-specific.fish:226:15:    # resolve symlinks (-f => recursively)\\n./fish/load_last_interactive_only/files-specific.fish:228:18:        echo -e \\\"symlink:\\\\n   $_cd_path =>\\\"\\n./fish/load_last_interactive_only/files-specific.fish:366:43:        # PRN show file name, file type?, symlinks?\\n./fish/load_last_interactive_only/files-specific.fish:887:69:    # btw `diff_two_commands 'fd --type f --type d' 'fd'` differ in symlinks (at least)\\n./fish/load_last_interactive_only/pbcopy-specific.fish:7:48:    # 1 arg ~= pwd + relative path (no resolve symlinks)\\n./fish/load_last_interactive_only/pbcopy-specific.fish:8:24:    #   do not resolve symlinks\\n./fish/load_last_interactive_only/pbcopy-specific.fish:43:24:        grealpath --no-symlinks \\\"$argv\\\"\\n./fish/load_last_interactive_only/pbcopy-specific.fish:45:55:        # macOS version of realpath doesn't have --no-symlinks option\\n./fish/load_last_interactive_only/pbcopy-specific.fish:50:23:        realpath --no-symlinks \\\"$argv\\\"\\n./fish/load_last_interactive_only/git-specific.fish:171:94:        # PRN support -P/-L arg like builtin does, and set default behavior of not resolving symlinks (-L) because right now the below defaults as if -P was passed (it resolves symlinks)\\n./fish/load_last_interactive_only/misc-specific.fish:1270:42:#    tellme_about docker   # executable, symlink\\n./fish/load_last_interactive_only/misc-specific.fish:1271:46:#    tellme_about ld       # executable, not symlink\\n./fish/load_last_interactive_only/files-search-specific.fish:256:22:abbr fdtl 'fd --type symlink'\\n./fish/load_first/paths.fish:114:12:#    maybe symlink fuc ones to my completions dir or a second completions dir? OR just put all fuc ones in front of bundled completions?\\n./fish/load_first/paths.fish:216:10:function symlink_exists\\n./fish/load_first/paths.fish:226:41:            fd --type executable --type symlink --exact-depth 1 . $dir\\n./fish/load_first/paths.fish:228:22:            # - thus symlinks to executables won't match\\n./fish/load_first/paths.fish:229:43:            #   i.e. fd ~/.rd/bin  => all symlinks+executable\\n./fish/load_first/paths.fish:230:61:            # - FIX => include both types `executable` and `symlink` (OR'd together)\\n\",\"name\":\"STDOUT\"}]}"
+      },{
+        "_logged":true,
+        "tool_calls":[{
+            "id":"AUOTY6YblHFnJJ6X3aNo8UAcmBVeWk78",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\": \"sed -n '870,890p' fish/load_last_interactive_only/files-specific.fish\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"We need to modify file picker to include symlinked files. The function __fzf_picker uses fd command passed as argument. For files picker, it's \"fd --type f .\". To include symlinks, we can add --type f --type symlink or -H? Actually fd supports multiple --type options? It can accept multiple values, maybe --type f or --type symlink. So we modify the file picker definitions to include symlinks. Probably adjust _fzf_nested_file_picker to use fd --type f --type symlink . Or use fd -a? But want only files, not directories. Symlinked files are type symlink but not f. So include both. Let's edit lines where _fzf_nested_file_picker and unrestricted and both. The unrestricted includes -u which includes hidden and maybe symlinks? It still uses --type f . -u, not symlink. So modify to include symlink type.\n\nPatch file: fish/load_last_interactive_only/files-specific.fish around line 878-883.\n\nLet's open snippet.",
+        "role":"assistant",
+        "content":"",
+        "timings":{
+          "predicted_per_second":242.25141544041,
+          "predicted_n":280,
+          "prompt_per_second":9114.5132648119,
+          "prompt_ms":148.664,
+          "prompt_per_token_ms":0.10971512915129,
+          "predicted_ms":1155.824,
+          "predicted_per_token_ms":4.1279428571429,
+          "prompt_n":1355,
+          "cache_n":5274
+        }
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"AUOTY6YblHFnJJ6X3aNo8UAcmBVeWk78",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"end\\n\\n# ---------------------------------------------------------------------------\\n\\nfunction _fzf_nested_dir_picker -d \\\"Paste selected directory into command line\\\"\\n    __fzf_picker dirs \\\"fd --type d .\\\"\\nend\\n\\nfunction _fzf_nested_file_picker -d \\\"Paste selected file into command line\\\"\\n    __fzf_picker files \\\"fd --type f .\\\"\\nend\\n\\nfunction _fzf_nested_file_unrestricted_picker\\n    __fzf_picker unrestricted \\\"fd --type f . -u\\\"\\nend\\n\\nfunction _fzf_nested_both_file_and_dirs_picker -d \\\"Paste selected file or directory into command line\\\"\\n    # btw `diff_two_commands 'fd --type f --type d' 'fd'` differ in symlinks (at least)\\n    __fzf_picker both \\\"fd .\\\"\\nend\\n\\n\",\"name\":\"STDOUT\"}]}"
+      },{
+        "_logged":true,
+        "tool_calls":[{
+            "id":"wYiRWuedMGq6cRWb2Rdg49YMdk3vpkpU",
+            "type":"function",
+            "function":{
+              "arguments":"{\"patch\":\"*** Begin Patch\\n*** Update File: fish/load_last_interactive_only/files-specific.fish\\n@@\\n function _fzf_nested_file_picker -d \\\"Paste selected file into command line\\\"\\n-    __fzf_picker files \\\"fd --type f .\\\"\\n+    __fzf_picker files \\\"fd --type f --type symlink .\\\"\\n end\\n \\n function _fzf_nested_file_unrestricted_picker\\n-    __fzf_picker unrestricted \\\"fd --type f . -u\\\"\\n+    __fzf_picker unrestricted \\\"fd --type f --type symlink . -u\\\"\\n end\\n@@\\n function _fzf_nested_both_file_and_dirs_picker -d \\\"Paste selected file or directory into command line\\\"\\n     # btw `diff_two_commands 'fd --type f --type d' 'fd'` differ in symlinks (at least)\\n-    __fzf_picker both \\\"fd .\\\"\\n+    __fzf_picker both \\\"fd --type f --type d --type symlink .\\\"\\n end\\n*** End Patch\"}",
+              "name":"apply_patch"
+            }
+          }],
+        "reasoning_content":"We'll change file picker to include symlink type: \"fd --type f --type symlink .\". For unrestricted: \"fd --type f --type symlink . -u\". For both: maybe include symlink for both files and dirs. \"fd --type f --type d --type symlink .\". That addresses symlinks.\n\nApply patch.",
+        "role":"assistant",
+        "content":"",
+        "timings":{
+          "predicted_per_second":242.79524090978,
+          "predicted_n":320,
+          "prompt_per_second":2865.8125421443,
+          "prompt_ms":77.116,
+          "prompt_per_token_ms":0.34894117647059,
+          "predicted_ms":1317.983,
+          "predicted_per_token_ms":4.118696875,
+          "prompt_n":221,
+          "cache_n":6908
+        }
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"wYiRWuedMGq6cRWb2Rdg49YMdk3vpkpU",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Success. Updated the following files:\\nM fish/load_last_interactive_only/files-specific.fish\\n\"}]}"
+      },{
+        "_logged":true,
+        "tool_calls":[{
+            "id":"S6pePqWzeE2ZxCTjW50tDCveAp6DS6MK",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\": \"git add fish/load_last_interactive_only/files-specific.fish && git commit -m \\\"Include symlinked files in fzf pickers\\\" --author=\\\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\\\"\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}",
+              "name":"run_process"
+            }
+          }],
+        "reasoning_content":"Now commit.",
+        "role":"assistant",
+        "content":"",
+        "timings":{
+          "predicted_per_second":243.70492410876,
+          "predicted_n":96,
+          "prompt_per_second":3443.4045558891,
+          "prompt_ms":79.282,
+          "prompt_per_token_ms":0.29041025641026,
+          "predicted_ms":393.919,
+          "predicted_per_token_ms":4.1033229166667,
+          "prompt_n":273,
+          "cache_n":7222
+        }
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"S6pePqWzeE2ZxCTjW50tDCveAp6DS6MK",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"[master 0ddd8a65] Include symlinked files in fzf pickers\\n Author: gptoss120b <wes.mcclure+gptoss120b@gmail.com>\\n 1 file changed, 3 insertions(+), 3 deletions(-)\\n\",\"name\":\"STDOUT\"}]}"
+      }],
+    "max_tokens":8192,
+    "top_p":1
+  },
+  "last_sse":{
+    "id":"chatcmpl-vTSn1QlJ4XvGinTtmfId4e8yNLr9GMb0",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "__verbose":{
+      "timings":{
+        "predicted_per_second":241.88157478099,
+        "predicted_n":110,
+        "prompt_per_second":1537.7180264488,
+        "prompt_ms":68.283,
+        "prompt_per_token_ms":0.65031428571429,
+        "predicted_ms":454.768,
+        "predicted_per_token_ms":4.1342545454545,
+        "prompt_n":105,
+        "cache_n":7590
+      },
+      "model":"ggml-org/gpt-oss-120b-GGUF",
+      "index":0,
+      "tokens_cached":7804,
+      "prompt":"<|start|>system<|message|>You are ChatGPT, a large language model trained by OpenAI.\nKnowledge cutoff: 2024-06\nCurrent date: 2026-04-28\n\nReasoning: medium\n\n# Valid channels: analysis, commentary, final. Channel must be included for every message.\nCalls to these tools must go to the commentary channel: 'functions'.<|end|><|start|>developer<|message|># Instructions\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers using code comments.\n- NEVER change **unrelated code and comments.**\n- Never add new comments to the end of a line.\n- Never add trivial comments.\n- Respect indentation when modifying code.\n- Prefer readable code over of comments.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n\n*** Add File: <path> - every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - in-place edits (optionally with a rename).\n\nUpdateFile can be immediately followed by MoveTo to rename the file:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\n- Verify your changes with `git diff foo.json`\n- Nothing wrong with commands too:\n  - `rm foo.json` to delete\n  - `mv foo.json bar.json` to rename\n  - `rename` for bulk rename\n- Don't be that guy that uses DeleteFile followed by AddFile just to rename a file!\n\n\nTips on a failure:\n\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n\n- NEVER leave comments about removed code, just get rid of it. This code lives in a git repo.\n- Check your work! Especially after a failure.\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n\n\n# Tools\n\n## functions\n\nnamespace functions {\n\n// Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.\ntype fetch = (_: {\n// On return output starting at this character index, useful if a previous fetch was truncated and more context is required.\nstart_index?: number, // default: 0,\n// Maximum number of characters to return.\nmax_length?: number, // default: 5000,\n// URL to fetch\nurl: string,\n// Get the actual HTML content of the requested page, without simplification.\nraw?: boolean, // default: false,\n}) => any;\n\n// Run a process on this linux machine\ntype run_process = (_: {\n// Optional timeout in milliseconds, defaults to 30,000ms\ntimeout_ms?: number,\n// Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\nstdin_text?: string,\n// Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\ncommand_line?: string,\n// Optional to set working directory\ncwd?: string,\n// Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\nargv?: string[],\n}) => any;\n\n// Execute arbitrary Lua code in the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd.\ntype run_lua = (_: {\n// Lua code to execute. Should be a valid Lua chunk.\ncode: string,\n}) => any;\n\n// Patch a file\ntype apply_patch = (_: {\n// file changes in custom diff format\npatch: string,\n}) => any;\n\n} // namespace functions<|end|><|start|>user<|message|>## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n<|end|><|start|>user<|message|>## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n<|end|><|start|>user<|message|>make my fzf file picker in fish shell, it doens't show symlinked files<|end|><|start|>assistant<|channel|>analysis<|message|>We need to modify fish script for fzf file picker to include symlinked files. Find relevant file. Use search.<|end|><|start|>assistant<|channel|>commentary to=functions.run_process <|constrain|>json<|message|>{\"command_line\": \"rg -n \\\"fzf\\\" -t f -t fish\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}<|call|><|start|>functions.run_process to=assistant<|channel|>commentary<|message|>{\"isError\":true,\"content\":[{\"type\":\"text\",\"text\":\"2\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"rg: unrecognized file type: f\\n\",\"name\":\"STDERR\"}]}<|end|><|start|>assistant<|channel|>analysis<|message|>Let's just search for fzf.<|end|><|start|>assistant<|channel|>commentary to=functions.run_process <|constrain|>json<|message|>{\"command_line\": \"rg -n \\\"fzf\\\" -t fish .\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}<|call|><|start|>functions.run_process to=assistant<|channel|>commentary<|message|>{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"./fish/load_last_interactive_only/files-specific.fish:392:47:    #  locate (build db of paths and use with fzf/fasd/etc?)\\n./fish/load_last_interactive_only/files-specific.fish:403:87:        #    cdz /foo/bar    # 3. tried third - any way to just take first match from fzf and cd to it? and only open interactive if NO matches with fzf?\\n./fish/load_last_interactive_only/files-specific.fish:407:14:        #    fzf --query /foo/bar  # 4. interactive selection\\n./fish/load_last_interactive_only/files-specific.fish:417:69:        # tmp idea... get all dirs (of current dir!) and query with fzf...\\n./fish/load_last_interactive_only/files-specific.fish:419:47:        # fallback to interactive cd! with fd+fzf\\n./fish/load_last_interactive_only/files-specific.fish:426:85:        # FYI --select-1 auto selects if only one matching entry instead of showing fzf UI\\n./fish/load_last_interactive_only/files-specific.fish:427:41:        set selected_dir (fd --type d | fzf --select-1 --preview 'ls {}' --query \\\"$argv\\\")\\n./fish/load_last_interactive_only/files-specific.fish:786:7:# *** fzf \\\"pickers\\\" for selecting a file to pass to a command\\n./fish/load_last_interactive_only/files-specific.fish:787:7:# --- fzf per-directory MRU cache --------------------------------------------\\n./fish/load_last_interactive_only/files-specific.fish:789:8:set -g FZF_MRU_DIR ~/.cache/fzf-mru\\n./fish/load_last_interactive_only/files-specific.fish:790:8:set -g FZF_MRU_CAP 30 # per dir limit, only most recent are gonna matter anyways\\n./fish/load_last_interactive_only/files-specific.fish:792:12:function __fzf_mru_key\\n./fish/load_last_interactive_only/files-specific.fish:796:12:function __fzf_mru_file --argument-names picker\\n./fish/load_last_interactive_only/files-specific.fish:797:17:    set -l dir $FZF_MRU_DIR/$picker\\n./fish/load_last_interactive_only/files-specific.fish:800:25:    set -l file $dir/(__fzf_mru_key)\\n./fish/load_last_interactive_only/files-specific.fish:808:12:function __fzf_mru_read --argument-names picker\\n./fish/load_last_interactive_only/files-specific.fish:809:20:    set -l file (__fzf_mru_file $picker)\\n./fish/load_last_interactive_only/files-specific.fish:819:12:function __fzf_mru_write --argument-names picker path\\n./fish/load_last_interactive_only/files-specific.fish:820:118:    # normalize cleans up path ... but, the path should always be the same assuming I only ever save selections from fzf to the cache\\n./fish/load_last_interactive_only/files-specific.fish:825:20:    set -l file (__fzf_mru_file $picker)\\n./fish/load_last_interactive_only/files-specific.fish:831:20:    end | head -n $FZF_MRU_CAP >$temp_new_file\\n./fish/load_last_interactive_only/files-specific.fish:835:12:function __fzf_picker --argument-names picker fd_command\\n./fish/load_last_interactive_only/files-specific.fish:838:12:    set -l fzf_opts --height 50% --border --header \\\"MRU ↑  |  Fresh ↓\\\"\\n./fish/load_last_interactive_only/files-specific.fish:840:46:        # can type `cd foo<alt-shift-d>` and fzf opens with `foo` prefilled\\n./fish/load_last_interactive_only/files-specific.fish:841:76:        #  effectively start filtering before and/or after deciding to use fzf picker\\n./fish/load_last_interactive_only/files-specific.fish:842:13:        set fzf_opts $fzf_opts --query $current_word\\n./fish/load_last_interactive_only/files-specific.fish:847:32:            set -l mru_file (__fzf_mru_file $picker)\\n./fish/load_last_interactive_only/files-specific.fish:848:15:            __fzf_mru_read $picker\\n./fish/load_last_interactive_only/files-specific.fish:850:15:        end | fzf $fzf_opts\\n./fish/load_last_interactive_only/files-specific.fish:854:11:        __fzf_mru_write $picker \\\"$file\\\"\\n./fish/load_last_interactive_only/files-specific.fish:874:11:function _fzf_nested_dir_picker -d \\\"Paste selected directory into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:875:7:    __fzf_picker dirs \\\"fd --type d .\\\"\\n./fish/load_last_interactive_only/files-specific.fish:878:11:function _fzf_nested_file_picker -d \\\"Paste selected file into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:879:7:    __fzf_picker files \\\"fd --type f .\\\"\\n./fish/load_last_interactive_only/files-specific.fish:882:11:function _fzf_nested_file_unrestricted_picker\\n./fish/load_last_interactive_only/files-specific.fish:883:7:    __fzf_picker unrestricted \\\"fd --type f . -u\\\"\\n./fish/load_last_interactive_only/files-specific.fish:886:11:function _fzf_nested_both_file_and_dirs_picker -d \\\"Paste selected file or directory into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:888:7:    __fzf_picker both \\\"fd .\\\"\\n./fish/load_last_interactive_only/files-specific.fish:891:11:function _fzf_nested_git_commit_picker -d \\\"Pick a git commit_hash\\\"\\n./fish/load_last_interactive_only/files-specific.fish:899:11:        | fzf --height 50% --border --ansi --accept-nth=1\\n./fish/load_last_interactive_only/files-specific.fish:906:102:    # TODO porting commit hashes to have MUR? then use this as a refernece for the differences w/ fd+fzf pickers above\\n./fish/load_last_interactive_only/files-specific.fish:910:17:    # function _fzf_nested_file_unrestricted_picker -d \\\"Paste selected file (including hidden) into command line\\\"\\n./fish/load_last_interactive_only/files-specific.fish:911:43:    #     set -l file (fd --type f . -u | fzf --height 50% --border)\\n./fish/load_last_interactive_only/files-specific.fish:919:49:bind_both_modes_default_and_insert alt-shift-d _fzf_nested_dir_picker\\n./fish/load_last_interactive_only/files-specific.fish:920:49:bind_both_modes_default_and_insert alt-shift-f _fzf_nested_file_picker\\n./fish/load_last_interactive_only/files-specific.fish:921:49:bind_both_modes_default_and_insert alt-shift-u _fzf_nested_file_unrestricted_picker\\n./fish/load_last_interactive_only/files-specific.fish:922:49:bind_both_modes_default_and_insert alt-shift-b _fzf_nested_both_file_and_dirs_picker\\n./fish/load_last_interactive_only/files-specific.fish:924:49:bind_both_modes_default_and_insert alt-shift-g _fzf_nested_git_commit_picker\\n./fish/load_last_interactive_only/files-search-specific.fish:109:46:        set picked (printf '%s\\\\n' $results | fzf --height 50% --border $all_binds)\\n./fish/load_last_interactive_only/files-search-specific.fish:136:49:        set -l picked (printf '%s\\\\n' $results | fzf --height 50% --border --query \\\"$argv\\\")\\n./fish/load_last_interactive_only/files-search-specific.fish:167:14:#  i.e. fd | fzf scenarios\\n./fish/load_last_interactive_only/misc-specific.fish:997:54:        set selection (fd --type dir $argv ~/repos | fzf --query $argv)\\n./fish/load_last_interactive_only/misc-specific.fish:1002:78:        # PRN drop passing $argv to fd (left side) and only filter argv with fzf on right?\\n./fish/load_last_interactive_only/misc-specific.fish:1003:90:        #  dropping fd filter would allow changing the entire query w/o relaunching z/fd+fzf...\\n\",\"name\":\"STDOUT\"}]}<|end|><|start|>assistant<|channel|>analysis<|message|>The file defines _fzf_nested_file_picker using fd --type f . which by default excludes symlinks? fd default follows symlinks? According to fd docs, by default follows symlinks when -L? Actually fd by default does not follow symlinks for directories, but includes symlinked files? Not sure. Might be that symlinked files are omitted because fd excludes hidden? Let's check fd options. The file shows unrestricted version uses -u to include hidden, but still symlinks maybe not. To include symlinks we need fd --type f -H? Actually fd has options: -L to follow symlinks, -a to include hidden and ignored. Let's search for symlink mention.<|end|><|start|>assistant<|channel|>commentary to=functions.run_process <|constrain|>json<|message|>{\"command_line\": \"rg -n \\\"symlink\\\" -t fish .\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}<|call|><|start|>functions.run_process to=assistant<|channel|>commentary<|message|>{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"./install/symlinks.fish:6:24:# start moving general symlinks to dotfiles here (consolidate them?)\\n./install/symlinks.fish:18:82:    ln -f -s $dotfiles_dir/.config/hammerspoon/config $HOME/.hammerspoon/. # DIR SYMLINK\\n./install/symlinks.fish:29:40:        # -n means don't follow target symlink (else recreates nested symlink)\\n./install/symlinks.fish:39:25:    # FYI for directory symlinks, use only . on the end, else can end up with a symlink loop (nested symlink is created if exist already)\\n./install/symlinks.fish:40:72:    ln -f -s $dotfiles_dir/.config/nvim/lua $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:41:72:    ln -f -s $dotfiles_dir/.config/nvim/fnl $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:42:76:    ln -f -s $dotfiles_dir/.config/nvim/queries $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:44:79:    # ln -f -s $dotfiles_dir/.config/nvim/ftplugin $HOME/.config/nvim/. # DIR SYMLINK   # USE after/ftplugin\\n./install/symlinks.fish:45:74:    ln -f -s $dotfiles_dir/.config/nvim/after $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:47:77:    ln -f -s $dotfiles_dir/.config/nvim/snippets $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:48:78:    ln -f -s $dotfiles_dir/.config/nvim/UltiSnips $HOME/.config/nvim/. # DIR SYMLINK\\n./install/symlinks.fish:77:43:ln -f -s $dotfiles_dir/.grc $HOME/. # DIR SYMLINK\\n./install/symlinks.fish:81:17:# PRN you could symlink all of ~/.config/git and not bother with specific items\\n./install/symlinks.fish:83:68:ln -f -s $dotfiles_dir/.config/git/hooks $HOME/.config/git/. # DIR symlink\\n./install/symlinks.fish:114:65:ln -f -s $dotfiles_dir/.config/ask-openai $HOME/.config/. # DIR symlink\\n./install/symlinks.fish:123:72:ln -f -s $ask_repo_path/.agents/global/instructs $HOME/.agents/. # DIR symlink (just skills for now) => should have skills dir from this repo as ~/.config/skills and NOT ~/.config/skills/skills\\n./fish/load_last_interactive_only/files-specific.fish:226:15:    # resolve symlinks (-f => recursively)\\n./fish/load_last_interactive_only/files-specific.fish:228:18:        echo -e \\\"symlink:\\\\n   $_cd_path =>\\\"\\n./fish/load_last_interactive_only/files-specific.fish:366:43:        # PRN show file name, file type?, symlinks?\\n./fish/load_last_interactive_only/files-specific.fish:887:69:    # btw `diff_two_commands 'fd --type f --type d' 'fd'` differ in symlinks (at least)\\n./fish/load_last_interactive_only/pbcopy-specific.fish:7:48:    # 1 arg ~= pwd + relative path (no resolve symlinks)\\n./fish/load_last_interactive_only/pbcopy-specific.fish:8:24:    #   do not resolve symlinks\\n./fish/load_last_interactive_only/pbcopy-specific.fish:43:24:        grealpath --no-symlinks \\\"$argv\\\"\\n./fish/load_last_interactive_only/pbcopy-specific.fish:45:55:        # macOS version of realpath doesn't have --no-symlinks option\\n./fish/load_last_interactive_only/pbcopy-specific.fish:50:23:        realpath --no-symlinks \\\"$argv\\\"\\n./fish/load_last_interactive_only/git-specific.fish:171:94:        # PRN support -P/-L arg like builtin does, and set default behavior of not resolving symlinks (-L) because right now the below defaults as if -P was passed (it resolves symlinks)\\n./fish/load_last_interactive_only/misc-specific.fish:1270:42:#    tellme_about docker   # executable, symlink\\n./fish/load_last_interactive_only/misc-specific.fish:1271:46:#    tellme_about ld       # executable, not symlink\\n./fish/load_last_interactive_only/files-search-specific.fish:256:22:abbr fdtl 'fd --type symlink'\\n./fish/load_first/paths.fish:114:12:#    maybe symlink fuc ones to my completions dir or a second completions dir? OR just put all fuc ones in front of bundled completions?\\n./fish/load_first/paths.fish:216:10:function symlink_exists\\n./fish/load_first/paths.fish:226:41:            fd --type executable --type symlink --exact-depth 1 . $dir\\n./fish/load_first/paths.fish:228:22:            # - thus symlinks to executables won't match\\n./fish/load_first/paths.fish:229:43:            #   i.e. fd ~/.rd/bin  => all symlinks+executable\\n./fish/load_first/paths.fish:230:61:            # - FIX => include both types `executable` and `symlink` (OR'd together)\\n\",\"name\":\"STDOUT\"}]}<|end|><|start|>assistant<|channel|>analysis<|message|>We need to modify file picker to include symlinked files. The function __fzf_picker uses fd command passed as argument. For files picker, it's \"fd --type f .\". To include symlinks, we can add --type f --type symlink or -H? Actually fd supports multiple --type options? It can accept multiple values, maybe --type f or --type symlink. So we modify the file picker definitions to include symlinks. Probably adjust _fzf_nested_file_picker to use fd --type f --type symlink . Or use fd -a? But want only files, not directories. Symlinked files are type symlink but not f. So include both. Let's edit lines where _fzf_nested_file_picker and unrestricted and both. The unrestricted includes -u which includes hidden and maybe symlinks? It still uses --type f . -u, not symlink. So modify to include symlink type.\n\nPatch file: fish/load_last_interactive_only/files-specific.fish around line 878-883.\n\nLet's open snippet.<|end|><|start|>assistant<|channel|>commentary to=functions.run_process <|constrain|>json<|message|>{\"command_line\": \"sed -n '870,890p' fish/load_last_interactive_only/files-specific.fish\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}<|call|><|start|>functions.run_process to=assistant<|channel|>commentary<|message|>{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"end\\n\\n# ---------------------------------------------------------------------------\\n\\nfunction _fzf_nested_dir_picker -d \\\"Paste selected directory into command line\\\"\\n    __fzf_picker dirs \\\"fd --type d .\\\"\\nend\\n\\nfunction _fzf_nested_file_picker -d \\\"Paste selected file into command line\\\"\\n    __fzf_picker files \\\"fd --type f .\\\"\\nend\\n\\nfunction _fzf_nested_file_unrestricted_picker\\n    __fzf_picker unrestricted \\\"fd --type f . -u\\\"\\nend\\n\\nfunction _fzf_nested_both_file_and_dirs_picker -d \\\"Paste selected file or directory into command line\\\"\\n    # btw `diff_two_commands 'fd --type f --type d' 'fd'` differ in symlinks (at least)\\n    __fzf_picker both \\\"fd .\\\"\\nend\\n\\n\",\"name\":\"STDOUT\"}]}<|end|><|start|>assistant<|channel|>analysis<|message|>We'll change file picker to include symlink type: \"fd --type f --type symlink .\". For unrestricted: \"fd --type f --type symlink . -u\". For both: maybe include symlink for both files and dirs. \"fd --type f --type d --type symlink .\". That addresses symlinks.\n\nApply patch.<|end|><|start|>assistant<|channel|>commentary to=functions.apply_patch <|constrain|>json<|message|>{\"patch\": \"*** Begin Patch\\n*** Update File: fish/load_last_interactive_only/files-specific.fish\\n@@\\n function _fzf_nested_file_picker -d \\\"Paste selected file into command line\\\"\\n-    __fzf_picker files \\\"fd --type f .\\\"\\n+    __fzf_picker files \\\"fd --type f --type symlink .\\\"\\n end\\n \\n function _fzf_nested_file_unrestricted_picker\\n-    __fzf_picker unrestricted \\\"fd --type f . -u\\\"\\n+    __fzf_picker unrestricted \\\"fd --type f --type symlink . -u\\\"\\n end\\n@@\\n function _fzf_nested_both_file_and_dirs_picker -d \\\"Paste selected file or directory into command line\\\"\\n     # btw `diff_two_commands 'fd --type f --type d' 'fd'` differ in symlinks (at least)\\n-    __fzf_picker both \\\"fd .\\\"\\n+    __fzf_picker both \\\"fd --type f --type d --type symlink .\\\"\\n end\\n*** End Patch\"}<|call|><|start|>functions.apply_patch to=assistant<|channel|>commentary<|message|>{\"content\":[{\"type\":\"text\",\"text\":\"Success. Updated the following files:\\nM fish/load_last_interactive_only/files-specific.fish\\n\"}]}<|end|><|start|>assistant<|channel|>analysis<|message|>Now commit.<|end|><|start|>assistant<|channel|>commentary to=functions.run_process <|constrain|>json<|message|>{\"command_line\": \"git add fish/load_last_interactive_only/files-specific.fish && git commit -m \\\"Include symlinked files in fzf pickers\\\" --author=\\\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\\\"\", \"cwd\": \"~/repos/github/g0t4/dotfiles\"}<|call|><|start|>functions.run_process to=assistant<|channel|>commentary<|message|>{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"[master 0ddd8a65] Include symlinked files in fzf pickers\\n Author: gptoss120b <wes.mcclure+gptoss120b@gmail.com>\\n 1 file changed, 3 insertions(+), 3 deletions(-)\\n\",\"name\":\"STDOUT\"}]}<|end|><|start|>assistant",
+      "stop_type":"eos",
+      "stopping_word":"",
+      "stop":true,
+      "tokens":[],
+      "id_slot":0,
+      "tokens_predicted":110,
+      "tokens_evaluated":7695,
+      "generation_settings":{
+        "ignore_eos":false,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "value":"^\\s+to$",
+            "type":2
+          },{
+            "value":"^<\\|channel\\|>(?:commentary|analysis)\\s+to=functions$",
+            "type":2
+          },{
+            "value":"<\\|start\\|>assistant(\\s+to)",
+            "type":2
+          },{
+            "value":"<\\|start\\|>assistant(<\\|channel\\|>(?:commentary|analysis)\\s+to)",
+            "type":2
+          }],
+        "top_p":1,
+        "temperature":1,
+        "grammar":"boolean ::= (\"true\" | \"false\") space\nchar ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (\",\" space json-value)* space \"]\") space\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)? space\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\") space\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\" space\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\" space\ntool-apply-patch ::= (\" to=functions.\" \"apply_patch\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-apply-patch-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"apply_patch\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-apply-patch-schema\ntool-apply-patch-schema ::= \"{\" space tool-apply-patch-schema-patch-kv \"}\" space\ntool-apply-patch-schema-patch-kv ::= \"\\\"patch\\\"\" space \":\" space string\ntool-call ::= tool-fetch | tool-run-process | tool-run-lua | tool-apply-patch\ntool-fetch ::= (\" to=functions.\" \"fetch\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-fetch-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"fetch\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-fetch-schema\ntool-fetch-schema ::= \"{\" space tool-fetch-schema-url-kv ( \",\" space ( tool-fetch-schema-start-index-kv tool-fetch-schema-start-index-rest | tool-fetch-schema-max-length-kv tool-fetch-schema-max-length-rest | tool-fetch-schema-raw-kv ) )? \"}\" space\ntool-fetch-schema-max-length ::= ([1-9] | ([1-8] [0-9] | [9] [0-9]) | ([1-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9])) | ([1-8] [0-9]{3} | [9] ([0-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9]))) | ([1-8] [0-9]{4} | [9] ([0-8] [0-9]{3} | [9] ([0-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9])))) | ([1-8] [0-9]{5} | [9] ([0-8] [0-9]{4} | [9] ([0-8] [0-9]{3} | [9] ([0-8] [0-9]{2} | [9] ([0-8] [0-9] | [9] [0-9])))))) space\ntool-fetch-schema-max-length-kv ::= \"\\\"max_length\\\"\" space \":\" space tool-fetch-schema-max-length\ntool-fetch-schema-max-length-rest ::= ( \",\" space tool-fetch-schema-raw-kv )?\ntool-fetch-schema-raw-kv ::= \"\\\"raw\\\"\" space \":\" space boolean\ntool-fetch-schema-start-index ::= ([0] | [1-9] [0-9]{0,15}) space\ntool-fetch-schema-start-index-kv ::= \"\\\"start_index\\\"\" space \":\" space tool-fetch-schema-start-index\ntool-fetch-schema-start-index-rest ::= ( \",\" space tool-fetch-schema-max-length-kv )? tool-fetch-schema-max-length-rest\ntool-fetch-schema-url ::= \"\\\"\" char+ \"\\\"\" space\ntool-fetch-schema-url-kv ::= \"\\\"url\\\"\" space \":\" space tool-fetch-schema-url\ntool-run-lua ::= (\" to=functions.\" \"run_lua\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-lua-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"run_lua\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-lua-schema\ntool-run-lua-schema ::= \"{\" space tool-run-lua-schema-code-kv \"}\" space\ntool-run-lua-schema-code-kv ::= \"\\\"code\\\"\" space \":\" space string\ntool-run-process ::= (\" to=functions.\" \"run_process\" \"<|channel|>\" (\"commentary\" | \"analysis\") (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-process-schema | (\"<|channel|>\" (\"commentary\" | \"analysis\") \" to=functions.\" \"run_process\" (space \"<|constrain|>\"? [A-Za-z0-9_-]+)? \"<|message|>\") tool-run-process-schema\ntool-run-process-schema ::= \"{\" space  (tool-run-process-schema-timeout-ms-kv tool-run-process-schema-timeout-ms-rest | tool-run-process-schema-stdin-text-kv tool-run-process-schema-stdin-text-rest | tool-run-process-schema-command-line-kv tool-run-process-schema-command-line-rest | tool-run-process-schema-cwd-kv tool-run-process-schema-cwd-rest | tool-run-process-schema-argv-kv )? \"}\" space\ntool-run-process-schema-argv ::= \"[\" space string (\",\" space string)* \"]\" space\ntool-run-process-schema-argv-kv ::= \"\\\"argv\\\"\" space \":\" space tool-run-process-schema-argv\ntool-run-process-schema-command-line-kv ::= \"\\\"command_line\\\"\" space \":\" space string\ntool-run-process-schema-command-line-rest ::= ( \",\" space tool-run-process-schema-cwd-kv )? tool-run-process-schema-cwd-rest\ntool-run-process-schema-cwd-kv ::= \"\\\"cwd\\\"\" space \":\" space string\ntool-run-process-schema-cwd-rest ::= ( \",\" space tool-run-process-schema-argv-kv )?\ntool-run-process-schema-stdin-text-kv ::= \"\\\"stdin_text\\\"\" space \":\" space string\ntool-run-process-schema-stdin-text-rest ::= ( \",\" space tool-run-process-schema-command-line-kv )? tool-run-process-schema-command-line-rest\ntool-run-process-schema-timeout-ms-kv ::= \"\\\"timeout_ms\\\"\" space \":\" space number\ntool-run-process-schema-timeout-ms-rest ::= ( \",\" space tool-run-process-schema-stdin-text-kv )? tool-run-process-schema-stdin-text-rest\n",
+        "stream":true,
+        "lora":[],
+        "backend_sampling":false,
+        "post_sampling_probs":false,
+        "timings_per_token":false,
+        "n_discard":0,
+        "speculative.ngram_m_hits":1024,
+        "n_keep":0,
+        "speculative.ngram_size_m":1024,
+        "speculative.ngram_size_n":1024,
+        "speculative.type":"none",
+        "speculative.p_min":0.75,
+        "speculative.n_min":0,
+        "speculative.n_max":16,
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "generation_prompt":"<|start|>assistant",
+        "reasoning_in_content":false,
+        "reasoning_format":"deepseek",
+        "chat_format":"peg-native",
+        "preserved_tokens":[200003,200005,200006,200007,200008],
+        "dry_multiplier":0,
+        "top_k":40,
+        "repeat_penalty":1,
+        "mirostat_eta":0.10000000149012,
+        "seed":4294967295,
+        "dynatemp_range":0,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "stop":[],
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":131072,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "max_tokens":8192,
+        "n_predict":8192
+      },
+      "has_new_line":true,
+      "truncated":false,
+      "content":""
+    },
+    "created":1777413640,
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "timings":{
+      "predicted_per_second":241.88157478099,
+      "predicted_n":110,
+      "prompt_per_second":1537.7180264488,
+      "prompt_ms":68.283,
+      "prompt_per_token_ms":0.65031428571429,
+      "predicted_ms":454.768,
+      "predicted_per_token_ms":4.1342545454545,
+      "prompt_n":105,
+      "cache_n":7590
+    }
+  },
+  "response_message":{
+    "role":"assistant",
+    "finish_reason":"stop",
+    "content":"Implemented updates to the FZF file pickers to include symlinked files:\n\n- Modified `_fzf_nested_file_picker` to use `fd --type f --type symlink`.\n- Updated `_fzf_nested_file_unrestricted_picker` to include symlinks with `fd --type f --type symlink`.\n- Adjusted `_fzf_nested_both_file_and_dirs_picker` to include symlinks for both files and directories.\n\nThese changes ensure symlinked files appear in the FZF selections. Commit applied."
+  }
+}
