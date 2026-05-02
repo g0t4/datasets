@@ -1,0 +1,61 @@
+{
+  "request_body":{
+    "options":[],
+    "temperature":1,
+    "stream":true,
+    "max_tokens":4096,
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: tools\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n- Use `py_compile` to check for indentation and syntax errors.\n\n\n## Recent yanks (copy to clipboard):\n```deep/run_command_command.py\n# def run_command(commandline: str) -> Command:\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/course-agent-tools-langchain/tools/patcher/middleware/middleware.py:32-33\n    def after_model(self, state: StateT, runtime: Runtime[ContextT]) -> dict[str, Any] | None:\n        rich.print(\"[deep_pink1 bold]AFTER_MODEL[/]\")\n\n## ~/repos/github/g0t4/course-agent-tools-langchain/tools/patcher/middleware/middleware.py:25-27\n    def after_agent(self, state: StateT, runtime: Runtime[ContextT]) -> dict[str, Any] | None:\n        rich.print(\"[deep_pink1 bold]AFTER_AGENT[/]\")\n        # PRN demo return\n\n## ~/repos/github/g0t4/course-agent-tools-langchain/tools/show.py:239-242\n    def reset(self):\n        \"\"\"reset state for a new model response\"\"\"\n        self.node = None\n        self.accumulated = None\n\n## ~/repos/github/g0t4/course-agent-tools-langchain/tools/recover/resume.py:105-124\n\n\n\n\n\n\n\n\n\n\n# %%\n\n# events = await stream_messages(agent, # pyright:ignore \n#     Command(resume={}),\n#     config=config,\n# ) \n\n\n\n# dump_checkpoints()\n\n\n## ~/repos/github/g0t4/course-agent-tools-langchain/tools/recover/hitl.py:28-47\n\n\n\nmodel = ChatLlamaServer(base_url=\"http://paxy:8012\", api_key=\"\",\n    # Qwen3.6 via llama-server\n    # * disable thinking + give explicit instructions to gen parallel tool calls to Qwen3.6\n    extra_body={\"chat_template_kwargs\": { \"enable_thinking\": False }}, \\\n)\n\nmessages = [\n    # HumanMessage(\"Run two commands in parallel: run_command(hostname) and run_command(date)\"),\n    SystemMessage(\n        \"This is a demonstration of LangChain human-in-the-loop approve/reject/edit. \"\n        \"Follow the user request exactly as written and do not reinterpret or optimize it.\"\n    ),\n    # FYI ls -R / to demonstrate commands that are not wise!\n    HumanMessage(\"Run two commands in parallel: run_command(ls -R /) and run_python(add code to get timestamp)\"),\n    # HumanMessage(\"Read show.py and investigate how I display the tool call ID value... add a function to shorten the ID to a max of first 6 chars and use that to show the ID\"),\n]\n\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```deep/run_command_command.py\nfrom langchain_core.messages import ToolMessage\nfrom langgraph.types import Command\n\n@tool(description=\"Execute a shell commandline and return its STDOUT.\")\n# def run_command(commandline: str) -> Command:\ndef run_command(commandline: str) -> ToolMessage:\n    import subprocess\n\n    # block ls -R\n    if commandline.strip().startswith(\"ls -R\"):\n        explain = \"COMMAND BLOCKED. Recursive listing with `ls -R` is blocked because `ls` has no default mechanism to exclude directories like node_modules, .venv, etc. This leads to an explosion of output. Use `fd --type file` to recursively list files.\"\n        return ToolMessage(content=explain)\n\n    result = subprocess.run(\n        commandline,\n        shell=True,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.STDOUT,\n        text=True,\n    )\n    content = {\n        \"stdout\": result.stdout,\n        \"stderr\": result.stderr,\n        \"returncode\": result.returncode,\n    }\n    status = \"success\" if <|fim_middle|>\n    return ToolMessage(content=content, status=status)\n```\n\n## Reminders about the cursor line:\nText before cursor: `    status = \"success\" if `"
+      }],
+    "raw":false,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "model":"gpt-oss:120b"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to complete condition: success if result.returncode == 0 maybe and no stderr? Probably just returncode ==0. So fill: result.returncode == 0 else \"error\". Need expression after if. Should be `result.returncode == 0 else \"error\"` but they assign status = \"success\" if <cond>. Actually Python ternary: \"success\" if condition else \"error\". So we need condition part. Provide `result.returncode == 0`.",
+    "role":"assistant",
+    "_logged":true,
+    "content":"result.returncode == 0"
+  },
+  "last_sse":{
+    "created":1777705778,
+    "id":"chatcmpl-qfjPqQgR1XBmZ6mCrQgBFGP7UolI8CdP",
+    "timings":{
+      "predicted_per_second":258.25334653295,
+      "predicted_n":114,
+      "prompt_per_second":11735.723817019,
+      "prompt_n":1715,
+      "prompt_ms":146.135,
+      "prompt_per_token_ms":0.085209912536443,
+      "predicted_ms":441.427,
+      "predicted_per_token_ms":3.8721666666667,
+      "cache_n":0
+    },
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
