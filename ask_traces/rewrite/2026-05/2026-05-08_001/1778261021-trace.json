@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "timings":{
+      "prompt_per_token_ms":0.12917729502453,
+      "predicted_n":368,
+      "prompt_per_second":7741.2984983942,
+      "prompt_n":1427,
+      "cache_n":0,
+      "predicted_per_second":256.62214133046,
+      "predicted_per_token_ms":3.8967798913043,
+      "predicted_ms":1434.015,
+      "prompt_ms":184.336
+    },
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "created":1778260970,
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "id":"chatcmpl-6j7zpGrhVXylj6k2nHnDbgdQy1tfYnGD"
+  },
+  "request_body":{
+    "stream":true,
+    "temperature":1,
+    "model":"",
+    "messages":[{
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true,
+        "role":"system"
+      },{
+        "content":"## Recent yanks (copy to clipboard):\n```fish/load_last_interactive_only/files-specific.fish\n        git -C ~/repos/github/g0t4/dotfiles pull\n```\n\n```fish/load_last_interactive_only/files-specific.fish\n    git -C ~/repos/github/g0t4/devtools.nvim pull\n```\n\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"use array + loop\n\nHere is the code I selected:\n```fish/load_last_interactive_only/files-specific.fish:53-56\n    git -C ~/repos/github/g0t4/dotfiles pull\n    git -C ~/repos/github/g0t4/ask-openai.nvim pull\n    git -C ~/repos/github/g0t4/devtools.nvim pull\n    git -C ~/repos/github/g0t4/mcp-servers pull\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true,
+        "role":"user"
+      }],
+    "max_tokens":8192,
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    }
+  },
+  "response_message":{
+    "_logged":true,
+    "content":"    set repo_paths ~/repos/github/g0t4/dotfiles \\\n        ~/repos/github/g0t4/ask-openai.nvim \\\n        ~/repos/github/g0t4/devtools.nvim \\\n        ~/repos/github/g0t4/mcp-servers\n\n    for repo_path in $repo_paths\n        git -C $repo_path pull\n    end",
+    "reasoning_content":"User wants to refactor the four git pull commands using an array and a loop, following fish preferences: snake_case, extract ambiguous conditions (not needed), use long options. So create an array of repo paths and loop over them, running git -C $repo pull. Use meaningful variable names, maybe repo_path. Provide fish code snippet replacing lines 53-56. Preserve indentation. Provide only code, no markdown. Also follow instructions: no markdown, no explanation. So output fish code with proper indentation. Ensure using long options for git? Git uses -C short; maybe use --git-dir? But -C is short; there is long option --git-dir? Actually git -C is short, long version is --git-dir? No, git -C changes directory. Long option is --git-dir? That's for .git dir not same. Keep -C? But user prefers long options. Could use --git-dir? Not same. So maybe keep -C. It's fine. Provide code:\n\nset repos ~/repos/github/g0t4/dotfiles ~/repos/github/g0t4/ask-openai.nvim ~/repos/github/g0t4/devtools.nvim ~/repos/github/g0t4/mcp-servers\n\nfor repo_path in $repos\n    git -C $repo_path pull\nend\n\nPreserve indentation: original lines have 4 spaces indent. So produce same.",
+    "role":"assistant",
+    "finish_reason":"stop"
+  }
+}
