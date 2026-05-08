@@ -1,0 +1,57 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "timings":{
+      "predicted_per_second":255.56565197637,
+      "predicted_n":36,
+      "prompt_per_second":7433.8844787509,
+      "prompt_n":678,
+      "cache_n":1059,
+      "prompt_ms":91.204,
+      "prompt_per_token_ms":0.1345191740413,
+      "predicted_ms":140.864,
+      "predicted_per_token_ms":3.9128888888889
+    },
+    "id":"chatcmpl-JmoehVlgtMxv1jP7AcnSjfvvNBv1ztJL",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1778273918
+  },
+  "response_message":{
+    "content":"DELEGATE_TOOL",
+    "role":"assistant",
+    "_logged":true,
+    "finish_reason":"stop",
+    "reasoning_content":"We need to fill name field. Likely DELEGATE_TOOL constant. So insert DELEGATE_TOOL."
+  },
+  "request_body":{
+    "top_p":1,
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "options":[],
+    "raw":false,
+    "max_tokens":4096,
+    "model":"gpt-oss:120b",
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system",
+        "_logged":true
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: agents\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n- Use `py_compile` to check for indentation and syntax errors.\n\n\n## Recent yanks (copy to clipboard):\n```subagents/server.py\n            raise McpError(ErrorData(code=1, message=f\"Stop hallucinating tools... {name} is not a real tool, did you mean `delegate` ?\"))\n```\n\n",
+        "role":"user",
+        "_logged":true
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```subagents/server.py\nfrom mcp.shared.exceptions import McpError\nfrom mcp.server import Server\nfrom mcp.server.stdio import stdio_server\nfrom mcp.types import (\n    ErrorData,\n    GetPromptResult,\n    Prompt,\n    PromptArgument,\n    PromptMessage,\n    TextContent,\n    Tool,\n    INVALID_PARAMS,\n    INTERNAL_ERROR,\n)\nfrom pydantic import BaseModel, Field, AnyUrl\n\nDELEGATE_TOOL = \"delegate\"\n\nasync def serve() -> None:\n    server = Server(\"subagents\")\n\n    @server.list_tools()\n    async def list_tools() -> list[Tool]:\n        return [\n            Tool(\n                name=<|fim_middle|>,\n                description=\"Delegate to a subagent to perform research and summarize findings.\",\n                inputSchema={\n                    'properties': {\n                        'description': {\n                            'description': 'describe the task for the agent to perform',\n                            'type': 'string'\n                        },\n                        'agent_type': {\n                            'description': 'which subagent profile to use, options: general, web-researcher, command-runner',\n                            'type': 'string',\n                        }\n                        # TODO other options? limit # turns (recursion_limit?)\n                    },\n                    'required': ['description'],\n                    'type': 'object'\n                })\n        ]\n\n        # @server.list_prompts()\n        # async def list_prompts() -> list[Prompt]:\n        #     return [Prompt(\n        #         name=\"...\",\n        #         description=\"...\",\n        #         arguments=[PromptArgument(description=\"\", agent_type=\"\", required=True)],\n        #     )]\n\n    @server.call_tool()\n    async def call_tool(requested_tool, arguments: dict) -> list[TextContent]:\n        if requested_tool != DELEGATE_TOOL:\n            raise McpError(ErrorData(code=1, message=f\"You made up a tool... you asked for {requested_tool}...\", data={\"valid_tools\": DELEGATE_TOOL}))\n\n        try:\n            from subagents.tools import delegate_tool\n            description = arguments.get(\"description\")\n            agent_type = arguments.get(\"agent_type\", \"general\")\n            if description is None:\n                raise ValueError(\"`description` is required\")\n            result = await delegate_tool(description, agent_type)\n            return result\n\n        except ValueError as e:\n            raise McpError(ErrorData(code=INVALID_PARAMS, message=str(e)))\n\n        url = str(args.url)\n        if not url:\n            raise McpError(ErrorData(code=INVALID_PARAMS, message=\"URL is required\"))\n\n        content, prefix = await fetch_url(url, force_raw=args.raw, proxy_url=proxy_url)\n        original_length = len(content)\n        if args.start_index >= original_length:\n            content = \"<error>No more content available.</error>\"\n        else:\n            truncated_content = content[args.start_index:args.start_index + args.max_chars]\n            if not truncated_content:\n                content = \"<error>No more content available.</error>\"\n            else:\n                content = truncated_content\n                actual_content_length = len(truncated_content)\n                remaining_content = original_length - (args.start_index + actual_content_length)\n                # Only add the prompt to continue fetching if there is still remaining content\n                if actual_content_length == args.max_chars and remaining_content > 0:\n                    next_start = args.start_index + actual_content_length\n                    content += f\"\\n\\n<error>Content truncated. Call the fetch tool with a start_index of {next_start} to get more content.</error>\"\n        return [TextContent(type=\"text\", text=f\"{prefix}Contents of {url}:\\n{content}\")]\n\n    options = server.create_initialization_options()\n    async with stdio_server() as (read_stream, write_stream):\n        await server.run(read_stream, write_stream, options, raise_exceptions=False)\n```\n\n## Reminders about the cursor line:\nText before cursor: `                name=`\nText after cursor: `,`",
+        "role":"user",
+        "_logged":true
+      }]
+  }
+}
