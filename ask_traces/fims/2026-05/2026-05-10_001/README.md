@@ -1,0 +1,1 @@
+tested char by char how long it took for gptoss to recommend 'difftastic' ... just for fun, not commenting on quality b/c it is rote memorization + random luck + other packages with same prefix (and coin toss w.r.t. package popularity in guides or otherwise)
