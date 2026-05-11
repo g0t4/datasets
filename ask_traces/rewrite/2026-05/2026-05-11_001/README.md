@@ -1,0 +1,3 @@
+love rewrites... switch to fs module for me
+- also it followed my typescript code preferences to change the variable names to camel case (as requested)...
+   FYI it only got a small chunk to rewrite so I had to map these new names to usages, but that is on me for not sending more context to rewrite and/or make available to see
