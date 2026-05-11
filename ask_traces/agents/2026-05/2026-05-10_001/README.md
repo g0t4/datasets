@@ -1,2 +1,6 @@
 awesome job finding and modifying my layout strategy for my ask openai semantic_grep picker to horizontal
 and then follow up to adjust ratio (with me simply stating I wanted more space for code)
+
+FYI the height change broke the code, there is no `results_height`... just set `preview_height` to the ratio (out of 1) so 0.8 in this case works...
+- I almost wonder if my word choice (preview vs results height) led to this mistake... as if I was suggesting that there is a results_height...
+  it was just dumb luck I chose those two terms `results` and `preview` both of which aline with docs or telescope w.r.t. naming of panes... so that might explain it!
