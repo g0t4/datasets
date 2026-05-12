@@ -1,0 +1,1 @@
+pretty good rewrite to use tree... one issue is pprint_no_truncate() which does not return anything at all, let alone that would be added to a tree... also not thrilled with inlining variables that are extracted to make boolean conditions explicit
