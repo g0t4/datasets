@@ -1,0 +1,63 @@
+{
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"```python\n        # Look for an override style for the header\n        apply_style = next(\n            (style for heading, style in emphasize_headings.items() if heading in header_line),\n            None,\n        )\n        if apply_style:\n            return Group(Text(header_line, style=apply_style), _syntax(content, \"markdown\"))\n\n        # No override – render header as markdown with content\n        return _syntax(self.content, \"markdown\")\n```",
+    "reasoning_content":"We need to simplify code: lookup override style first then if found use Text(header_line, style...). Provide rewritten snippet preserving indentation. No markdown formatting. Provide code only.",
+    "role":"assistant",
+    "_logged":true
+  },
+  "last_sse":{
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "timings":{
+      "predicted_per_second":266.35361895649,
+      "predicted_n":135,
+      "prompt_per_second":7646.816452168,
+      "prompt_ms":82.518,
+      "prompt_per_token_ms":0.13077337559429,
+      "predicted_ms":506.845,
+      "prompt_n":631,
+      "cache_n":0,
+      "predicted_per_token_ms":3.7544074074074
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1778568227,
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "id":"chatcmpl-qLCup0ES0KnUxRV7XbXsENVxvo0psp59"
+  },
+  "request_body":{
+    "max_tokens":2048,
+    "messages":[{
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true,
+        "role":"system"
+      },{
+        "content":"## Recent yanks (copy to clipboard):\n```tools/chat_viewer/__main__.py\ndef show_remaining_keys(loaded, tree: TreeWrapper):\n    if not any(loaded):\n        return\n    # FYI basically I want a JSON like dump with leading and trailing { and } which waste space...\n    for key in loaded.keys():\n        value = loaded.get(key)\n        display = Text.from_markup(f\"[blue]{key}:[/] \") + Text(value)\n        # print as if values are all str/bool/number ... handle list/dict if that arises later\n        tree.add(display)\n\n```\n\n```tools/chat_viewer/tree_wrapper.py\n        for key, value in obj.items():\n            # Create a node for the key and attach the value as a child\n            self.add_section(key, value)\n```\n\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n- Use `py_compile` to check for indentation and syntax errors.\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"simplify this so that we lookup an override style first and then if found we do the Text(header_line, style...)\n\nHere is the code I selected:\n```tools/chat_viewer/__main__.py:134-144\n        header_render = None\n        for heading, apply_style in emphasize_headings.items():\n            if heading in header_line:\n                header_render = Text(header_line, style=apply_style)\n                break\n\n        if header_render:\n            return Group(header_render, _syntax(content, \"markdown\"))\n\n        # if no header style override then render header as markdown along with content:\n        return _syntax(self.content, \"markdown\")\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true,
+        "role":"user"
+      }],
+    "model":"",
+    "top_p":1,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"off"
+    },
+    "temperature":1
+  }
+}
