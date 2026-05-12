@@ -1,0 +1,1 @@
+sometimes I just want to bang out a line of code without finagling FIM to do it for me... I should make an easier way with rewrite to do this... no need to select anything... no selection == insert at cursor position... anyways, here is an example of what I can do if I don't wanna meticulously type out the import myself

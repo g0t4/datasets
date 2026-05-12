@@ -1,0 +1,63 @@
+{
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"```python\nfrom rich.console import Console\n```",
+    "reasoning_content":"Need to add import fix? The user shows \"import rich console\" likely wrong. Provide corrected import line. Provide code snippet with proper import. Preserve indentation.",
+    "role":"assistant",
+    "_logged":true
+  },
+  "request_body":{
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n- Use `py_compile` to check for indentation and syntax errors.\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/tree_wrapper.py:0-19\nimport traceback\nimport os\nimport rich\nfrom rich.console import RenderableType, Console\nfrom rich.style import Style, StyleType\nfrom rich.syntax import Syntax\nfrom rich.padding import Padding\nfrom rich.live import Live\nfrom rich.text import Text\nfrom rich.tree import Tree\nfrom rich.pretty import Pretty\nfrom rich.markup import escape\nfrom rich.markdown import Markdown\n\nimport json\nimport sys\nimport asyncio\nfrom typing import Any, List, Optional\n\nclass TreeWrapper(Tree):\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/tree_wrapper.py:19-167\nclass TreeWrapper(Tree):\n    \"\"\" Thin wrapper around :class:`rich.tree.Tree` with additional helpers. \"\"\"\n\n    parent: \"TreeWrapper | None\" = None\n\n    def __init__(\n        self,\n        label: RenderableType | None = None,\n        parent: \"TreeWrapper | None\" = None,\n        style: StyleType = \"tree\",\n        guide_style: StyleType = \"tree.line\",\n        expanded: bool = True,\n        highlight: bool = False,\n        hide_root: bool = False,\n    ) -> None:\n        # parent specific config:\n        self.label = label or \"\"\n        self.style = style\n        self.guide_style = guide_style\n        self.children: List[Tree] = []\n        self.expanded = expanded\n        self.highlight = highlight\n        self.hide_root = hide_root\n        #\n        self.parent = parent\n        self.TREE_GUIDES = [(\"    \", \"    \", \"    \", \"    \")]\n\n    def blank_line(self) -> None:\n        BLANK_LINE = \"\"\n\n        if not self.children:\n            self.add(BLANK_LINE)\n            return\n\n        last = self.children[-1]\n        label = last.label\n        if isinstance(label, Text):\n            ends_newline = label.plain.endswith(\"\\n\")\n        else:\n            ends_newline = isinstance(label, str) and label.endswith(\"\\n\")\n        if not ends_newline:\n            self.add(BLANK_LINE)\n\n    def add(\n        self,\n        label: RenderableType,\n        *,\n        style: Optional[StyleType] = None,\n        guide_style: Optional[StyleType] = None,\n        expanded: bool = True,\n        highlight: Optional[bool] = False,\n    ) -> \"TreeWrapper\":\n        \"\"\"Add a child tree.\n\n        Args:\n            label (RenderableType): The renderable or str for the tree label.\n            style (StyleType, optional): Style of this tree. Defaults to \"tree\".\n            guide_style (StyleType, optional): Style of the guide lines. Defaults to \"tree.line\".\n            expanded (bool, optional): Also display children. Defaults to True.\n            highlight (Optional[bool], optional): Highlight renderable (if str). Defaults to False.\n\n        Returns:\n            Tree: A new child Tree, which may be further modified.\n        \"\"\"\n        node = TreeWrapper(\n            label,\n            style=self.style if style is None else style,\n            guide_style=self.guide_style if guide_style is None else guide_style,\n            expanded=expanded,\n            highlight=self.highlight if highlight is None else highlight,\n        )\n        self.children.append(node)\n        return node\n\n    def add_no_markup(self, text: str, **kwargs) -> \"TreeWrapper\":\n        \"\"\" make explicit this content should not have markup rendered \"\"\"\n        # btw Text == plain unless you pass a style arg\n        return self.add(Text(text), **kwargs)\n\n    def add_markup(self, label: str, **kwargs) -> \"TreeWrapper\":\n        \"\"\" this is purely for readability, to make it clear that the content should have markup rendered \"\"\"\n        return self.add(label, **kwargs)\n\n    def add_pretty(self, obj: Any, **kwargs) -> \"TreeWrapper\":\n        return self.add(Pretty(obj), **kwargs)\n\n    def add_syntax(self, code: str, lexer: str, *, theme: str = \"monokai\", **kwargs) -> \"TreeWrapper\":\n        return self.add(Syntax(code, lexer, theme=theme), **kwargs)\n\n    def add_sections_from_json_keys(self, json_str: str, **kwargs) -> \"TreeWrapper\":\n        try:\n            obj = json.loads(json_str)\n        except json.JSONDecodeError as error:\n            # Show the error and raw content in the tree\n            self.add_error(\"failed to load JSON result\", error) \\\n                .add_no_markup(json_str)\n            return self\n\n        self.add_list_of_key_value_pairs(obj)\n        return self\n\n    def add_list_of_key_value_pairs(self, obj):\n        if not any(obj.keys()):\n            return\n        # FYI basically I want a JSON like dump with leading and trailing { and } which waste space...\n        for key, value in obj.items():\n            # for scalars I do not want to nest the value, I want it to be part of label (after key):\n            display = Text.from_markup(f\"[blue]{key}:[/] \") + Text(value)\n            # print as if values are all str/bool/number ...\n            # PRN handle list/dict if that arises later, in this case nesting value MAY make sense, but maybe not too (i.e. list of numbers would look fine \"inline\")\n            self.add(display)\n        return self\n\n    def show_truncated_string(self, text: str):\n        lines = text.splitlines()\n        max_lines = 5\n        if len(lines) > max_lines:\n            initial = \"\\n\".join(lines[:max_lines])\n            truncated_lines = len(lines) - max_lines\n            truncated_chars = len(text) - len(initial)  # total chars - shown chars\n            truncated_indicator = f\"... ({truncated_lines} lines, {truncated_chars} chars)\"\n            # PRN truncate on char count too? really long lines of output can be a problem too (measure length of first X lines and if super long then take char_max too... else maybe allow more lines than I do now within reason)\n            self.add_no_markup(initial)\n            self.add_markup(f\"[bold yellow]{truncated_indicator}[/]\")\n        else:\n            self.add_no_markup(text)\n\n    def add_section(self, title: str, value: Any):\n        section = self.add_markup(f\"[blue]{title}[/]:\")\n        if isinstance(value, str):\n            section.show_truncated_string(value)\n        else:\n            section.add_no_markup(str(value))\n\n    def remove_self(self):\n        if self.parent:\n            try:\n                self.parent.children.remove(self)\n            except ValueError as error:\n                # ? do I want to see this failure, ever?\n                self.add_error(\"unexpected, failed to remove self\", error)\n            self.parent = None\n        return self\n\n    def add_error(self, message: str, error: Exception, context: Any | None = None) -> \"TreeWrapper\":\n        node = self.add_markup(f\"[red bold]{message}[/]\")\n        node.add_pretty(error)\n        node.add_no_markup(traceback.format_exc())\n        return node\n\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/tree_wrapper.py:15-34\nimport sys\nimport asyncio\nfrom typing import Any, List, Optional\n\nclass TreeWrapper(Tree):\n    \"\"\" Thin wrapper around :class:`rich.tree.Tree` with additional helpers. \"\"\"\n\n    parent: \"TreeWrapper | None\" = None\n\n    def __init__(\n        self,\n        label: RenderableType | None = None,\n        parent: \"TreeWrapper | None\" = None,\n        style: StyleType = \"tree\",\n        guide_style: StyleType = \"tree.line\",\n        expanded: bool = True,\n        highlight: bool = False,\n        hide_root: bool = False,\n    ) -> None:\n        # parent specific config:\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/__main__.py:0-19\nimport json\nimport os\nimport sys\nimport subprocess\nimport re\nfrom dataclasses import dataclass, field\nfrom pathlib import Path\nfrom rich.console import Console, Group\nfrom rich.markdown import Markdown\nfrom rich.padding import Padding\nfrom rich.syntax import Syntax\nfrom rich.panel import Panel\nfrom rich.pretty import Pretty, pprint\nfrom rich.text import Text\nfrom rich.tree import Tree\nfrom typing import Any, Iterable, Iterator\nimport hashlib\n\nfrom tools.chat_viewer.markdown_utils import split_h2_markdown_sections\nfrom tools.chat_viewer.tree_wrapper import TreeWrapper\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/__main__.py:15-34\nfrom typing import Any, Iterable, Iterator\nimport hashlib\n\nfrom tools.chat_viewer.markdown_utils import split_h2_markdown_sections\nfrom tools.chat_viewer.tree_wrapper import TreeWrapper\n\n_console = Console(color_system=\"truecolor\")\n\npreapproved_file_patterns: list[re.Pattern] = []\nSHOW_ALL = False\n\nEXCLUDED_CONTENT_HASHES: list[str] = [\n    # FYI careful w/ trailing \\n when computing by hand\n    #   cat 1776320801-trace.json | jq --raw-output --join-output .request_body.messages[0].content | sha256\n    #      use jq's --join-output which joins lines thus removing \\n on end\n    #\n    # * Rewrites\n    \"4601994390a24a63f5e38160e15dd11c02361ed2be2af84d1a2ae8e77bc7392b\",  # Rewrite msg1 - System Message - #1 \"Ground rules\" (short list of 9 bullets)\n    \"f7dae2933320d80989f18d7f3b973ca2fb8b57cfdfa8525736aec8e8c85a1482\",  #   ground rules updated\n    #\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"import rich console\n\nHere is the code I selected:\n```tools/chat_viewer/tree_wrapper_tests.py:22-23\n\n\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "stream":true,
+    "model":"",
+    "top_p":1,
+    "max_tokens":2048,
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"off"
+    }
+  },
+  "last_sse":{
+    "timings":{
+      "prompt_n":2196,
+      "cache_n":298,
+      "prompt_ms":209.42,
+      "prompt_per_token_ms":0.095364298724954,
+      "predicted_ms":201.812,
+      "predicted_per_token_ms":3.881,
+      "predicted_per_second":257.66555011595,
+      "predicted_n":52,
+      "prompt_per_second":10486.104479037
+    },
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1778570579,
+    "id":"chatcmpl-kkxwl8Y7I6tmSw1uNo6dPmj44VZpXnaV",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }]
+  }
+}
