@@ -1,0 +1,63 @@
+{
+  "request_body":{
+    "stream":true,
+    "max_tokens":4096,
+    "model":"",
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/chunks/ansi.py:15-23\nBLUEBG = \"\\x1b[44m\"\nMAGENTABG = \"\\x1b[45m\"\nCYANBG = \"\\x1b[46m\"\nWHITEBG = \"\\x1b[47m\"\n#\nRESET = \"\\x1b[0m\"\nBOLD = \"\\x1b[1m\"\nITALIC = \"\\x1b[3m\"\nUNDERLINE = \"\\x1b[4m\"\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/chunks/ansi.py:0-19\n# * ANSI colors\n# foreground:\nBLACK = \"\\x1b[30m\"\nRED = \"\\x1b[31m\"\nGREEN = \"\\x1b[32m\"\nYELLOW = \"\\x1b[33m\"\nBLUE = \"\\x1b[34m\"\nMAGENTA = \"\\x1b[35m\"\nCYAN = \"\\x1b[36m\"\nWHITE = \"\\x1b[37m\"\n# background:\nBLACKBG = \"\\x1b[40m\"\nREDBG = \"\\x1b[41m\"\nGREENBG = \"\\x1b[42m\"\nYELLOWBG = \"\\x1b[43m\"\nBLUEBG = \"\\x1b[44m\"\nMAGENTABG = \"\\x1b[45m\"\nCYANBG = \"\\x1b[46m\"\nWHITEBG = \"\\x1b[47m\"\n#\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/inference/server/__main__.py:54-56\ndef clear_iterm_scrollback():\n    clear_iterm_scrolback = \"\\x1b]1337;ClearScrollback\\a\"\n    print(clear_iterm_scrolback)\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/chunks/chunker_tests.py:305-312\n    def test_function_with_preceding_unrelated_triple_dash_alias(self):\n        # again another edge case that I want to keep even though I use generic blank line detection\n        # ---@alias preceding (with blank line separator) is not related\n        # HOWEVER, if I were to tack one on w/o the blank line then that's gonna be included b/c that's not a direction I want to go with disambiguating annotation doc_commments :)\n        chunk = self.chunks[5]\n        assert chunk.text == \"\"\"function Divide(a, b)\n    return a / b\nend\"\"\"\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/logs.py:35-53\ndef clear_iterm_scrollback(log_file):\n    # FYI some imports take time and will delay this happening for a few seconds (i.e. model load on import)\n    # * clear iTerm scrollback/screen!\n    #   \\x1b = ESC (ansi escape sequence start)\n    #   ESC] = Operating System Command\n    #   50 and 1337 both work\n    #     iTerm docs recommend 1337 to avoid conflicts w/ xterm (origin of many of these commands)\n    #\n    # https://iterm2.com/documentation-escape-codes.html\n\n    # see: https://apple.stackexchange.com/a/382057/53333\n    # clear_iterm_scrolback = \"\\x1b]50;ClearScrollback\\a\"\n    clear_iterm_scrolback = \"\\x1b]1337;ClearScrollback\\a\"\n    log_file.write(clear_iterm_scrolback)\n    log_file.flush()\n    #\n    # * clear just current screen using rich (through log works):\n    # console.clear()  # NOTE: not scrollback in iTerm (obviously)\n    # TODO does console have a clear scrollback too that blasts all possible clears? or that I can specific which term to do it for?\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"use constants instead of comments for arrow directions\n\nHere is the code I selected:\n```tools/chat_viewer/browser/__main__.py:120-127\n                if sequence == b'\\x1b[A':  # Up arrow\n                    browser._move(-1)  # treat as back\n                elif sequence == b'\\x1b[B':  # Down arrow (optional)\n                    pass  # no action defined\n                elif sequence == b'\\x1b[C':  # Right arrow (optional)\n                    browser._move(1)\n                elif sequence == b'\\x1b[D':  # Left arrow\n                    browser._move(-1)  # treat as forward\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "temperature":1
+  },
+  "last_sse":{
+    "created":1778628400,
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "timings":{
+      "cache_n":0,
+      "predicted_per_token_ms":3.87978125,
+      "predicted_per_second":257.74649021772,
+      "prompt_n":1397,
+      "prompt_per_token_ms":0.142170365068,
+      "predicted_ms":620.765,
+      "prompt_per_second":7033.8146738364,
+      "prompt_ms":198.612,
+      "predicted_n":160
+    },
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "id":"chatcmpl-LQVdaF7J6IBco7e7C7t2t2y0uyDhZ8xT",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }]
+  },
+  "response_message":{
+    "role":"assistant",
+    "_logged":true,
+    "reasoning_content":"Need to replace comments with constants. Provide constants definitions and use them. No markdown.",
+    "finish_reason":"stop",
+    "content":"# tools/chat_viewer/browser/__main__.py\n\n# Arrow direction constants (ANSI escape sequences)\nUP_ARROW = b'\\x1b[A'\nDOWN_ARROW = b'\\x1b[B'\nRIGHT_ARROW = b'\\x1b[C'\nLEFT_ARROW = b'\\x1b[D'\n\n# ... earlier code ...\n\n                if sequence == UP_ARROW:\n                    browser._move(-1)  # treat as back\n                elif sequence == DOWN_ARROW:\n                    pass  # no action defined\n                elif sequence == RIGHT_ARROW:\n                    browser._move(1)\n                elif sequence == LEFT_ARROW:\n                    browser._move(-1)  # treat as forward"
+  }
+}
