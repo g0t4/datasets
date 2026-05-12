@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "id":"chatcmpl-eTKTLYymfwtxMNOxNDJVyei6yYOc8Cae",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "cache_n":165,
+      "prompt_ms":67.599,
+      "predicted_n":199,
+      "predicted_ms":751.469,
+      "predicted_per_token_ms":3.7762261306533,
+      "prompt_n":317,
+      "predicted_per_second":264.81464970611,
+      "prompt_per_second":4689.4184825219,
+      "prompt_per_token_ms":0.21324605678233
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "created":1778565804
+  },
+  "request_body":{
+    "max_tokens":2048,
+    "stream":true,
+    "top_p":1,
+    "messages":[{
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true,
+        "role":"system"
+      },{
+        "content":"## Recent yanks (copy to clipboard):\n```tools/chat_viewer/__main__.py\nget_renderable\n```\n\n```tools/chat_viewer/__main__.py\nsearch_for\n```\n\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"## General Code Preferences\n\n- When rewriting code, leave unrelated code and unrelated comments as is.\n- When an if statement has an AMBIGUOUS condition, extract a variable to meaningfully name it, for example:\n```lua\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"## Python Code Preferences\n- Use snake_case for functions and variables.\n- Use PascalCase for classes.\n- Use type hints to clear up ambiguity and improve code completion.\n- prefer `list[]` over `List[]` to mimimize imports\n- Avoid docstrings, ABSOLUTELY NO trivial comments.\n- Use `py_compile` to check for indentation and syntax errors.\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"build a dictionary of mappings where key == search_for and value == apply_style ... loop over the keys and if the key (saerch_for) is \"in\" (note NOT ==) then apply value (style)\n\nHere is the code I selected:\n```tools/chat_viewer/__main__.py:144-147\n        search_for = \"## Recent yanks (copy to clipboard):\"\n        apply_style = \"bold on yellow\"\n        if search_for in header_line:\n            header_render = Text(header_line, style=apply_style)\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true,
+        "role":"user"
+      }],
+    "temperature":1,
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"off"
+    }
+  },
+  "response_message":{
+    "content":"```python\n# Existing code around line 144\nstyle_map: dict[str, str] = {\n    \"## Recent yanks (copy to clipboard):\": \"bold on yellow\",\n    # add other mappings here as needed\n}\n\nfor search_key, apply_style in style_map.items():\n    if search_key in header_line:\n        header_render = Text(header_line, style=apply_style)\n        break\n```",
+    "finish_reason":"stop",
+    "reasoning_content":"User wants to build a dictionary of mappings where key == search_for and value == apply_style, loop over keys and if key is \"in\" header_line then apply style. They provided snippet. Need to modify code accordingly. Should preserve indentation. Need to add dictionary and loop. Probably replace current variables with dict and loop. Provide code only, no markdown. Ensure proper indentation. Use type hints. Use snake_case. Use list[] not needed. Provide minimal changes. Use py_compile not needed. Provide final code snippet.",
+    "role":"assistant",
+    "_logged":true
+  }
+}
