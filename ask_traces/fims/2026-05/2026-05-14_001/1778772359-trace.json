@@ -1,0 +1,57 @@
+{
+  "request_body":{
+    "stream":true,
+    "options":[],
+    "raw":false,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: 2026-05-14_001\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```README.md\nit works! regex based abbr for grev1 => git revert HEAD~1, grev2 => HEAD~2 etc\n\ncritique:\n- capture group (\\d+) is pointless just do `\\d+`\n  - to use captures you'd use `string match --regex` inside the body of the expanion function\n- IMO a better solution is to just replace the typed prefix `grev` with <|fim_middle|>\n\n```\n\n## Reminders about the cursor line:\nText before cursor: `- IMO a better solution is to just replace the typed prefix `grev` with `",
+        "_logged":true
+      }],
+    "model":"gpt-oss:120b",
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "top_p":1,
+    "max_tokens":4096,
+    "temperature":1
+  },
+  "last_sse":{
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "id":"chatcmpl-7k2skCTU5mZ85UGQE1ZN6arN8ETyk36E",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "timings":{
+      "prompt_n":43,
+      "cache_n":909,
+      "prompt_ms":35.49,
+      "prompt_per_token_ms":0.8253488372093,
+      "predicted_ms":352.219,
+      "predicted_per_token_ms":3.9575168539326,
+      "predicted_n":89,
+      "prompt_per_second":1211.6089039166,
+      "predicted_per_second":252.68369963006
+    },
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "created":1778772300
+  },
+  "response_message":{
+    "reasoning_content":"We need to fill in <|fim_middle|> with appropriate text. The line is inside backticks? It says replace typed prefix `grev` with ... likely `<C-r>=expand('<cword>')`? Actually want replacement text, probably the expansion like `git revert HEAD~`. So replace prefix with `git revert HEAD~`. Probably just that.",
+    "role":"assistant",
+    "_logged":true,
+    "content":"git revert HEAD~",
+    "finish_reason":"stop"
+  }
+}
