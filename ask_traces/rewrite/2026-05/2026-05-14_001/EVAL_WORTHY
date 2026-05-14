@@ -1,0 +1,12 @@
+test by running as fish script... then extract function name for expansion and test it expands correctly
+
+```fish
+cat "1778771900-trace.json" | jq .response_message.content --raw-output | source
+type grev1
+type grev10
+# TODO and/or test function directly
+set func_name $(cat "1778771900-trace.json" | jq .response_message.content --raw-output | grep -Eo "^\s*function\s+(\w+)" | string replace --regex "^\s*function\s+" "" )
+# TODO score if it has _abbr_expand_ common prefix?
+# run function
+set result ($func_name grev10)
+```
