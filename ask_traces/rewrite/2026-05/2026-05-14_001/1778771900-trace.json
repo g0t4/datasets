@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-wV335FksKodqdb15Pq3XwjDC3WQamGgj",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "prompt_n":2562,
+      "predicted_per_second":254.10428240452,
+      "cache_n":0,
+      "prompt_ms":241.078,
+      "prompt_per_token_ms":0.094097580015613,
+      "predicted_ms":401.41,
+      "predicted_per_token_ms":3.9353921568627,
+      "predicted_n":102,
+      "prompt_per_second":10627.26586416
+    },
+    "created":1778771841,
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }]
+  },
+  "response_message":{
+    "_logged":true,
+    "content":"abbr --add _grev_d --regex 'grev(\\d+)' --function _abbr_expand_grev_d\nfunction _abbr_expand_grev_d\n    # replace grev<number> with the appropriate git revert command\n    set count (string replace --regex '^grev' '' $argv[1])\n    echo \"git revert HEAD~$count\"\nend",
+    "finish_reason":"stop",
+    "reasoning_content":"We need to add abbreviation with regex and function. Provide function similar to others.",
+    "role":"assistant"
+  },
+  "request_body":{
+    "stream":true,
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "top_p":1,
+    "model":"",
+    "temperature":1,
+    "messages":[{
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/git-specific.fish:278-280\nfunction _abbr_expand_grbi_d\n    string replace --regex \"grbi(\\d+)\" \"git rebase -i HEAD~\\1\" $argv[1]\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/globals-specific.fish:45-64\nabbr --add _head_d --regex 'h\\d+' --function _abbr_expand_head_pipe_d # keep h1/h2 etc for now and see if it catches on..\nfunction _abbr_expand_head_pipe_d\n    set text (string replace --regex \"^p\" \"| \" $argv[1]) # replace p => |\n    set text (string replace --regex 'h(\\d+)$' 'head -\\1' $text) # h10 => head -10\n    echo $text\nend\n\n# # * tail abbrs\nabbr --position=anywhere --add _tail_pipe_d --regex 'pt\\d+' --function _abbr_expand_tail_pipe_d # keep pt1 yes! this one I should habitutate\n# abbr --add _tail_d --regex 't\\d+' --function _abbr_expand_tail_pipe_d # disable t\\d b/c I wanna use that for my trace abbr... and I cannot think of when I used h1/t1 anytime recently\nfunction _abbr_expand_tail_pipe_d\n    set text (string replace --regex \"^p\" \"| \" $argv[1]) # replace p => |\n    set text (string replace --regex 't(\\d+)$' 'tail -\\1' $text) # t10 => tail -10\n    echo $text\nend\n\n# TODO make pwc insert pbpaste if line is empty? else just `| wc`?\nabbr --position=anywhere -- pwc '| wordcount'\n\nabbr --position=anywhere -- hC '| hexdump -C'\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/git-specific.fish:45-64\n\nabbr gl git log\n\nabbr --regex 'gl\\d+' --function glX _glX\nabbr --regex 'g\\d+' --function glX _gX\nfunction glX\n    # support both\n    #   gl10\n    #   g10\n    #   hence l? => optional l after the g\n    string replace --regex '^gl?' 'git log -' $argv\nend\n\nset _unpushed_commits \"HEAD@{push}~1..HEAD\" # always show last pushed commit too (so if nothing unpushed the output isn't empty as if maybe broken)\nset _unpushed_commits_without_last_pushed \"HEAD@{push}..HEAD\" # in some cases I don't wanna show last pushed (i.e. gls --stat)\n#\nabbr gst 'git status' # I just can't stop using gst...\n#\nabbr gstl \"git status && echo && git_unpushed_commits\" # * try # FYI requires gst/glo aliases(funcs) to work\n\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/git-specific.fish:270-289\nabbr grb 'git rebase'\nabbr grba 'git rebase --abort'\nabbr grbc 'git rebase --continue'\nabbr grbs 'git rebase --skip'\nabbr grbi 'git rebase -i'\nabbr grbias 'git rebase -i --autostash'\n#\nabbr --add _grbi_d --regex 'grbi\\d+' --function _abbr_expand_grbi_d\nfunction _abbr_expand_grbi_d\n    string replace --regex \"grbi(\\d+)\" \"git rebase -i HEAD~\\1\" $argv[1]\nend\n\nfunction _repo_is_index_clean\n    set repo_dir $argv[1]\n    set -q argv[1]; or set repo_dir (_repo_root)\n\n    # 0 = nothing staged, 1 = staged\n    git -C $repo_dir diff --staged --quiet\nend\n\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/git-specific.fish:90-109\nabbr glp \"git log --patch $_unpunched_commits\"\nabbr glpf \"git log --pretty=full --patch $_unpunched_commits\"\nabbr --regex 'glpf?\\d+' --function glp_x _glp_x\nfunction glp_x\n    set command_line $argv[1]\n    if string match --quiet --regex '^glpf' $command_line\n        string replace --regex '^glpf' 'git log --pretty=full --patch -' $command_line\n    else\n        string replace --regex '^glp' 'git log --patch -' $command_line\n    end\nend\n\n#\n# w/ stat (files)\nabbr gls \"git log --stat $_unpushed_commits_without_last_pushed\"\nabbr glsf \"git log --pretty=full --stat $_unpushed_commits_without_last_pushed\"\nabbr --regex 'gls[f]{0,1}\\d+' --function glsX _glsX\nfunction glsX\n    # btw f is optional and => --pretty=full if present\n    set expanded (string replace --regex '^glsf' 'git log --pretty=full --stat -' $argv); or true # swap most specific first\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"make a dynamic variant (regex based) with this regex: grev\\d+  where the d represents a count vs HEAD... so grev1 => git revert HEAD~1  ... grev10 is HEAD~10 etc\n\nHere is the code I selected:\n```fish/load_last_interactive_only/git-aliases.fish:141\nabbr grev 'git revert'\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      }]
+  }
+}
