@@ -1,0 +1,29 @@
+
+challenges:
+  - commit: 57753b7e
+    repo: ask-openai.nvim
+    changes: contains newly indented lines + in the same for loop some removed lines, interestingly delta shows this one ok right now
+  - commit: e8fadce4
+    repo: ask-openai.nvim
+    changes: similar to 57753b7e, includes for loop indentation change (lua) + removed lines + new lines... this is a good all around commit to judge many factors of a diff tool
+    robust: yes # robust is for markign commits that are good for testing a new diff tool
+  - commit: eeca6735
+    repo: ask-openai.nvim
+    changes: I added the de-indent in a separate commit so delta would be able to show the diff better for subsets of the overall changes
+  - commit_range: bd8aa252~2..bd8aa252
+    repo: ask-openai.nvim
+    changes: |
+       return early refactoring
+       split into two commits
+       looks ok with delta now (with git diff range)... is that b/c I created two commits so tracking changes is easier for git...
+       - not sure if separate commits makes range diff easier to "get right"?
+       - I swear many of these look terrible when checking in changes
+       - TODO take notes when committing (git add --patch time too)... also you might have diff algorithms running for `git add --patch` vs `git diff`?
+        I do know that diffs look different before commit vs after
+
+---
+# assume no org on repo == my repo
+trivial:
+  - commit: 48c0e3fe
+    repo: dotfiles
+    changes: Added a fish function, add lines only
