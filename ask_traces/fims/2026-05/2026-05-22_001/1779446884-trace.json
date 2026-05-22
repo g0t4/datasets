@@ -1,0 +1,61 @@
+{
+  "response_message":{
+    "role":"assistant",
+    "_logged":true,
+    "finish_reason":"stop",
+    "content":"(\"AXValue\", \"PNG\")",
+    "reasoning_content":"We need to complete the call: setAttributeValue probably needs two args: attribute name and value. Looking at earlier code: save_as_name:setAttributeValue(\"AXValue\", \"thumb.png\") So here: file_format:setAttributeValue(\"AXValue\", \"PNG\") maybe. Use string. So completion: (\"AXValue\", \"PNG\")"
+  },
+  "request_body":{
+    "model":"gpt-oss:120b",
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/filetypemods.lua:265-267\n               function()\n        vim.bo.filetype = \"ini\"\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/learn/axuielem.lua:90-102\n-- hs.axuielement:setAttributeValue(attribute, value) -> axuielementObject | nil, errString\n--\n-- hs.axuielement:isValid() -> boolean | nil, errString\n--    find out if element is removed, etc (aka invalid)\n-- hs.axuielement:matchesCriteria(criteria) -> boolean\n--    test like if searching?\n-- hs.axuielement:path() -> table\n--   OMG use with element at position!\n--   THEN... I should be able to programatically produce applescript or otherwise to find an object using my own locator code...\n--       I could even traverse nearby elements and find where decision points are and find differing aspects to build the unique path to object\n--\n--\n--\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/macros/fcpx/init.lua:102-116\nfunction FcpxTitlePanelChangeElemValue(delta, description)\n    FcpxTitlePanelFocusOnElementByDescription(description, function(elem)\n        local val = elem:axValue()\n        local new_value = tonumber(val) + tonumber(delta)\n        local rounded_three_decimals = string.format(\"%.3f\", new_value)\n        print(rounded_three_decimals)\n\n        -- seems slightly faster to type the new value? both work:\n        -- elem:setAttributeValue(\"AXValue\", rounded_three_decimals)\n        hs.eventtap.keyStrokes(rounded_three_decimals) -- type it in! (and it will be \"read\" by the app as the new value)\n\n        -- w/o return it will not preview the changes, also needed to type over the value again next time I call this\n        hs.eventtap.keyStroke({}, \"return\")\n    end)\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/filetypemods.lua:155-178\n               function()\n        -- FYI subsequent autocmds can override this... so careful with printing out current settings cuz it might be interim\n\n        -- *** global defaults ***\n        --   using autocmd on BufEnter to override all init.lua config settings for this (including after ftplugins)\n        local opts = vim.opt.formatoptions._value -- use a FUCKING string... whoever came up with this fucking multi-value option should be raped and shot and then raped again\n        -- print(\"filetypemods - initial formatoptions:\", opts)\n\n        -- auto-wrap on textwidth:\n        --   I HATE auto wrapping... especially for comments\n        --   You might convince me to wrap code/text automatically if it is smart about how it decides... but sometimes I want a long line of code too (or comment at end)\n        opts = opts:gsub(\"c\", \"\") --  wrapping comments on textwidth\n        opts = opts:gsub(\"t\", \"\") --  wrapping regular text on textwidth\n        opts = opts .. \"l\" --  do not wrap in insert mode (when past textwidth columns) - was already default, just make explicit\n\n        -- comment leaders:\n        --   FYI habitutate using Ctrl-U to remove comment leader (this should help when I don't want it)\n        opts = opts .. \"o\" --  insert comment leader on `o` and `O`\n        opts = opts .. \"r\" --  insert comment leader on <Enter>\n        opts = opts .. \"j\" --  remove comment leader when joining lines\n\n        -- opt_local is for current file only\n        vim.opt_local.formatoptions = opts\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/filetypemods.lua:324-336\n               function()\n        vim.keymap.set(\"n\", '=', function()\n                -- unfortunately, fnlfmt doesn't support formatting a subset of lines (i.e. line range)...\n                --   nor can I just pass lines standalone...\n                --   so there's really no reason to wait for a motion...\n                --   b/c its all or none for the full buffer contents...\n                --   but, b/c the interface is gg=G (or otherwise) I am stuck waiting on motion\n\n                vim.o.operatorfunc = \"v:lua.fennel_fmt\"\n                return \"g@\"\n            end,\n            { expr = true, buffer = true }) -- buffer=true => only override for current buffer (fennel file type)\n    end\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```.config/hammerspoon/config/macros/msft_office/pptx.lua\nfunction PPTX_EnsureTabOpen(tabName)\n    MicrosoftOfficeEnsureTabSelected(\"Microsoft PowerPoint\", tabName)\nend\n\n---@return hs.axuielement\nfunction GetPowerPointAppElement()\n    return GetAppElement(\"PowerPoint\")\n    -- return GetAppElement(\"com.microsoft.PowerPoint\")\nend\n\nfunction PPTX_SaveAs()\n    local app = GetPowerPointAppElement()\n\n    PressMenuItem({ \"File\", \"Export...\" })\n\n    local save_as_name = wait_for_element(function()\n        -- sheet attrs:\n        -- AXDescription: export<string>\n        -- AXIdentifier: save-panel<string>\n        -- AXRoleDescription: sheet<string>\n        local sheet = app:window(1):sheet(1)\n        if not sheet then\n            return nil\n        end\n        return sheet:splitGroup(1):textField(2)\n    end, 100, 200) -- 200 cycles × 100\u202fms/cycle = 20\u202f000\u202fms → 20\u202fseconds (for restart to complete and find and reopen project)\n\n    -- name textbox control attrs:\n    --  app:window(1):sheet(1):splitGroup(1):textField(2)\n    -- AXIdentifier: saveAsNameTextField<string>\n    -- AXFocused: true<bool> -- PRN wait for this to be true if not focused fast enough for above wait_for_element\n    -- unique ref: app:window('thumbs'):sheet():splitGroup()   --\n    --\n    -- print(hs.inspect(save_as_name))\n    -- print(save_as_name:axValue())\n    -- set name to just \"thumb\" instead of thumbs\n    save_as_name:setAttributeValue(\"AXValue\", \"thumb.png\")\n\n    local file_format = app:window(1):sheet(1):splitGroup(1):group(2):popUpButton(1)\n    print(\"file_format\", file_format:axValue())\n    file_format:setAttributeValue<|fim_middle|>\n\n\n    -- THEN change the \"File Format\" dropdown to PNG ... here is the control info to click on to open choices:\n    --   actually can I just set the AXValue to PNG (below it is PDF by default)... I wonder if that works w/o needing to click to open it first?\n    --\n    -- app:window(1):sheet(1):splitGroup(1):group(2):popUpButton(1)\n    --\n    -- AXDescription: File Format:<string>\n    -- AXDirectTouchOptions: 0<number>\n    -- AXPath: unrecognized type: 139<string>\n    -- AXRoleDescription: pop up button<string>\n    -- AXSortPriority: 0.0<number>\n    -- AXTraits: 0<number>\n    -- AXValue: PDF<string>\n    -- unique ref: app:window('thumbs'):sheet():splitGroup():group(subrole='AXHostingView'):popUpButton()\nend\n```\n\n## Reminders about the cursor line:\nText before cursor: `    file_format:setAttributeValue`",
+        "_logged":true
+      }],
+    "stream":true,
+    "max_tokens":4096,
+    "options":[],
+    "raw":false,
+    "top_p":1
+  },
+  "last_sse":{
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "id":"chatcmpl-yrlXJrrbxJAg5FzMQEr9DVeXGN2LGRSj",
+    "created":1779446817,
+    "timings":{
+      "prompt_n":1612,
+      "prompt_ms":142.716,
+      "prompt_per_token_ms":0.088533498759305,
+      "predicted_ms":337.773,
+      "predicted_per_token_ms":3.9275930232558,
+      "predicted_per_second":254.60886453328,
+      "cache_n":1020,
+      "predicted_n":86,
+      "prompt_per_second":11295.159617702
+    },
+    "object":"chat.completion.chunk"
+  }
+}
