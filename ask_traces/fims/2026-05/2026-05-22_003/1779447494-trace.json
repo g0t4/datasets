@@ -1,0 +1,61 @@
+{
+  "response_message":{
+    "role":"assistant",
+    "_logged":true,
+    "finish_reason":"stop",
+    "content":"PNG\")",
+    "reasoning_content":"We need to complete string title, likely \"PNG\". So insert PNG\". But cursor inside quotes, need close quote and maybe parenthesis. The line currently:\n\n`    local png_menu_item = file_path:menu(1):menuitem_by_title(\"<|fim_middle|>`\n\nWe need to finish with `PNG\")`. So completion: `PNG\")`. Ensure not duplicate suffix. The line after will have rest? after cursor there is nothing. So provide `PNG\")`."
+  },
+  "request_body":{
+    "model":"gpt-oss:120b",
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n\n## Recent yanks (copy to clipboard):\n```.config/hammerspoon/config/macros/msft_office/pptx.lua\n    -- app:window(1):sheet(1):splitGroup(1):group(2):popUpButton(1):menu(1):menuItem(6)\n```\n\n```.config/hammerspoon/config/macros/msft_office/pptx.lua\n    -- print(hs.inspect(save_as_name))\n```\n\n```.config/hammerspoon/config/ax/helpers.lua\nfunction axuielemMT:window_by_title(title)\n    local windows = self:windows()\n    for _, window in ipairs(windows) do\n        local window_title = window:axTitle()\n        if window_title == title then return window end\n    end\nend\n\n```\n\n```.config/hammerspoon/config/macros/msft_office/pptx.lua\n    -- local png_menu_item = file_format:menu(1):menuItem(6)\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/ax/helpers.lua:324-330\nfunction axuielemMT:menuitem_by_title(title)\n    local menu_items = self:menuItems()\n    for _, menu in ipairs(menu_items) do\n        local title = menu:axTitle()\n        if title == title then return menu end\n    end\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/unused/disabled-nvim-tree-context-menu.lua:34-40\n                            function(menu_item)\n            return {\n                value = menu_item,\n                ordinal = menu_item.name,\n                display = menu_item.name,\n            }\n        end\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/uielements.lua:284-303\n    --  can be slow with more menu items (i.e. FCPX)\n\n    -- dump(menu_items)\n    dump_html(menu_items)\n\n    -- PRN anything worth doing to enumerate the menus?\n    -- for _, item in ipairs(menu_items) do\n    --     -- local title = get_value_or_empty_string(item)\n    --     prints(hs.inspect(item), \"<br>\")\n    -- end\nend)\n\n\nhs.hotkey.bind({ \"cmd\", \"alt\", \"ctrl\" }, \"E\", function()\n    -- test drive element search\n    -- TODO try menu item search (like app.getMenuItems() above)\n\n    ensure_cleared_web_view()\n\n    local app = hs.application.frontmostApplication()\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/uielements.lua:272-294\n                                              function()\n    -- USEFUL to quick check for a menu item\n    -- FYI could use this to replace app - Paletro (use canvas to draw menu control)\n\n    ensure_cleared_web_view()\n\n    local app = hs.application.frontmostApplication()\n    print(\"starting potentially slow element search of: \" .. app:name())\n    -- FYI can use app:getMenuItems(callback) instead (called when done, non-blocking too) - callback gets same object and then the return here is the app object (when cb provided)\n    local menu_items = app:getMenuItems()\n    -- timings:\n    --  41ms (feels super fast) with hammerspoon's menus (~120 entries) at least\n    --  can be slow with more menu items (i.e. FCPX)\n\n    -- dump(menu_items)\n    dump_html(menu_items)\n\n    -- PRN anything worth doing to enumerate the menus?\n    -- for _, item in ipairs(menu_items) do\n    --     -- local title = get_value_or_empty_string(item)\n    --     prints(hs.inspect(item), \"<br>\")\n    -- end\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/ax/helpers.lua:312-316\n\n\n---AXMenuItem\n---@return hs.axuielement[]\naxuielemMT.menuItems = \n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```.config/hammerspoon/config/macros/msft_office/pptx.lua\nfunction PPTX_EnsureTabOpen(tabName)\n    MicrosoftOfficeEnsureTabSelected(\"Microsoft PowerPoint\", tabName)\nend\n\n---@return hs.axuielement\nfunction GetPowerPointAppElement()\n    return GetAppElement(\"PowerPoint\")\n    -- return GetAppElement(\"com.microsoft.PowerPoint\")\nend\n\nfunction PPTX_SaveAs()\n    local app = GetPowerPointAppElement()\n\n    PressMenuItem({ \"File\", \"Export...\" })\n\n    local save_as_name = wait_for_element(function()\n        -- sheet attrs:\n        -- AXDescription: export<string>\n        -- AXIdentifier: save-panel<string>\n        -- AXRoleDescription: sheet<string>\n        local sheet = app:window(1):sheet(1)\n        if not sheet then\n            return nil\n        end\n        return sheet:splitGroup(1):textField(2)\n    end, 100, 200) -- 200 cycles × 100\u202fms/cycle = 20\u202f000\u202fms → 20\u202fseconds (for restart to complete and find and reopen project)\n\n    -- name textbox control attrs:\n    --  app:window(1):sheet(1):splitGroup(1):textField(2)\n    -- AXIdentifier: saveAsNameTextField<string>\n    -- AXFocused: true<bool> -- PRN wait for this to be true if not focused fast enough for above wait_for_element\n    -- unique ref: app:window('thumbs'):sheet():splitGroup()   --\n    --\n    -- print(hs.inspect(save_as_name))\n    -- print(save_as_name:axValue())\n    -- set name to just \"thumb\" instead of thumbs\n    save_as_name:setAttributeValue(\"AXValue\", \"thumb.png\")\n\n\n    -- file format control attrs:\n    -- app:window(1):sheet(1):splitGroup(1):group(2):popUpButton(1)\n    -- AXDescription: File Format:<string>\n    -- AXValue: PDF<string>\n    -- unique ref: app:window('thumbs'):sheet():splitGroup():group(subrole='AXHostingView'):popUpButton()\n    local file_format = app:window(1):sheet(1):splitGroup(1):group(2):popUpButton(1)\n    print(\"file_format\", file_format:axValue())\n    -- set AXValue does not work to change selection in dropdown\n    file_format:axPress()\n\n    -- could also type PNG to select it\n    local png_menu_item = file_format:menu(1):menuitem_by_title(\"<|fim_middle|>\n    -- local png_menu_item = file_format:menu(1):menuItem(6)\n    -- png_menu_item:axPress()\n    -- app:window(1):sheet(1):splitGroup(1):group(2):popUpButton(1):menu(1):menuItem(6)\n    --\n    -- AXEnabled: true<bool>\n    -- AXIdentifier: menuAction:<string>\n    -- AXMenuItemCmdModifiers: 8<number>\n    -- AXMenuItemPrimaryUIElement: AXMenuItem 'PNG' menuAction:<hs.axuielement>\n    -- AXSelected: true<bool>\n    -- AXTitle: PNG<string>\n    -- AXTraits: 0<number>\n    -- frame: x=928.0,y=724.0,w=258.0,h=24.0\n    --\n    -- press 'c' children, 'e' everything\n    --\n    -- unique ref: app:window('thumbs'):sheet():splitGroup():group(subrole='AXHostingView'):popUpButton():menu()\n    --   :menuItem('PNG')\n\nend\n```\n\n## Reminders about the cursor line:\nText before cursor: `    local png_menu_item = file_format:menu(1):menuitem_by_title(\"`",
+        "_logged":true
+      }],
+    "stream":true,
+    "max_tokens":4096,
+    "options":[],
+    "raw":false,
+    "top_p":1
+  },
+  "last_sse":{
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "id":"chatcmpl-X8pD45WjAaNWqwUc1SB6b5mKK3SNLlWY",
+    "created":1779447427,
+    "timings":{
+      "prompt_n":1306,
+      "prompt_ms":126.952,
+      "prompt_per_token_ms":0.0972067381317,
+      "predicted_ms":428.423,
+      "predicted_per_token_ms":3.9304862385321,
+      "predicted_per_second":254.42144796148,
+      "cache_n":1333,
+      "predicted_n":109,
+      "prompt_per_second":10287.352700233
+    },
+    "object":"chat.completion.chunk"
+  }
+}
