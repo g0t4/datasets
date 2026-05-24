@@ -1,0 +1,61 @@
+{
+  "request_body":{
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system",
+        "_logged":true
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: devtools.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n\n## Recent yanks (copy to clipboard):\n```lua/devtools/diff/combined.tests.lua\nonly\n```\n\n",
+        "role":"user",
+        "_logged":true
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/diff/histogram.tests.lua:7-8\nfunction ignore(a, b)\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/lua.tests.lua:9-13\n                                             function()\n        local path = lua.which_module(\"devtools.messages.nonexistent\")\n        should.be_equal(nil, path)\n        -- PRN? error?\n    end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/_ignore.lua:0-1\nfunction _ignore(a, b)\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/inspect.tests.lua:23-26\n                      function()\n        local result = inspect.wtf(\"wtf\")\n        assert(result == \"wtf\")\n    end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/inspect.tests.lua:56-60\n                    function()\n        local result = inspect.bat_json(nil)\n        local result_without_color = inspect.strip_ansi_escape_sequences(result)\n        assert.matches(\"null\", result_without_color)\n    end\n",
+        "role":"user",
+        "_logged":true
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/builders.lua\nlocal M = {}\n\nlocal function NOOP<|fim_middle|>\n\noriginal_it = it\nfunction M._only(desc, func)\n    original_it(desc, func)\n\n    -- if we mark a single test as only run this => then we want to disable (skip) all other tests not defined with only...\n    --   IOTW it => NOOP\n    it = NOOP\nend\n\nfunction M._skip(desc, func)\nend\n\nreturn M\n\n```\n\n## Reminders about the cursor line:\nText before cursor: `local function NOOP`",
+        "role":"user",
+        "_logged":true
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "options":[],
+    "raw":false,
+    "model":"gpt-oss:120b",
+    "top_p":1,
+    "temperature":1,
+    "max_tokens":4096,
+    "stream":true
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"() end",
+    "reasoning_content":"We need to complete function definition. Likely `local function NOOP() end` or something. In Lua, define a noop function that does nothing. Probably `() end`. So after cursor insert `() end`. Need no extra spaces? Original line: `local function NOOP<|fim_middle|>` cursor after NOOP. So we add `()` then maybe newline? The function body likely empty, so `()` then maybe ` end`. Actually syntax: `local function NOOP() end`. So insertion: `() end`. Ensure space before end? Usually `function NOOP() end` works. So insert `() end`.",
+    "role":"assistant",
+    "_logged":true
+  },
+  "last_sse":{
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "id":"chatcmpl-uWelIuv5hxP2ixGJychlrobim88MgCyf",
+    "timings":{
+      "prompt_ms":69.495,
+      "predicted_per_second":259.96851085643,
+      "predicted_n":142,
+      "prompt_per_second":5813.367868192,
+      "prompt_per_token_ms":0.17201732673267,
+      "predicted_ms":546.22,
+      "predicted_per_token_ms":3.8466197183099,
+      "cache_n":994,
+      "prompt_n":404
+    },
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "created":1779626304,
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
