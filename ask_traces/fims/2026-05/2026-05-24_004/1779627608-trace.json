@@ -1,0 +1,61 @@
+{
+  "request_body":{
+    "stream":true,
+    "top_p":1,
+    "options":[],
+    "raw":false,
+    "max_tokens":4096,
+    "model":"gpt-oss:120b",
+    "messages":[{
+        "_logged":true,
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: devtools.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/define/builders.lua:5-14\n-- define multiple one or more tests to ONLY run a subset\n--   ignore tests defined with `it`\n--   FYI by definition, you must call only() at least once to skip other tests\nfunction M.only(desc, func)\n    original_it(desc, func)\n\n    -- if we mark a single test as only run this => then we want to disable (skip) all other tests not defined with only...\n    --   IOTW it => NOOP\n    it = NOOP\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/define/builders.lua:16-17\nfunction M.describe(desc, func)\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/humanize.lua:0-1\nlocal M = {}\n\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/define/builders.lua:0-1\nlocal M = {}\n\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/buffers.lua:0-1\nlocal M = {}\n\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/devtools/tests/define/skip.lua\nlocal M = {}\nfunction M.skip(desc, func)\nend\n<|fim_middle|>\n\n```\n\n## Reminders about the cursor line:\n",
+        "role":"user"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "temperature":1
+  },
+  "last_sse":{
+    "timings":{
+      "prompt_n":319,
+      "prompt_ms":65.976,
+      "prompt_per_token_ms":0.20682131661442,
+      "predicted_ms":1192.115,
+      "predicted_per_token_ms":3.8831107491857,
+      "cache_n":970,
+      "predicted_per_second":257.5254904099,
+      "predicted_n":307,
+      "prompt_per_second":4835.0915484419
+    },
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1779627542,
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-SI4S4EEBVi3IGMc74fQ6rBS1ij0baDXO"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to insert code after the function. Likely implement skip similar to only? In skip.lua probably should set it = NOOP? Let's check patterns: only sets it = NOOP. skip likely disables this test only? Probably it should mark test as skipped by redefining it? In many test frameworks skip registers test but not run. Might set it = function() end? Probably similar to only? Look at other files. But implement simple placeholder: return nothing. Might want to set it = function() end? Let's just implement function body: call original_it? Actually skip should register test as skipped, maybe call original_it but mark skip? Could just call original_it(desc, func) then set it = original_it? Not sure.\n\nSimplest: function M.skip(desc, func) end already empty. Maybe need to set it = function() end? Probably similar to only: after defining skip, we want to skip this test only, meaning disable this test but keep others. So just set it = original_it? No.\n\nImplement: it = NOOP? That would skip all subsequent? Not correct.\n\nMaybe skip should just call original_it with a flag? Without context, leave empty.\n\nThus maybe no insertion needed. But need to suggest something. Could add comment? No comments allowed at end line. Maybe return M at end.\n\nAdd `return M` after. That is common. So <|fim_middle|> should be `return M`.",
+    "role":"assistant",
+    "_logged":true,
+    "content":"return M"
+  }
+}
