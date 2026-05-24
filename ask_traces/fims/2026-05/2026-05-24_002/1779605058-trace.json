@@ -1,0 +1,61 @@
+{
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to fill require path. Likely a module for safe json decode. Search repo? Probably ask-openai.helpers.safely? Let's guess file helpers/safely.lua. Use require(\"ask-openai.helpers.safely\"). So completion: helpers.safely\").",
+    "role":"assistant",
+    "content":"helpers.safely\")",
+    "_logged":true
+  },
+  "request_body":{
+    "max_tokens":4096,
+    "raw":false,
+    "top_p":1,
+    "model":"gpt-oss:120b",
+    "messages":[{
+        "_logged":true,
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/init.lua:127-137\nfunction M.ask_openai()\n    local cmdline = vim.fn.getcmdline()\n    print(\"asking...\") -- overwrites showing luaeval(\"...\") in cmdline\n\n    local stdin_text = ' env: nvim (neovim) command mode (return a valid command w/o the leading : ) \\n question: ' ..\n        cmdline\n\n    local suggest = require(\"ask-openai.suggest\")\n    local result = suggest.get_vim_command_suggestion(stdin_text)\n    return trim_null_characters(result)\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/fim.lua:0-11\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal files = require(\"ask-openai.helpers.files\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal ContextItem = require(\"ask-openai.frontends.context.item\")\n\nlocal M = {}\n\n-- these models work for other purposes too...\n--   but lets collect them under fim for now\n--   really these are the fim related special tokens\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/backends/fim_backend.lua:0-19\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal fim = require(\"ask-openai.backends.models.fim\")\nlocal qwen = fim.qwen25coder.sentinel_tokens\nlocal fim_harmony = require(\"ask-openai.backends.models.gptoss.fim_harmony\")\nlocal meta = require(\"ask-openai.backends.models.meta\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal api = require(\"ask-openai.api\")\nlocal gptoss_tokenizer = require(\"ask-openai.backends.models.gptoss.tokenizer\")\n\nrequire(\"ask-openai.backends.sse.parsers\")\n\n---@class FimBackend\n---@field ps_chunk PrefixSuffixChunk\n---@field rag_matches LSPRankedMatch[]\n---@field context CurrentContext\nlocal FimBackend = {}\nFimBackend.__index = FimBackend\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/gptoss/fim_harmony.lua:0-13\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal api = require(\"ask-openai.api\")\nlocal dedupe = require(\"ask-openai.rag.client.dedupe\")\nlocal harmony = require(\"ask-openai.backends.models.gptoss.tokenizer\").harmony\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal qwen = require(\"ask-openai.backends.models.fim\").qwen25coder.sentinel_tokens\nlocal rag_instructions = require(\"ask-openai.frontends.prompts.rag_instructions\")\nlocal files = require(\"ask-openai.helpers.files\")\n\n---@class HarmonyFimPromptBuilder\n---@field _parts string[]\nlocal HarmonyFimPromptBuilder = {}\nHarmonyFimPromptBuilder.__index = HarmonyFimPromptBuilder\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/init.lua:0-19\nlocal local_share = require(\"ask-openai.config.local_share\")\n\n---@class Provider\n---@field get_bearer_token fun(): string\n---@field check fun() # optional\n---@field get_chat_completions_url fun(): string # optional\nlocal M = {}\n\n--- ask-openai options\n---@class AskOpenAIOptions\n---@field model string\n---@field provider string\n---@field copilot CopilotOptions\n---@field api_url string|nil\nlocal default_options = {\n\n    keymaps = {\n        cmdline_ask = \"<C-b>\",\n    },\n\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/ask-openai/backends/json_client.lua\nlocal http = require(\"socket.http\") -- luarocks install --local --lua-version=5.1 luasocket\n-- BTW arch: sudo pacman --noconfirm -S lua51   -- to install lua 5.1\nlocal ltn12 = require(\"ltn12\") -- also from luasocket\nlocal safely = require(\"ask-openai.<|fim_middle|>\n\nlocal JsonClient = {\n    ---@enum Methods\n    Methods = {\n        GET = \"GET\",\n        POST = \"POST\",\n    }\n}\n\n--- PRN rename to HttpClient? right now it's only for JSON so let's leave it to convey that purpose\n---@param url string\n---@param method Methods\n---@param request_body? table\n---@return JsonClientResponse?\nfunction JsonClient.get_response_body(url, method, request_body)\n    local request_json = nil\n    if request_body then\n        request_json = vim.json.encode(request_body)\n    end\n\n    local curl_args = {\n        \"curl\",\n        \"-sS\", -- silent but show errors\n        \"-X\", method,\n        \"-H\", \"Content-Type: application/json\",\n    }\n\n    if request_json then\n        table.insert(curl_args, \"-d\")\n        table.insert(curl_args, request_json)\n    end\n\n    -- Append URL and ask curl to output HTTP status code on a new line\n    table.insert(curl_args, url)\n    table.insert(curl_args, \"-w\")\n    table.insert(curl_args, \"\\n%{http_code}\")\n\n    -- Execute curl and capture output as a list of lines\n    local output = vim.fn.systemlist(curl_args)\n\n    -- The last line is the HTTP status code\n    local http_code = tonumber(output[#output]) or 0\n    -- All preceding lines form the response body\n    table.remove(output) -- drop the status line\n    local body_str = table.concat(output, \"\\n\")\n\n    ---@class JsonClientResponse\n    ---@field code integer\n    ---@field body any|nil\n    local response = {\n        code = http_code,\n        body = (function()\n            local ok, obj = safely.decode_json(body_str)\n            if ok then\n                return obj\n            end\n            return nil\n        end)(),\n    }\n\n    -- vim.print(response)\n    return response\nend\n\nreturn JsonClient\n```\n\n## Reminders about the cursor line:\nText before cursor: `local safely = require(\"ask-openai.`"
+      }],
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "options":[],
+    "stream":true
+  },
+  "last_sse":{
+    "id":"chatcmpl-PSx76Cm2g9XhDKeSdi2tmIeZXN9YAfcr",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "object":"chat.completion.chunk",
+    "timings":{
+      "cache_n":975,
+      "predicted_per_second":253.50081048851,
+      "predicted_n":71,
+      "prompt_ms":134.59,
+      "prompt_per_token_ms":0.097954876273654,
+      "prompt_n":1374,
+      "predicted_per_token_ms":3.9447605633803,
+      "prompt_per_second":10208.782227506,
+      "predicted_ms":280.078
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "created":1779604990
+  }
+}
