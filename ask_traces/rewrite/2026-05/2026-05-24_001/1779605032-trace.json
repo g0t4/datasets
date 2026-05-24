@@ -1,0 +1,63 @@
+{
+  "response_message":{
+    "finish_reason":"stop",
+    "reasoning_content":"We need to modify to use safely.decode_json and return nil on failure. So body = (function... )? Use safely.decode_json(body_str) which returns success, object; if not success then nil. Implement.",
+    "role":"assistant",
+    "content":"---@class JsonClientResponse\n---@field code integer\n---@field body any|nil\nlocal response = {\n    code = http_code,\n    body = (function()\n        local ok, obj = safely.decode_json(body_str)\n        if ok then\n            return obj\n        end\n        return nil\n    end)(),\n}",
+    "_logged":true
+  },
+  "request_body":{
+    "max_tokens":4096,
+    "model":"",
+    "temperature":1,
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "messages":[{
+        "_logged":true,
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/safely.lua:39-45\n--- use this when you are unsure if the JSON is valid\n--- and you don't need to know a reason why if it fails\n--- i.e. when parsing partial args from streaming tool call request\nfunction M.decode_json_ignore_failure(json_string)\n    local success, object = pcall(vim.json.decode, json_string)\n    return success, object\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/safely.lua:19-28\n---@param json_string string\n---@return boolean success\n---@return any object\nfunction M.decode_json(json_string)\n    local success, object = xpcall(vim.json.decode, M.xpcall_log_failures, json_string)\n    if not success then\n        log:error(\"failed to decode json: \", json_string)\n    end\n    return success, object\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/safely.lua:30-37\nfunction M.decode_json_always_logged(json_string)\n    local success, object = M.decode_json(json_string)\n    if success then\n        -- * key difference, this logs success too:\n        log:info(\"decoded object: \" .. vim.inspect(object))\n    end\n    return success, object\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/llama_cpp/llama_server_client.tests.lua:75-81\n    local function read_json_file(filename)\n        local text = files.read_text(filename)\n        if not text then\n            return nil\n        end\n        return vim.json.decode(text)\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:140-159\n    local function on_stdout(read_error, data)\n        log:log_if_stdio_read_error(string.format(\"MCP on_stdout %s\", server_log_name), read_error, data) -- FYI switch _errors/_always with:    log:trace_stdio_read_always(\"MCP ...\n        if data == nil then return end -- EOF\n\n        pending_json = pending_json .. data\n\n        -- PRN/TODO support content-length \"header\" before message? right now my MCP server mcp-server-commands (typescript MCP SDK) doesn't include content-length style (NOT AFAICT, maybe a setting to enable?)\n        --   instead, right now responses are delimited by a trailing \\n\n        -- TODO add integration tests to make sure this is solid\n        -- TODO you do not want tool calling to randomly fail for plumbing reasons!!!\n        -- TODO look at what you did with SSEs in streaming callbacks via uv.spawn and curl... can be similar integration test style here\n        --  NOTE not using curl implementation of loop/SSE/etc b/c SSE convention is \\n\\n unlike here where message is one trailing \\n\n        while true do\n            -- FYI could be multiple responses/notifications (aka messages) in one callback, hence loop\n            local line, rest = pending_json:match(\"^(.-)\\r?\\n(.*)$\")\n            if not line then break end\n            pending_json = rest\n\n            local ok, response = safely.decode_json(line)\n            if ok then\n\n"
+      },{
+        "_logged":true,
+        "role":"user",
+        "content":"use safely module to decode json and handle failure gracefully (return nil) for body\n\nHere is the code I selected:\n```lua/ask-openai/backends/json_client.lua:50-56\n    ---@class JsonClientResponse\n    ---@field code integer\n    ---@field body any|nil\n    local response = {\n        code = http_code,\n        body = vim.json.decode(body_str),\n    }\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "stream":true
+  },
+  "last_sse":{
+    "id":"chatcmpl-4DrNnzbd3udB9GbsBeg0ON1EjCyHLRRv",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "object":"chat.completion.chunk",
+    "timings":{
+      "cache_n":413,
+      "predicted_per_second":260.79834468489,
+      "predicted_n":121,
+      "prompt_ms":97.237,
+      "prompt_per_token_ms":0.11631220095694,
+      "prompt_n":836,
+      "predicted_per_token_ms":3.8343801652893,
+      "prompt_per_second":8597.5503152092,
+      "predicted_ms":463.96
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "system_fingerprint":"b8943-92dd2b6a9",
+    "created":1779604965
+  }
+}
