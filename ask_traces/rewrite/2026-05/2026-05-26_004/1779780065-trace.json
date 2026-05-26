@@ -1,0 +1,63 @@
+{
+  "response_message":{
+    "role":"assistant",
+    "_logged":true,
+    "finish_reason":"stop",
+    "content":"---@param tools table[] @list of tool objects, each must contain a `name` field\nlocal function log_tool_names(tools)\n    local names = vim.iter(tools)\n        :map(function(tool) return tool.name end)\n        :totable()\n    log:info(\"tools:\", vim.inspect(names))\nend\n\n-- Example usage (replace the original log line):\n-- log_tool_names(tools)",
+    "reasoning_content":"The user asks: \"function this and then use vim.iter inside to get tool.name instead of entire tool object. Here is the code I selected: ```lua/ask-openai/tools/router.lua:24 log:info(\"tools:\", vim.inspect(tools))```\"\n\nThey want to write a function that probably processes tools and logs only tool.name using vim.iter. Need to preserve indentation. Provide code snippet with function definition using snake_case, maybe function log_tool_names(tools) that uses vim.iter(tools):map(function(t) return t.name end):totable() and then log:info(\"tools:\", vim.inspect(names)). Use EmmyLua annotation.\n\nWe need to not wrap in markdown code blocks. Just give code. Ensure indentation matches original file: line 24 had two spaces? Let's assume original indentation is 8 spaces before log:info? Not sure. Provide function with appropriate indentation.\n\nProvide code snippet:\n\n```lua\n---@param tools table[] @list of tool objects each having a `name` field\nlocal function log_tool_names(tools)\n    local names = vim.iter(tools)\n        :map(function(tool) return tool.name end)\n        :totable()\n    log:info(\"tool names:\", vim.inspect(names))\nend\n```\n\nThen replace original line with call to that function. But user just wants function and use vim.iter inside to get tool.name instead of entire tool object. Provide the function and maybe usage.\n\nNo markdown. Just raw code.\n\nLet's output function definition."
+  },
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "top_p":1,
+    "stream":true,
+    "temperature":1,
+    "max_tokens":8192,
+    "model":"",
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:465-469\n                                                        function()\n        local message = vim.inspect(M.tools_available)\n        log:info(message)\n        print(message)\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/context/inspect.lua:70-93\n--- use an item's __tostring to represent itself (if available)\n-- FYI use vim.inspect for a VERBATIM dump of a table\n--- including on tables\nfunction inspect_repr(x)\n    -- FYI made to show Fold type, to condense representations when I don't need the table dumped verbatim\n    local mt = getmetatable(x)\n    if mt and mt.__tostring then\n        return tostring(x)\n    end\n    if type(x) == \"table\" then\n        local copy = {}\n        for k, v in pairs(x) do\n            -- FYI k will be either an index or a key depending on table type\n            local vmt = getmetatable(v)\n            if vmt and vmt.__tostring then\n                copy[k] = tostring(v)\n            else\n                copy[k] = v\n            end\n        end\n        return vim.inspect(copy)\n    end\n    return vim.inspect(x)\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:464-470\nfunction M.setup()\n    vim.api.nvim_create_user_command(\"McpLogToolsList\", function()\n        local message = vim.inspect(M.tools_available)\n        log:info(message)\n        print(message)\n    end, { nargs = 0 })\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:215-217\n    local function tools_list(callback)\n        send_request_stdio({ method = \"tools/list\" }, callback)\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.tests.lua:4-12\n                               function()\n    it(\"populates tools list within timeout\", function()\n        local got_tool = vim.wait(2000, function()\n            -- vim.print(mcp.tools_available)\n            return mcp.tools_available[\"search_docs_by_lang_chain\"] ~= nil\n        end, 50)\n        assert.is_true(got_tool)\n    end)\nend\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"function this and then use vim.iter inside to get tool.name instead of entire tool object\n\nHere is the code I selected:\n```lua/ask-openai/tools/router.lua:24\n        log:info(\"tools:\", vim.inspect(tools))\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true
+      }]
+  },
+  "last_sse":{
+    "created":1779779997,
+    "system_fingerprint":"b9342-eebd4e1bb",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "id":"chatcmpl-xDli4DSiuY0HrSlXHqxkwioihBfeJQOH",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "timings":{
+      "cache_n":473,
+      "predicted_per_second":273.60365650267,
+      "predicted_n":397,
+      "prompt_ms":110.1,
+      "prompt_per_token_ms":0.20313653136531,
+      "predicted_ms":1451.004,
+      "predicted_per_token_ms":3.6549219143577,
+      "prompt_n":542,
+      "prompt_per_second":4922.7974568574
+    },
+    "object":"chat.completion.chunk"
+  }
+}
