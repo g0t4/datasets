@@ -1,0 +1,345 @@
+{
+  "last_sse":{
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "object":"chat.completion.chunk",
+    "__verbose":{
+      "content":"",
+      "generation_settings":{
+        "n_keep":0,
+        "n_probs":0,
+        "min_keep":0,
+        "max_tokens":8192,
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "value":"<tool_call>\n",
+            "type":1
+          }],
+        "preserved_tokens":[29,248058,248059,248068,248069],
+        "chat_format":"peg-native",
+        "reasoning_format":"deepseek",
+        "stream":true,
+        "reasoning_in_content":false,
+        "generation_prompt":"<|im_start|>assistant\n<think>\n",
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "speculative.types":"none",
+        "timings_per_token":false,
+        "post_sampling_probs":false,
+        "backend_sampling":false,
+        "lora":[],
+        "grammar":"boolean ::= (\"true\" | \"false\") space\nchar ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\ninteger ::= (\"-\"? integral-part) space\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (\",\" space json-value)* space \"]\") space\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)? space\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\") space\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\" space\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\" space\ntool-apply-patch ::= (\"<function=\" \"apply_patch\" \">\\n\") space tool-apply-patch-arg-patch space \"</function>\\n\"\ntool-apply-patch-arg-patch ::= (\"<parameter=\" \"patch\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-call ::= \"<tool_call>\\n\" space (tool-fetch | tool-run-process | tool-delegate | tool-run-in-neovim | tool-apply-patch | tool-semantic-grep) space \"</tool_call>\" (space \"<tool_call>\\n\" space (tool-fetch | tool-run-process | tool-delegate | tool-run-in-neovim | tool-apply-patch | tool-semantic-grep) space \"</tool_call>\")* space\ntool-delegate ::= (\"<function=\" \"delegate\" \">\\n\") space tool-delegate-arg-description (space (tool-delegate-arg-agent-type))* space \"</function>\\n\"\ntool-delegate-arg-agent-type ::= (\"<parameter=\" \"agent_type\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-delegate-arg-description ::= (\"<parameter=\" \"description\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-fetch ::= (\"<function=\" \"fetch\" \">\\n\") space tool-fetch-arg-url (space (tool-fetch-arg-max-chars | tool-fetch-arg-raw | tool-fetch-arg-start-index))* space \"</function>\\n\"\ntool-fetch-arg-max-chars ::= (\"<parameter=\" \"max_chars\" \">\\n\") \"\" integer space \"</parameter>\\n\"\ntool-fetch-arg-raw ::= (\"<parameter=\" \"raw\" \">\\n\") \"\" boolean space \"</parameter>\\n\"\ntool-fetch-arg-start-index ::= (\"<parameter=\" \"start_index\" \">\\n\") \"\" integer space \"</parameter>\\n\"\ntool-fetch-arg-url ::= (\"<parameter=\" \"url\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-in-neovim ::= (\"<function=\" \"run_in_neovim\" \">\\n\") space tool-run-in-neovim-arg-lua space \"</function>\\n\"\ntool-run-in-neovim-arg-lua ::= (\"<parameter=\" \"lua\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process ::= (\"<function=\" \"run_process\" \">\\n\") space (space (tool-run-process-arg-timeout-ms | tool-run-process-arg-cwd | tool-run-process-arg-command-line | tool-run-process-arg-argv | tool-run-process-arg-stdin-text))* space \"</function>\\n\"\ntool-run-process-arg-argv ::= (\"<parameter=\" \"argv\" \">\\n\") \"\" tool-run-process-arg-argv-schema space \"</parameter>\\n\"\ntool-run-process-arg-argv-schema ::= \"[\" space string (\",\" space string)* \"]\" space\ntool-run-process-arg-command-line ::= (\"<parameter=\" \"command_line\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-cwd ::= (\"<parameter=\" \"cwd\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-stdin-text ::= (\"<parameter=\" \"stdin_text\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-timeout-ms ::= (\"<parameter=\" \"timeout_ms\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-semantic-grep ::= (\"<function=\" \"semantic_grep\" \">\\n\") space tool-semantic-grep-arg-query (space (tool-semantic-grep-arg-embed-top-k | tool-semantic-grep-arg-instruct | tool-semantic-grep-arg-filetype | tool-semantic-grep-arg-top-k))* space \"</function>\\n\"\ntool-semantic-grep-arg-embed-top-k ::= (\"<parameter=\" \"embed_top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-semantic-grep-arg-filetype ::= (\"<parameter=\" \"filetype\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-instruct ::= (\"<parameter=\" \"instruct\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-query ::= (\"<parameter=\" \"query\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-top-k ::= (\"<parameter=\" \"top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\nuntil-suffix ::= ([^<] | \"<\" [^/] | \"</\" [^p] | \"</p\" [^a] | \"</pa\" [^r] | \"</par\" [^a] | \"</para\" [^m] | \"</param\" [^e] | \"</parame\" [^t] | \"</paramet\" [^e] | \"</paramete\" [^r] | \"</parameter\" [^>] | \"</parameter>\" [^\\n])*\n",
+        "temperature":1,
+        "n_predict":8192,
+        "top_p":1,
+        "logit_bias":[],
+        "repeat_penalty":1,
+        "top_k":20,
+        "stop":[],
+        "seed":4294967295,
+        "dynatemp_range":0,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":262144,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "n_discard":0,
+        "ignore_eos":false
+      },
+      "tokens_cached":3087,
+      "truncated":false,
+      "timings":{
+        "prompt_ms":80.675,
+        "prompt_per_token_ms":0.24521276595745,
+        "predicted_ms":274.02,
+        "predicted_per_token_ms":4.2815625,
+        "predicted_n":64,
+        "prompt_per_second":4078.0911062907,
+        "prompt_n":329,
+        "predicted_per_second":233.55959419021,
+        "cache_n":2695
+      },
+      "has_new_line":true,
+      "stop_type":"eos",
+      "tokens":[],
+      "id_slot":1,
+      "tokens_predicted":64,
+      "stop":true,
+      "index":0,
+      "stopping_word":"",
+      "prompt":"<|im_start|>system\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"fetch\", \"description\": \"Fetch a URL and extract HTML contents as markdown\", \"parameters\": {\"properties\": {\"max_chars\": {\"default\": 50000, \"description\": \"Maximum number of characters to return\", \"type\": \"integer\"}, \"url\": {\"type\": \"string\"}, \"raw\": {\"default\": false, \"description\": \"Do not convert HTML to markdown\", \"type\": \"boolean\"}, \"start_index\": {\"default\": 0, \"description\": \"Start at this character offset, useful if a previous fetch was truncated and more context is required\", \"type\": \"integer\"}}, \"required\": [\"url\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"run_process\", \"description\": \"Run a process on this darwin machine\", \"parameters\": {\"properties\": {\"timeout_ms\": {\"description\": \"Optional timeout in milliseconds, defaults to 30,000ms\", \"type\": \"number\"}, \"cwd\": {\"description\": \"Optional to set working directory\", \"type\": \"string\"}, \"command_line\": {\"description\": \"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\", \"type\": \"string\"}, \"argv\": {\"minItems\": 1, \"description\": \"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\", \"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"stdin_text\": {\"description\": \"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\", \"type\": \"string\"}}, \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"delegate\", \"description\": \"Delegate to a subagent to perform relevent tasks and summarize findings.\", \"parameters\": {\"properties\": {\"agent_type\": {\"type\": \"string\", \"description\": \"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder\"}, \"description\": {\"type\": \"string\", \"description\": \"describe the task for the agent to perform\"}}, \"required\": [\"description\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"run_in_neovim\", \"description\": \"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()\", \"parameters\": {\"properties\": {\"lua\": {\"description\": \"Lua code to execute. Should be a valid Lua chunk.\", \"type\": \"string\"}}, \"type\": \"object\", \"required\": [\"lua\"]}}}\n{\"type\": \"function\", \"function\": {\"name\": \"apply_patch\", \"description\": \"Patch a file\", \"parameters\": {\"properties\": {\"patch\": {\"description\": \"file changes in custom diff format\", \"type\": \"string\"}}, \"required\": [\"patch\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"semantic_grep\", \"description\": \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\", \"parameters\": {\"properties\": {\"embed_top_k\": {\"description\": \"number of embeddings matches to consider for reranking\", \"type\": \"number\"}, \"query\": {\"description\": \"query text, what you are looking for\", \"type\": \"string\"}, \"instruct\": {\"description\": \"instructions for the query, explain the type of query\", \"type\": \"string\"}, \"filetype\": {\"description\": \"limit matches to a vim compatible filetype. default includes all filetypes\", \"type\": \"string\"}, \"top_k\": {\"description\": \"number of matches to return (post reranking)\", \"type\": \"number\"}}, \"required\": [\"query\"], \"type\": \"object\"}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n\n*** Add File: <path> - every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - in-place edits (optionally with a rename).\n\nUpdateFile can be immediately followed by MoveTo to rename the file:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\n- Verify your changes with `git diff foo.json`\n- Nothing wrong with commands too:\n  - `rm foo.json` to delete\n  - `mv foo.json bar.json` to rename\n  - `rename` for bulk rename\n- Don't be that guy that uses DeleteFile followed by AddFile just to rename a file!\n\n\nTips on a failure:\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n- Check your work!\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```<|im_end|>\n<|im_start|>user\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```<|im_end|>\n<|im_start|>user\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```<|im_end|>\n<|im_start|>user\nwhat time is it<|im_end|>\n<|im_start|>assistant\n<think>\nThe user is asking for the current time. I will use the `run_in_neovim` tool to execute a Lua command that gets the current time and prints it. Since I'm in a Neovim environment, I can use `os.date()` to get the current time.\n</think>\n\n<tool_call>\n<function=run_in_neovim>\n<parameter=lua>\nlocal time = os.date(\"%H:%M:%S\")\nlocal date = os.date(\"%Y-%m-%d\")\nprint(string.format(\"Current time: %s on %s\", time, date))\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"nil\",\"name\":\"RESULT\",\"type\":\"text\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nThe Lua code executed but didn't print anything visible in the chat window. Let me try a different approach - I'll use the `run_process` tool to get the current time using the system's date command.\n</think>\n\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ndate '+%Y-%m-%d %H:%M:%S'\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"0\",\"name\":\"EXIT_CODE\",\"type\":\"text\"},{\"text\":\"2026-05-26 18:49:24\\n\",\"name\":\"STDOUT\",\"type\":\"text\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n",
+      "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+      "tokens_evaluated":3024
+    },
+    "timings":{
+      "prompt_ms":80.675,
+      "prompt_per_token_ms":0.24521276595745,
+      "predicted_ms":274.02,
+      "predicted_per_token_ms":4.2815625,
+      "predicted_n":64,
+      "prompt_per_second":4078.0911062907,
+      "prompt_n":329,
+      "predicted_per_second":233.55959419021,
+      "cache_n":2695
+    },
+    "id":"chatcmpl-Ns8Vn6r8argY1XltP89WJoRRMJe0BBsi",
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "system_fingerprint":"b9342-eebd4e1bb",
+    "created":1779839293
+  },
+  "request_body":{
+    "model":"",
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "max_tokens":8192,
+    "tools":[{
+        "function":{
+          "description":"Fetch a URL and extract HTML contents as markdown",
+          "name":"fetch",
+          "parameters":{
+            "properties":{
+              "max_chars":{
+                "default":50000,
+                "description":"Maximum number of characters to return",
+                "type":"integer"
+              },
+              "url":{
+                "type":"string"
+              },
+              "raw":{
+                "default":false,
+                "description":"Do not convert HTML to markdown",
+                "type":"boolean"
+              },
+              "start_index":{
+                "default":0,
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required",
+                "type":"integer"
+              }
+            },
+            "required":["url"],
+            "type":"object"
+          }
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Run a process on this darwin machine",
+          "name":"run_process",
+          "parameters":{
+            "properties":{
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "argv":{
+                "minItems":1,
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "items":{
+                  "type":"string"
+                },
+                "type":"array"
+              },
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              }
+            },
+            "type":"object"
+          }
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings.",
+          "name":"delegate",
+          "parameters":{
+            "properties":{
+              "agent_type":{
+                "type":"string",
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder"
+              },
+              "description":{
+                "type":"string",
+                "description":"describe the task for the agent to perform"
+              }
+            },
+            "required":["description"],
+            "type":"object"
+          }
+        },
+        "type":"function"
+      },{
+        "type":"function",
+        "function":{
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "name":"run_in_neovim",
+          "parameters":{
+            "properties":{
+              "lua":{
+                "description":"Lua code to execute. Should be a valid Lua chunk.",
+                "type":"string"
+              }
+            },
+            "type":"object",
+            "required":["lua"]
+          }
+        }
+      },{
+        "type":"function",
+        "function":{
+          "description":"Patch a file",
+          "name":"apply_patch",
+          "parameters":{
+            "properties":{
+              "patch":{
+                "description":"file changes in custom diff format",
+                "type":"string"
+              }
+            },
+            "required":["patch"],
+            "type":"object"
+          }
+        }
+      },{
+        "type":"function",
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep",
+          "parameters":{
+            "properties":{
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "top_k":{
+                "description":"number of matches to return (post reranking)",
+                "type":"number"
+              }
+            },
+            "required":["query"],
+            "type":"object"
+          }
+        }
+      }],
+    "top_p":1,
+    "messages":[{
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n\n*** Add File: <path> - every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - in-place edits (optionally with a rename).\n\nUpdateFile can be immediately followed by MoveTo to rename the file:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\n- Verify your changes with `git diff foo.json`\n- Nothing wrong with commands too:\n  - `rm foo.json` to delete\n  - `mv foo.json bar.json` to rename\n  - `rename` for bulk rename\n- Don't be that guy that uses DeleteFile followed by AddFile just to rename a file!\n\n\nTips on a failure:\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n- Check your work!\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n",
+        "_logged":true,
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"what time is it",
+        "_logged":true,
+        "role":"user"
+      },{
+        "content":"",
+        "tool_calls":[{
+            "id":"AURZHOJCjl7R6v0opbcDvlaC4WmBB0ZL",
+            "function":{
+              "arguments":"{\"lua\":\"local time = os.date(\\\"%H:%M:%S\\\")\\nlocal date = os.date(\\\"%Y-%m-%d\\\")\\nprint(string.format(\\\"Current time: %s on %s\\\", time, date))\"}",
+              "name":"run_in_neovim"
+            },
+            "type":"function"
+          }],
+        "timings":{
+          "prompt_ms":342.02,
+          "prompt_per_token_ms":0.12625322997416,
+          "predicted_ms":566.452,
+          "predicted_per_token_ms":4.259037593985,
+          "predicted_n":133,
+          "prompt_per_second":7920.5894392141,
+          "prompt_n":2709,
+          "predicted_per_second":234.79482815843,
+          "cache_n":0
+        },
+        "_logged":true,
+        "reasoning_content":"The user is asking for the current time. I will use the `run_in_neovim` tool to execute a Lua command that gets the current time and prints it. Since I'm in a Neovim environment, I can use `os.date()` to get the current time.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"nil\",\"name\":\"RESULT\",\"type\":\"text\"}]}",
+        "tool_call_id":"AURZHOJCjl7R6v0opbcDvlaC4WmBB0ZL",
+        "_logged":true,
+        "role":"tool"
+      },{
+        "content":"",
+        "tool_calls":[{
+            "id":"l93fEKw4TwfwS4G3eDQ4xANuQWBf5flQ",
+            "function":{
+              "arguments":"{\"command_line\":\"date '+%Y-%m-%d %H:%M:%S'\"}",
+              "name":"run_process"
+            },
+            "type":"function"
+          }],
+        "timings":{
+          "prompt_ms":58.664,
+          "prompt_per_token_ms":0.32957303370787,
+          "predicted_ms":371.868,
+          "predicted_per_token_ms":4.2257727272727,
+          "predicted_n":88,
+          "prompt_per_second":3034.2288285831,
+          "prompt_n":178,
+          "predicted_per_second":236.64310992072,
+          "cache_n":2695
+        },
+        "_logged":true,
+        "reasoning_content":"The Lua code executed but didn't print anything visible in the chat window. Let me try a different approach - I'll use the `run_process` tool to get the current time using the system's date command.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"name\":\"EXIT_CODE\",\"type\":\"text\"},{\"text\":\"2026-05-26 18:49:24\\n\",\"name\":\"STDOUT\",\"type\":\"text\"}]}",
+        "tool_call_id":"l93fEKw4TwfwS4G3eDQ4xANuQWBf5flQ",
+        "_logged":true,
+        "role":"tool"
+      }],
+    "temperature":1
+  },
+  "response_message":{
+    "content":"It's **6:49:24 PM** on Tuesday, May 26, 2026.",
+    "finish_reason":"stop",
+    "reasoning_content":"The current time is 2026-05-26 18:49:24 (6:49:24 PM).\n",
+    "role":"assistant"
+  }
+}
