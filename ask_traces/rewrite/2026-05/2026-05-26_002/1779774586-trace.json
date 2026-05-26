@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1779774517,
+    "timings":{
+      "prompt_n":2333,
+      "cache_n":0,
+      "predicted_per_second":253.63881832271,
+      "predicted_n":254,
+      "prompt_per_second":10414.15575256,
+      "prompt_ms":224.022,
+      "prompt_per_token_ms":0.096023146163738,
+      "predicted_ms":1001.424,
+      "predicted_per_token_ms":3.9426141732283
+    },
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-0KmduGTR1DatKNiL2oXhW3dU7dnzuQqh",
+    "system_fingerprint":"b8943-92dd2b6a9"
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"M.ToolDefinition = {\n    [\"function\"] = {\n        description = \"Execute arbitrary code (Lua or Vimscript) within the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd.\",\n        name = \"run_neovim_code\",\n        parameters = {\n            type = \"object\",\n            properties = {\n                code = {\n                    type = \"string\",\n                    description = \"Code to execute. Should be a valid Lua chunk or Vimscript snippet.\"\n                },\n            },\n            required = { \"code\" },\n        },\n    },\n    type = \"function\",\n}",
+    "reasoning_content":"We need to suggest a new name for the tool, conveying execution of code in Neovim, not just Lua. Provide a name suggestion. According to preferences, we should output code? The user asks \"suggest a new name for this tool ...\". Probably just give a name, maybe update the code snippet. Should preserve indentation. Provide revised ToolDefinition with new name. Use snake_case for functions and variables, PascalCase for classes. This is a tool definition, name field. Suggest \"run_neovim_code\". So update name and description accordingly. Provide code snippet. No markdown formatting. Just raw code.",
+    "role":"assistant",
+    "_logged":true
+  },
+  "request_body":{
+    "max_tokens":8192,
+    "stream":true,
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "temperature":1,
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inprocess.lua:22-38\n---@param tool_call table\n---@param callback ToolCallDoneCallback\nfunction M.send_tool_call(tool_call, callback)\n    local args = tool_call[\"function\"].arguments\n    local parsed_args = vim.json.decode(args)\n\n    local name = tool_call[\"function\"].name\n    if name == \"semantic_grep\" then\n        semantic_grep_tool.call(parsed_args, callback)\n    elseif name == \"apply_patch\" then\n        apply_patch_tool.call(parsed_args, callback)\n    elseif name == \"run_lua\" then\n        run_lua_tool.call(parsed_args, callback)\n    else\n        callback(plumbing.create_tool_call_output_for_error_message(\"Invalid in-process tool name: \" .. name))\n    end\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/tests/sse.lua:111-155\n                                                                                                                   function()\n            -- TODO can use full SSEs for parse_SSE testing/refactoring\n            -- body: {\"messages\":[{\"role\":\"system\",\"content\":\"You are a neovim AI plugin. Your name is Neo Vim.  Please respond with markdown formatted text\"},{\"role\":\"user\",\"content\":\"please list files\"}],\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"stream\":true,\"tools\":[{\"function\":{\"name\":\"run_command\",\"parameters\":{\"properties\":{\"cwd\":{\"description\":\"Current working directory, leave empty in most cases\",\"type\":\"string\"},\"command\":{\"description\":\"Command with args\",\"type\":\"string\"}},\"required\":[\"command\"],\"type\":\"object\"}},\"type\":\"function\"},{\"function\":{\"name\":\"run_script\",\"parameters\":{\"properties\":{\"interpreter\":{\"description\":\"Command with arguments. Script will be piped to stdin. Examples: bash, fish, zsh, python, or: bash --norc\",\"type\":\"string\"},\"script\":{\"description\":\"Script to run\",\"type\":\"string\"},\"cwd\":{\"description\":\"Current working directory\",\"type\":\"string\"}},\"required\":[\"script\"],\"type\":\"object\"}},\"type\":\"function\"}]}\n            -- data: {\"id\":\"chatcmpl-225\",\"object\":\"chat.completion.chunk\",\"created\":1744655392,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_809l7n8f\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\"}\"}}]},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-225\",\"object\":\"chat.completion.chunk\",\"created\":1744655393,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_oqp1e2a1\",\"index\":1,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\"}}]},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-225\",\"object\":\"chat.completion.chunk\",\"created\":1744655393,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"tool_calls\"}]}\n            -- data: [DONE]\n            local choices = [[\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_809l7n8f\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\"}\"}}]},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_oqp1e2a1\",\"index\":1,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\"}}]},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"tool_calls\"}\n            ]]\n\n            local request, frontend = call_on_delta(choices)\n            -- print(\"request\", vim.inspect(request))\n            should.be_equal(1, #request.accumulated_model_response_messages)\n            local rx_message = request.accumulated_model_response_messages[1]\n            should.be_equal(0, rx_message.index)\n            should.be_equal(\"assistant\", rx_message.role)\n            should.be_equal(\"tool_calls\", rx_message.finish_reason)\n\n            should.be_equal(2, #rx_message.tool_calls)\n            -- * tool1:\n            -- {\"id\":\"call_809l7n8f\",\"index\":0,\"type\":\"function\", \"function\":{\n            --    \"name\":\"run_command\",\n            --    \"arguments\":\"{\\\"command\\\":\\\"ls -la\\\"}\"}}]},\"finish_reason\":null}\n            first_call = rx_message.tool_calls[1]\n            should.be_equal(\"call_809l7n8f\", first_call.id)\n            should.be_equal(0, first_call.index)\n            should.be_equal(\"function\", first_call.type)\n            func = first_call[\"function\"]\n            should.be_equal(\"run_command\", func.name)\n            should.be_equal(\"{\\\"command\\\":\\\"ls -la\\\"}\", func.arguments)\n            -- * tool2:\n            -- {\"id\":\"call_oqp1e2a1\",\"index\":1,\"type\":\"function\", \"function\":{\n            --    \"name\":\"run_command\",\n            --    \"arguments\":\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\"}}]},\"finish_reason\":null}\n            second_call = rx_message.tool_calls[2]\n            should.be_equal(\"call_oqp1e2a1\", second_call.id)\n            should.be_equal(1, second_call.index)\n            should.be_equal(\"function\", second_call.type)\n            func = second_call[\"function\"]\n            should.be_equal(\"run_command\", func.name)\n            should.be_equal(\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\", func.arguments)\n        end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inprocess.lua:0-14\nlocal apply_patch_tool = require(\"ask-openai.tools.inproc.apply_patch\")\nlocal plumbing = require(\"ask-openai.tools.plumbing\")\nlocal semantic_grep_tool = require(\"ask-openai.tools.inproc.semantic_grep\")\nlocal run_lua_tool = require(\"ask-openai.tools.inproc.run_lua\")\n\nlocal M = {}\n\n---@type OpenAITool[]\nM.tools_available = {\n    semantic_grep = semantic_grep_tool.ToolDefinition,\n    apply_patch = apply_patch_tool.ToolDefinition,\n    run_lua = run_lua_tool.ToolDefinition,\n}\n\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/init.lua:127-137\nfunction M.ask_openai()\n    local cmdline = vim.fn.getcmdline()\n    print(\"asking...\") -- overwrites showing luaeval(\"...\") in cmdline\n\n    local stdin_text = ' env: nvim (neovim) command mode (return a valid command w/o the leading : ) \\n question: ' ..\n        cmdline\n\n    local suggest = require(\"ask-openai.cmdline.suggest\")\n    local result = suggest.get_vim_command_suggestion(stdin_text)\n    return trim_null_characters(result)\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:0-6\nlocal local_share = require(\"ask-openai.config.local_share\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal uv = vim.loop\nlocal inspect = require(\"devtools.inspect\")\nlocal Logger = {}\nLogger.__index = Logger\n\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"suggest a new name for this tool so it conveys that it is for executing code in neovim too ... not just running lua\n\nHere is the code I selected:\n```lua/ask-openai/tools/inproc/run_lua.lua:8-25\nM.ToolDefinition = {\n    [\"function\"] = {\n        description = \"Execute arbitrary Lua code in the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd.\",\n        name = \"run_lua\",\n        parameters = {\n            type = \"object\",\n            properties = {\n                code = {\n                    type = \"string\",\n                    description = \"Lua code to execute. Should be a valid Lua chunk.\"\n                },\n            },\n            required = { \"code\" },\n        },\n    },\n    type = \"function\",\n}\n\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      }],
+    "model":""
+  }
+}
