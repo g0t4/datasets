@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "id":"chatcmpl-XQanxPULHfU2R35K6Um5zzWBikYKSu0A",
+    "timings":{
+      "predicted_n":138,
+      "prompt_per_second":8919.1656717466,
+      "prompt_n":1524,
+      "cache_n":0,
+      "predicted_per_second":268.66491061051,
+      "prompt_ms":170.868,
+      "prompt_per_token_ms":0.11211811023622,
+      "predicted_ms":513.651,
+      "predicted_per_token_ms":3.7221086956522
+    },
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b9342-eebd4e1bb",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1779780390
+  },
+  "response_message":{
+    "_logged":true,
+    "finish_reason":"stop",
+    "content":"        local delegate_tool = mcp.tools_available[\"delegate\"]\n        if delegate_tool then\n            table.insert(tools, mcp.openai_tool(delegate_tool))\n        end",
+    "reasoning_content":"We need to modify the code to just look for the one tool in the list and add it if so. The current code loops over all tools, checks if name == \"delegate\". We can replace with direct lookup: if mcp.tools_available[\"delegate\"] then table.insert(tools, mcp.openai_tool(mcp.tools_available[\"delegate\"])) end. So output the modified snippet with correct indentation. Ensure Lua annotations style not needed. Just code. No markdown.",
+    "role":"assistant"
+  },
+  "request_body":{
+    "top_p":1,
+    "stream":true,
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "messages":[{
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:437-443\n                                         function(response)\n        local tools = response.result.tools\n        for _, tool in pairs(tools) do\n            tool.call = tools_call\n            M.tools_available[tool.name] = tool\n        end\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:472-498\nfunction M.openai_tool(mcp_tool)\n    -- OpenAI docs for tools: https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools\n\n    -- effectively a deep clone\n    params = {}\n    params.required = mcp_tool.inputSchema.required\n    params.type = mcp_tool.inputSchema.type\n    params.properties = {}\n    for k, v in pairs(mcp_tool.inputSchema.properties) do\n        params.properties[k] = {}\n        for k2, v2 in pairs(v) do\n            params.properties[k][k2] = v2\n        end\n        params.properties[k] = v\n    end\n\n    return {\n        type = \"function\",\n        [\"function\"] = {\n            name = mcp_tool.name,\n            -- FYI mcp-server-commands doesn't currently set a desc (won't see that in testing)\n            description = mcp_tool.description,\n            parameters = params,\n            -- strict = false -- default is false... should I set true?\n        }\n    }\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal config = require(\"ask-openai.config\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal text_helpers = require(\"ask-openai.helpers.text\")\nlocal thinking = require(\"ask-openai.rewrites.thinking\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal Displayer = require(\"ask-openai.rewrites.displayer\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal human = require(\"devtools.humanize\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.tests.lua:4-12\n                               function()\n    it(\"populates tools list within timeout\", function()\n        local got_tool = vim.wait(2000, function()\n            -- vim.print(mcp.tools_available)\n            return mcp.tools_available[\"search_docs_by_lang_chain\"] ~= nil\n        end, 50)\n        assert.is_true(got_tool)\n    end)\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal completion_logger = require(\"ask-openai.logs.completion_logger\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal AgentWindow = require(\"ask-openai.agents.viewer.window\")\nlocal AgentTrace = require(\"ask-openai.agents.trace\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal LinesBuilder = require(\"ask-openai.agents.viewer.lines_builder\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal formatters = require(\"ask-openai.agents.viewer.formatters\")\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"change this to just look for the one tool in the list and add it if so\n\nHere is the code I selected:\n```lua/ask-openai/tools/router.lua:27-31\n        for name, mcp_tool in pairs(mcp.tools_available) do\n            if name == \"delegate\" then\n                table.insert(tools, mcp.openai_tool(mcp_tool))\n            end\n        end\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      }],
+    "model":"",
+    "max_tokens":8192
+  }
+}
