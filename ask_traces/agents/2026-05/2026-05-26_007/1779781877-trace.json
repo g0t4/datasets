@@ -1,0 +1,108 @@
+{
+  "request_body":{
+    "temperature":1,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "tools":[{
+        "function":{
+          "name":"delegate",
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings.",
+          "parameters":{
+            "required":["description"],
+            "properties":{
+              "agent_type":{
+                "type":"string",
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder"
+              },
+              "description":{
+                "type":"string",
+                "description":"describe the task for the agent to perform"
+              }
+            },
+            "type":"object"
+          }
+        },
+        "type":"function"
+      }],
+    "messages":[{
+        "role":"system",
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"what keymap do I have setup to ask for a coordinator agent in my neovim plugin here",
+        "_logged":true
+      },{
+        "timings":{
+          "prompt_n":816,
+          "cache_n":0,
+          "prompt_ms":129.454,
+          "prompt_per_token_ms":0.15864460784314,
+          "predicted_ms":1697.307,
+          "predicted_n":396,
+          "prompt_per_second":6303.3973457753,
+          "predicted_per_second":233.3107681757,
+          "predicted_per_token_ms":4.2861287878788
+        },
+        "content":"",
+        "reasoning_content":"The user is asking about the keymap setup for a specific feature (\"ask for a coordinator agent\") in their neovim plugin `ask-openai.nvim`.\nI need to find the Lua files in the repository that handle keymaps, specifically looking for something related to a \"coordinator agent\" or just \"ask\" functionality.\n\nSteps:\n1.  Identify the structure of the project.\n2.  Search for files related to keymaps or mappings (`keymap`, `map`, `on_attach`, etc.).\n3.  Search for the term \"coordinator\" or \"agent\" within those files or generally in the plugin's codebase to see how it's exposed.\n4.  The user provided preferences: snake_case, PascalCase for classes, etc. I should just answer the question based on code findings.\n\nLet's use `semantic_grep` to find relevant code. I'll search for \"coordinator\" or \"agent\" in the context of keymaps.\n\nActually, the user is asking *what keymap I have setup*. This implies I should look at their configuration or the default configuration of the plugin they are maintaining.\n\nLet's search for \"coordinator\" in the codebase first.\nThen I can check the keymaps file.\n\nPossible files:\n- `lua/ask-openai/` directory.\n- `lua/ask-openai/mapping.lua` or similar.\n- `lua/ask-openai/agent/` directory.\n\nI will start by searching for the string \"coordinator\".\n",
+        "role":"assistant",
+        "_logged":true,
+        "tool_calls":[{
+            "id":"zQIyHlQShLmuyc45ssLvV1y6phj07e0f",
+            "function":{
+              "arguments":"{\"description\":\"Find the keymap setup for asking a coordinator agent in the ask-openai.nvim plugin. Search for 'coordinator' and check keymap configurations.\",\"agent_type\":\"file-finder\"}",
+              "name":"delegate"
+            },
+            "type":"function"
+          }]
+      },{
+        "role":"tool",
+        "_logged":true,
+        "content":"{\"content\":[{\"text\":\"Found it. Here's the coordinator keymap setup in `ask-openai.nvim`:\\n\\n**Keymap (normal mode):**\\n\\n```lua\\nvim.keymap.set('n', '<leader>ac', ':<C-u>:AskAgent /tools /norag /coordinator ', { noremap = true })\\n```\\n\\nThis is in `lua/ask-openai/agents/frontend.lua` (line 739).\\n\\n**What it does:**\\n\\n- **Mapping:** `<leader>ac` — triggers the AskAgent command with flags:\\n  - `/tools` — enables tool use\\n  - `/norag` — disables RAG (retrieval-augmented generation)\\n  - `/coordinator` — sets the coordinator flag\\n\\n**Coordinator mode behavior:**\\n\\nWhen the `/coordinator` flag is set, the tool router (`lua/ask-openai/tools/router.lua`) restricts the available tools to only the `\\\"agents\\\"` tool (for spawning subagents). The coordinator acts as a *primary agent* — it doesn't perform direct tool calls beyond spinning up subagents.\\n\\nThe flag is detected in `frontend.lua` via `context.includes.coordinator`, then passed to the tool router which gates tool access accordingly.\",\"type\":\"text\"}],\"isError\":false}",
+        "tool_call_id":"zQIyHlQShLmuyc45ssLvV1y6phj07e0f"
+      }],
+    "max_tokens":8192,
+    "top_p":1,
+    "model":""
+  },
+  "response_message":{
+    "role":"assistant",
+    "finish_reason":"stop",
+    "content":"The keymap you have setup to ask for a coordinator agent is **`<leader>ac`**.\n\nIt maps to the following command in normal mode:\n\n```lua\nvim.keymap.set('n', '<leader>ac', ':<C-u>:AskAgent /tools /norag /coordinator ', { noremap = true })\n```\n\n**Location:**\n`lua/ask-openai/agents/frontend.lua` (line 739)\n\n**What it does:**\n- **`/tools`**: Enables tool use.\n- **`/norag`**: Disables RAG (Retrieval-Augmented Generation).\n- **`/coordinator`**: Activates the coordinator mode, which restricts the agent to only using the `agents` tool (spawning subagents) rather than calling tools directly.",
+    "reasoning_content":"The previous search found the keymap setup in `lua/ask-openai/agents/frontend.lua`.\nThe keymap is `<leader>ac` and it runs `:AskAgent /tools /norag /coordinator`.\n\nThe user wants to know what keymap they have setup. I should provide the exact keymap and the command it runs.\n\nKeymap: `<leader>ac`\nCommand: `:AskAgent /tools /norag /coordinator`\n\nLocation: `lua/ask-openai/agents/frontend.lua` around line 739.\n\nI will formulate the answer now.\n"
+  },
+  "last_sse":{
+    "id":"chatcmpl-piZzcA2P9r8AWLKADw0T0dIuL4dg6b4t",
+    "created":1779782044,
+    "object":"chat.completion.chunk",
+    "timings":{
+      "prompt_n":728,
+      "cache_n":786,
+      "prompt_ms":143.76,
+      "prompt_per_token_ms":0.19747252747253,
+      "predicted_ms":1349.692,
+      "predicted_n":305,
+      "prompt_per_second":5063.9955481358,
+      "predicted_per_second":225.97748227003,
+      "predicted_per_token_ms":4.4252196721311
+    },
+    "system_fingerprint":"b9342-eebd4e1bb",
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0"
+  }
+}
