@@ -1,0 +1,108 @@
+{
+  "request_body":{
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "top_p":1,
+    "max_tokens":8192,
+    "messages":[{
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"what time is it?",
+        "role":"user"
+      },{
+        "content":"",
+        "reasoning_content":"The user is asking for the current time. I do not have a tool to fetch the current time directly, but I can use the `command-runner` tool to execute a shell command (like `date` on macOS, which is the OS in the path) to find out the time.\n\n1.  Identify the user's intent: Get the current time.\n2.  Identify available tools: `delegate` (specifically `command-runner`).\n3.  Select the appropriate tool: `delegate` with `agent_type` \"command-runner\".\n4.  Formulate the description: \"Run the date command to get the current time.\"\n\nLet's do this.\n",
+        "role":"assistant",
+        "_logged":true,
+        "tool_calls":[{
+            "id":"14dhwVbsn7aJmL6jIBznIrIPaX6jjaFR",
+            "function":{
+              "arguments":"{\"description\":\"Run the `date` command to get the current time.\",\"agent_type\":\"command-runner\"}",
+              "name":"delegate"
+            },
+            "type":"function"
+          }],
+        "timings":{
+          "predicted_per_second":232.19497640755,
+          "predicted_n":193,
+          "prompt_ms":126.206,
+          "prompt_per_token_ms":0.1577575,
+          "predicted_ms":831.198,
+          "predicted_per_token_ms":4.306725388601,
+          "prompt_n":800,
+          "prompt_per_second":6338.8428442388,
+          "cache_n":0
+        }
+      },{
+        "_logged":true,
+        "content":"{\"isError\":false,\"content\":[{\"type\":\"text\",\"text\":\"The current time is **Tuesday, May 26, 2026 at 2:13:02 AM CDT**.\"}]}",
+        "tool_call_id":"14dhwVbsn7aJmL6jIBznIrIPaX6jjaFR",
+        "role":"tool"
+      }],
+    "tools":[{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["description"],
+            "properties":{
+              "agent_type":{
+                "type":"string",
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder"
+              },
+              "description":{
+                "type":"string",
+                "description":"describe the task for the agent to perform"
+              }
+            }
+          },
+          "name":"delegate",
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings."
+        }
+      }],
+    "temperature":1,
+    "model":""
+  },
+  "last_sse":{
+    "id":"chatcmpl-ddXgt4QQYTgjvNQQLiSqi7mhpVLtR6dg",
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "created":1779779513,
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "system_fingerprint":"b9342-eebd4e1bb",
+    "timings":{
+      "predicted_per_second":228.13787349429,
+      "predicted_n":70,
+      "prompt_ms":78.696,
+      "prompt_per_token_ms":0.29146666666667,
+      "predicted_ms":306.832,
+      "predicted_per_token_ms":4.3833142857143,
+      "prompt_n":270,
+      "prompt_per_second":3430.9240622141,
+      "cache_n":785
+    }
+  },
+  "response_message":{
+    "finish_reason":"stop",
+    "content":"It is currently **Tuesday, May 26, 2026 at 2:13:02 AM CDT**.",
+    "reasoning_content":"The user asked for the current time, and the `command-runner` agent successfully executed the `date` command and returned the time. I should now provide this information to the user.\n",
+    "role":"assistant"
+  }
+}
