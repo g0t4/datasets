@@ -1,0 +1,216 @@
+{
+  "last_sse":{
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1779774419,
+    "timings":{
+      "prompt_n":89,
+      "cache_n":2266,
+      "predicted_per_second":256.42707631389,
+      "predicted_n":43,
+      "prompt_per_second":1544.8974986547,
+      "prompt_ms":57.609,
+      "prompt_per_token_ms":0.64729213483146,
+      "predicted_ms":167.689,
+      "predicted_per_token_ms":3.8997441860465
+    },
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-PphcxI4hzBeFldBlobqq9Z4ekoIsaVZd",
+    "system_fingerprint":"b8943-92dd2b6a9"
+  },
+  "response_message":{
+    "role":"assistant",
+    "finish_reason":"stop",
+    "content":"The Lua code returned the following table:\n\n```lua\n{\n  bar = \"hello\",\n  baz = { 1, 2, 3 },\n  foo = 42\n}\n```"
+  },
+  "request_body":{
+    "tools":[{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              },
+              "argv":{
+                "items":{
+                  "type":"string"
+                },
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "minItems":1,
+                "type":"array"
+              }
+            }
+          },
+          "description":"Run a process on this darwin machine",
+          "name":"run_process"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "required":["url"],
+            "type":"object",
+            "properties":{
+              "max_chars":{
+                "description":"Maximum number of characters to return",
+                "default":50000,
+                "type":"integer"
+              },
+              "start_index":{
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required",
+                "default":0,
+                "type":"integer"
+              },
+              "url":{
+                "type":"string"
+              },
+              "raw":{
+                "description":"Do not convert HTML to markdown",
+                "default":false,
+                "type":"boolean"
+              }
+            }
+          },
+          "description":"Fetch a URL and extract HTML contents as markdown",
+          "name":"fetch"
+        }
+      },{
+        "function":{
+          "parameters":{
+            "required":["code"],
+            "type":"object",
+            "properties":{
+              "code":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            }
+          },
+          "description":"Execute arbitrary Lua code in the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd.",
+          "name":"run_lua"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "required":["patch"],
+            "type":"object",
+            "properties":{
+              "patch":{
+                "type":"string",
+                "description":"file changes in custom diff format"
+              }
+            }
+          },
+          "description":"Patch a file",
+          "name":"apply_patch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "required":["query"],
+            "properties":{
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              },
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              }
+            },
+            "type":"object"
+          },
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep"
+        },
+        "type":"function"
+      }],
+    "max_tokens":8192,
+    "stream":true,
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "temperature":1,
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n\n*** Add File: <path> - every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - in-place edits (optionally with a rename).\n\nUpdateFile can be immediately followed by MoveTo to rename the file:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\n- Verify your changes with `git diff foo.json`\n- Nothing wrong with commands too:\n  - `rm foo.json` to delete\n  - `mv foo.json bar.json` to rename\n  - `rename` for bulk rename\n- Don't be that guy that uses DeleteFile followed by AddFile just to rename a file!\n\n\nTips on a failure:\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n- Check your work!\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"test the run_lua tool and specifically return a table with several values and tell me what you get back"
+      },{
+        "timings":{
+          "prompt_n":688,
+          "cache_n":1409,
+          "predicted_per_second":254.20232205518,
+          "predicted_n":199,
+          "prompt_per_second":6930.2442709645,
+          "prompt_ms":99.275,
+          "prompt_per_token_ms":0.14429505813953,
+          "predicted_ms":782.841,
+          "predicted_per_token_ms":3.9338743718593
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\n  \"code\": \"return {foo = 42, bar = \\\"hello\\\", baz = {1,2,3}}\"\n}",
+              "name":"run_lua"
+            },
+            "id":"DsCIbsBS0ld35xkgj9V5Didjn2q0Iv3z",
+            "type":"function"
+          }],
+        "content":"",
+        "reasoning_content":"We need to test run_lua tool. Need to execute Lua code that returns a table with several values. Then capture the output and display. Use run_lua function. We need to call functions.run_lua with Lua code that returns a table. How does run_lua return? It likely returns whatever is printed or returned? The tool description: Execute arbitrary Lua code in the Neovim process. Useful for calling vim API functions like vim.notify or vim.cmd. It returns any. Probably returns the result of executing the code snippet. We can try to have code that returns a table: e.g., `return {a=1, b=\"two\", c={3,4}}`. Use run_lua. We'll call function.",
+        "role":"assistant",
+        "_logged":true
+      },{
+        "_logged":true,
+        "role":"tool",
+        "tool_call_id":"DsCIbsBS0ld35xkgj9V5Didjn2q0Iv3z",
+        "content":"{\"content\":[{\"name\":\"RESULT\",\"type\":\"text\",\"text\":\"{\\n  bar = \\\"hello\\\",\\n  baz = { 1, 2, 3 },\\n  foo = 42\\n}\"}]}"
+      }],
+    "model":""
+  }
+}
