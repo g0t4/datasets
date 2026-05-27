@@ -1,0 +1,536 @@
+{
+  "request_body":{
+    "temperature":1,
+    "tools":[{
+        "type":"function",
+        "function":{
+          "name":"fetch",
+          "parameters":{
+            "required":["url"],
+            "type":"object",
+            "properties":{
+              "max_chars":{
+                "type":"integer",
+                "default":50000,
+                "description":"Maximum number of characters to return"
+              },
+              "url":{
+                "type":"string"
+              },
+              "raw":{
+                "type":"boolean",
+                "default":false,
+                "description":"Do not convert HTML to markdown"
+              },
+              "start_index":{
+                "type":"integer",
+                "default":0,
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required"
+              }
+            }
+          },
+          "description":"Fetch a URL and extract HTML contents as markdown"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "name":"run_process",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "argv":{
+                "items":{
+                  "type":"string"
+                },
+                "type":"array",
+                "minItems":1,
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'."
+              },
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              }
+            }
+          },
+          "description":"Run a process on this darwin machine"
+        }
+      },{
+        "function":{
+          "name":"apply_patch",
+          "parameters":{
+            "required":["patch"],
+            "type":"object",
+            "properties":{
+              "patch":{
+                "type":"string",
+                "description":"file changes in custom diff format"
+              }
+            }
+          },
+          "description":"Patch a file"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "properties":{
+              "lua":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            },
+            "type":"object",
+            "required":["lua"]
+          },
+          "name":"run_in_neovim",
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "properties":{
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              }
+            },
+            "type":"object",
+            "required":["query"]
+          },
+          "name":"semantic_grep",
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results."
+        },
+        "type":"function"
+      }],
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "max_tokens":8192,
+    "messages":[{
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/mcp-servers\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n\n*** Add File: <path> - every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - in-place edits (optionally with a rename).\n\nUpdateFile can be immediately followed by MoveTo to rename the file:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\n- Verify your changes with `git diff foo.json`\n- Nothing wrong with commands too:\n  - `rm foo.json` to delete\n  - `mv foo.json bar.json` to rename\n  - `rename` for bulk rename\n- Don't be that guy that uses DeleteFile followed by AddFile just to rename a file!\n\n\nTips on a failure:\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n- Check your work!\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"count to 21 with the tool",
+        "role":"user"
+      },{
+        "_logged":true,
+        "timings":{
+          "prompt_ms":316.383,
+          "prompt_per_token_ms":0.12505256916996,
+          "predicted_ms":3821.548,
+          "predicted_n":903,
+          "prompt_per_second":7996.6369874488,
+          "prompt_n":2530,
+          "predicted_per_second":236.29168075345,
+          "cache_n":0,
+          "predicted_per_token_ms":4.232057585825
+        },
+        "content":"I'll count to 21 using the fetch tool! Making them in parallel batches:\n\n",
+        "tool_calls":[{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/0\"}"
+            },
+            "type":"function",
+            "id":"SfrjgnWKg9DYIQn0AslBNWCBAyriuY7Y"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/1\"}"
+            },
+            "type":"function",
+            "id":"RulpJlgtZCWo0DNIO8rOJrduaxPoGPys"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/2\"}"
+            },
+            "type":"function",
+            "id":"LMcQKAdAzz3pY5vnB9ZmlY3EMyChtYmt"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/3\"}"
+            },
+            "type":"function",
+            "id":"ZG4gOyCW3Ci3v4NyR4ax4FVy5zhgFetL"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/4\"}"
+            },
+            "type":"function",
+            "id":"qmL8X31Pn1XgVz6Q2bkhGAIML3edUp9e"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/5\"}"
+            },
+            "type":"function",
+            "id":"5atXfgu6GH4csk4pFu5hEBgdMensCzuH"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/6\"}"
+            },
+            "type":"function",
+            "id":"uR0CN3sXEdHdtr4VCct5lR3QFyCG7KNC"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/7\"}"
+            },
+            "type":"function",
+            "id":"bpPgbm2ssa2aWy7Yrx9Up8oeLWnMOkov"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/8\"}"
+            },
+            "type":"function",
+            "id":"fd0Izt32m9ZdGxv3GVuANmDC0sK1L4cy"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/9\"}"
+            },
+            "type":"function",
+            "id":"zaLOGIkZtyxCTKT6CM8dJkgsPJ0LTG7E"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/10\"}"
+            },
+            "type":"function",
+            "id":"E8PWb3bDoDmXxoicfWbojAVCi5boehVl"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/11\"}"
+            },
+            "type":"function",
+            "id":"enQ8KuBEJmalMWZxz8YnFGPEOBiIU16b"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/12\"}"
+            },
+            "type":"function",
+            "id":"px5dFiogcYbX2qQYcaglpTXSQ6neoz2c"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/13\"}"
+            },
+            "type":"function",
+            "id":"n982QrLpcNP8DJ3oxLbmWVByuQXwIlvz"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/14\"}"
+            },
+            "type":"function",
+            "id":"kn4Mr8GDFSFrYE1azJXrQTfbpjRQvrqY"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/15\"}"
+            },
+            "type":"function",
+            "id":"TOmYHCczW5CLVXVwhx1FB7fClmiwmVN1"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/16\"}"
+            },
+            "type":"function",
+            "id":"yvNKi3g1UtwsxaQEqcrJ2M0aITor1e6n"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/17\"}"
+            },
+            "type":"function",
+            "id":"tSgX5vhGp6Ziq1Bj8OiFMc78y07CzwYo"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/18\"}"
+            },
+            "type":"function",
+            "id":"sYtC6osnHpana69qOBKuREPMSjfcYrps"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/19\"}"
+            },
+            "type":"function",
+            "id":"JGLyCjOML2MzsNsR8Lk0a6FcHYWVBy0S"
+          },{
+            "function":{
+              "name":"fetch",
+              "arguments":"{\"url\":\"https://httpbin.org/delay/20\"}"
+            },
+            "type":"function",
+            "id":"YgqS0TlDTuYRVqqIgtoVfvkV8ZIwAvSa"
+          }],
+        "reasoning_content":"The user wants me to count to 21 using the fetch tool. I'll fetch a URL 21 times, or perhaps they want me to use the fetch tool in some creative way to count. Let me just fetch a simple URL 21 times, maybe counting in the process. Actually, re-reading - \"count to 21 with the tool\" - they probably just want me to make 21 fetch calls. Let me do that with a simple URL, perhaps just fetching a placeholder or the README.\n\nActually, I think they just want me to demonstrate using the fetch tool 21 times. I'll fetch a simple URL each time, maybe with some incrementing parameter or just the same URL. Let me use the README URL they mentioned.\n\nLet me make 21 fetch calls in parallel batches since the tool supports concurrent execution.\n",
+        "role":"assistant"
+      },{
+        "_logged":true,
+        "tool_call_id":"SfrjgnWKg9DYIQn0AslBNWCBAyriuY7Y",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/0:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-615dded505bff552150fa0ad\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/0\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"RulpJlgtZCWo0DNIO8rOJrduaxPoGPys",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/1:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-116722d636483a451becc8fa\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/1\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"LMcQKAdAzz3pY5vnB9ZmlY3EMyChtYmt",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/2:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-5fe3ff3202c94ef159620c9f\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/2\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"ZG4gOyCW3Ci3v4NyR4ax4FVy5zhgFetL",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/3:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-04e7fa832946e3432a7983ea\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/3\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"qmL8X31Pn1XgVz6Q2bkhGAIML3edUp9e",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/4:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-784676c972c6fbcb7fad2e1a\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/4\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"5atXfgu6GH4csk4pFu5hEBgdMensCzuH",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/5:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-16b8a34b78f3fe52719514d6\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/5\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"uR0CN3sXEdHdtr4VCct5lR3QFyCG7KNC",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/6:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-467486fe22fc05d71f50421f\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/6\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"bpPgbm2ssa2aWy7Yrx9Up8oeLWnMOkov",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/7:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-21c1c2f02c417799203f3a67\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/7\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"fd0Izt32m9ZdGxv3GVuANmDC0sK1L4cy",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/8:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-2753442a491cc1542acb17fa\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/8\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"zaLOGIkZtyxCTKT6CM8dJkgsPJ0LTG7E",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/9:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-1181c958387b222751a8bbbd\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/9\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"E8PWb3bDoDmXxoicfWbojAVCi5boehVl",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/10:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-0ea41e5a10ee126349198b80\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/10\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"px5dFiogcYbX2qQYcaglpTXSQ6neoz2c",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/12:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-058c848643744e82402630e3\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/12\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"n982QrLpcNP8DJ3oxLbmWVByuQXwIlvz",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/13:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-2c7fa1d11ce9faa20da2161d\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/13\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"TOmYHCczW5CLVXVwhx1FB7fClmiwmVN1",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/15:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-186457561d11afe53e02e4b5\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/15\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"kn4Mr8GDFSFrYE1azJXrQTfbpjRQvrqY",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/14:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-3512973832e211ae4fc8b900\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/14\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"tSgX5vhGp6Ziq1Bj8OiFMc78y07CzwYo",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/17:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-4bb5517807cbb72c75501632\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/17\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"yvNKi3g1UtwsxaQEqcrJ2M0aITor1e6n",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/16:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-0a1173b55817d8532a3b027f\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/16\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"JGLyCjOML2MzsNsR8Lk0a6FcHYWVBy0S",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/19:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-0d5d70131f73348f37b1e93e\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/19\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"YgqS0TlDTuYRVqqIgtoVfvkV8ZIwAvSa",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/20:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-59d132c4507695a539a77645\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/20\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"sYtC6osnHpana69qOBKuREPMSjfcYrps",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/18:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-2e5586c0334df0363d2beee4\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/18\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      },{
+        "_logged":true,
+        "tool_call_id":"enQ8KuBEJmalMWZxz8YnFGPEOBiIU16b",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/11:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-64ef05253983c70477e38d47\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/11\\\"\\n}\\n\"}],\"isError\":false}",
+        "role":"tool"
+      }],
+    "top_p":1,
+    "stream":true
+  },
+  "response_message":{
+    "content":"Count to 21 complete! 🎉\n\nHere's the breakdown of all 21 fetch calls:\n\n| # | URL | Response |\n|---|-----|----------|\n| 1 | `https://httpbin.org/delay/0` | ✅ |\n| 2 | `https://httpbin.org/delay/1` | ✅ |\n| 3 | `https://httpbin.org/delay/2` | ✅ |\n| 4 | `https://httpbin.org/delay/3` | ✅ |\n| 5 | `https://httpbin.org/delay/4` | ✅ |\n| 6 | `https://httpbin.org/delay/5` | ✅ |\n| 7 | `https://httpbin.org/delay/6` | ✅ |\n| 8 | `https://httpbin.org/delay/7` | ✅ |\n| 9 | `https://httpbin.org/delay/8` | ✅ |\n| 10 | `https://httpbin.org/delay/9` | ✅ |\n| 11 | `https://httpbin.org/delay/10` | ✅ |\n| 12 | `https://httpbin.org/delay/11` | ✅ |\n| 13 | `https://httpbin.org/delay/12` | ✅ |\n| 14 | `https://httpbin.org/delay/13` | ✅ |\n| 15 | `https://httpbin.org/delay/14` | ✅ |\n| 16 | `https://httpbin.org/delay/15` | ✅ |\n| 17 | `https://httpbin.org/delay/16` | ✅ |\n| 18 | `https://httpbin.org/delay/17` | ✅ |\n| 19 | `https://httpbin.org/delay/18` | ✅ |\n| 20 | `https://httpbin.org/delay/19` | ✅ |\n| 21 | `https://httpbin.org/delay/20` | ✅ |\n\nAll 21 fetches completed successfully! (Responses arrived out of order due to parallel execution — classic async chaos 😄)",
+    "finish_reason":"stop",
+    "reasoning_content":"I made 21 fetch calls to count to 21. Let me present the results clearly.\n",
+    "role":"assistant"
+  },
+  "last_sse":{
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "object":"chat.completion.chunk",
+    "__verbose":{
+      "truncated":false,
+      "prompt":"<|im_start|>system\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"fetch\", \"description\": \"Fetch a URL and extract HTML contents as markdown\", \"parameters\": {\"required\": [\"url\"], \"type\": \"object\", \"properties\": {\"max_chars\": {\"type\": \"integer\", \"default\": 50000, \"description\": \"Maximum number of characters to return\"}, \"url\": {\"type\": \"string\"}, \"raw\": {\"type\": \"boolean\", \"default\": false, \"description\": \"Do not convert HTML to markdown\"}, \"start_index\": {\"type\": \"integer\", \"default\": 0, \"description\": \"Start at this character offset, useful if a previous fetch was truncated and more context is required\"}}}}}\n{\"type\": \"function\", \"function\": {\"name\": \"run_process\", \"description\": \"Run a process on this darwin machine\", \"parameters\": {\"type\": \"object\", \"properties\": {\"timeout_ms\": {\"type\": \"number\", \"description\": \"Optional timeout in milliseconds, defaults to 30,000ms\"}, \"stdin_text\": {\"type\": \"string\", \"description\": \"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\"}, \"argv\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\", \"minItems\": 1, \"description\": \"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\"}, \"command_line\": {\"type\": \"string\", \"description\": \"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\"}, \"cwd\": {\"type\": \"string\", \"description\": \"Optional to set working directory\"}}}}}\n{\"type\": \"function\", \"function\": {\"name\": \"apply_patch\", \"description\": \"Patch a file\", \"parameters\": {\"required\": [\"patch\"], \"type\": \"object\", \"properties\": {\"patch\": {\"type\": \"string\", \"description\": \"file changes in custom diff format\"}}}}}\n{\"type\": \"function\", \"function\": {\"name\": \"run_in_neovim\", \"description\": \"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()\", \"parameters\": {\"properties\": {\"lua\": {\"type\": \"string\", \"description\": \"Lua code to execute. Should be a valid Lua chunk.\"}}, \"type\": \"object\", \"required\": [\"lua\"]}}}\n{\"type\": \"function\", \"function\": {\"name\": \"semantic_grep\", \"description\": \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\", \"parameters\": {\"properties\": {\"query\": {\"type\": \"string\", \"description\": \"query text, what you are looking for\"}, \"filetype\": {\"type\": \"string\", \"description\": \"limit matches to a vim compatible filetype. default includes all filetypes\"}, \"embed_top_k\": {\"type\": \"number\", \"description\": \"number of embeddings matches to consider for reranking\"}, \"top_k\": {\"type\": \"number\", \"description\": \"number of matches to return (post reranking)\"}, \"instruct\": {\"type\": \"string\", \"description\": \"instructions for the query, explain the type of query\"}}, \"type\": \"object\", \"required\": [\"query\"]}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/mcp-servers\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"gptoss120b<wes.mcclure+gptoss120b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Use `apply_patch` to edit files.\n\nYour patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n\n*** Add File: <path> - every following line is a + line (the initial contents).\n*** Delete File: <path> - remove an existing file. Nothing follows.\n*** Update File: <path> - in-place edits (optionally with a rename).\n\nUpdateFile can be immediately followed by MoveTo to rename the file:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A full patch can combine several operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\n- Verify your changes with `git diff foo.json`\n- Nothing wrong with commands too:\n  - `rm foo.json` to delete\n  - `mv foo.json bar.json` to rename\n  - `rename` for bulk rename\n- Don't be that guy that uses DeleteFile followed by AddFile just to rename a file!\n\n\nTips on a failure:\n- You only need enough context for a unique match!\n- The line(s) you replace are context too; if they’re unique, no additional context is needed.\n- Split bigger patches into smaller patches, i.e. if editing two functions, try each separately!\n- Watch out for whitespace differences, i.e. blank lines\n\nPlease be curteous:\n- Check your work!\n\n### More Examples\n\nHere's a patch file to change the `win` property's type:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nWhich can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, this could work if the `win` property is unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```<|im_end|>\n<|im_start|>user\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```<|im_end|>\n<|im_start|>user\n## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors<|im_end|>\n<|im_start|>user\ncount to 21 with the tool<|im_end|>\n<|im_start|>assistant\n<think>\nThe user wants me to count to 21 using the fetch tool. I'll fetch a URL 21 times, or perhaps they want me to use the fetch tool in some creative way to count. Let me just fetch a simple URL 21 times, maybe counting in the process. Actually, re-reading - \"count to 21 with the tool\" - they probably just want me to make 21 fetch calls. Let me do that with a simple URL, perhaps just fetching a placeholder or the README.\n\nActually, I think they just want me to demonstrate using the fetch tool 21 times. I'll fetch a simple URL each time, maybe with some incrementing parameter or just the same URL. Let me use the README URL they mentioned.\n\nLet me make 21 fetch calls in parallel batches since the tool supports concurrent execution.\n</think>\n\nI'll count to 21 using the fetch tool! Making them in parallel batches:\n\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/0\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/1\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/2\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/3\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/4\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/5\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/6\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/7\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/8\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/9\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/10\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/11\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/12\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/13\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/14\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/15\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/16\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/17\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/18\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/19\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=fetch>\n<parameter=url>\nhttps://httpbin.org/delay/20\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/0:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-615dded505bff552150fa0ad\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/0\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/1:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-116722d636483a451becc8fa\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/1\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/2:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-5fe3ff3202c94ef159620c9f\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/2\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/3:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-04e7fa832946e3432a7983ea\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/3\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/4:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-784676c972c6fbcb7fad2e1a\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/4\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/5:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-16b8a34b78f3fe52719514d6\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/5\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/6:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-467486fe22fc05d71f50421f\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/6\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/7:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-21c1c2f02c417799203f3a67\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/7\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/8:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-2753442a491cc1542acb17fa\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/8\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/9:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-1181c958387b222751a8bbbd\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/9\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/10:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-0ea41e5a10ee126349198b80\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/10\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/12:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-058c848643744e82402630e3\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/12\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/13:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-2c7fa1d11ce9faa20da2161d\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/13\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/15:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-186457561d11afe53e02e4b5\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/15\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/14:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-3512973832e211ae4fc8b900\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/14\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/17:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-4bb5517807cbb72c75501632\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/17\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/16:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-0a1173b55817d8532a3b027f\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/16\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/19:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-0d5d70131f73348f37b1e93e\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/19\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/20:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-59d132c4507695a539a77645\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/20\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/18:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-2e5586c0334df0363d2beee4\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/18\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"Content type application/json cannot be simplified to markdown, but here is the raw content:\\nContents of https://httpbin.org/delay/11:\\n{\\n  \\\"args\\\": {}, \\n  \\\"data\\\": \\\"\\\", \\n  \\\"files\\\": {}, \\n  \\\"form\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Accept\\\": \\\"*/*\\\", \\n    \\\"Accept-Encoding\\\": \\\"gzip, deflate\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\", \\n    \\\"User-Agent\\\": \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\\\", \\n    \\\"X-Amzn-Trace-Id\\\": \\\"Root=1-6a17291d-64ef05253983c70477e38d47\\\"\\n  }, \\n  \\\"origin\\\": \\\"1.1.1.1\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/delay/11\\\"\\n}\\n\"}],\"isError\":false}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n",
+      "timings":{
+        "prompt_ms":810.75,
+        "prompt_per_token_ms":0.12014671013634,
+        "predicted_ms":2250.629,
+        "predicted_n":513,
+        "prompt_per_second":8323.1575701511,
+        "prompt_n":6748,
+        "predicted_per_second":227.93627914685,
+        "cache_n":2512,
+        "predicted_per_token_ms":4.3871910331384
+      },
+      "tokens_cached":9772,
+      "index":0,
+      "tokens":[],
+      "id_slot":0,
+      "tokens_predicted":513,
+      "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+      "stopping_word":"",
+      "content":"",
+      "stop":true,
+      "stop_type":"eos",
+      "has_new_line":true,
+      "generation_settings":{
+        "speculative.types":"none",
+        "timings_per_token":false,
+        "max_tokens":8192,
+        "backend_sampling":false,
+        "lora":[],
+        "stream":true,
+        "n_discard":0,
+        "n_keep":0,
+        "top_p":1,
+        "temperature":1,
+        "seed":4294967295,
+        "dynatemp_range":0,
+        "stop":[],
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":262144,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "top_k":20,
+        "repeat_penalty":1,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "type":1,
+            "value":"<tool_call>\n"
+          }],
+        "grammar":"boolean ::= (\"true\" | \"false\") space\nchar ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\ninteger ::= (\"-\"? integral-part) space\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (\",\" space json-value)* space \"]\") space\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)? space\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\") space\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\" space\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\" space\ntool-apply-patch ::= (\"<function=\" \"apply_patch\" \">\\n\") space tool-apply-patch-arg-patch space \"</function>\\n\"\ntool-apply-patch-arg-patch ::= (\"<parameter=\" \"patch\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-call ::= \"<tool_call>\\n\" space (tool-fetch | tool-run-process | tool-apply-patch | tool-run-in-neovim | tool-semantic-grep) space \"</tool_call>\" (space \"<tool_call>\\n\" space (tool-fetch | tool-run-process | tool-apply-patch | tool-run-in-neovim | tool-semantic-grep) space \"</tool_call>\")* space\ntool-fetch ::= (\"<function=\" \"fetch\" \">\\n\") space tool-fetch-arg-url (space (tool-fetch-arg-max-chars | tool-fetch-arg-raw | tool-fetch-arg-start-index))* space \"</function>\\n\"\ntool-fetch-arg-max-chars ::= (\"<parameter=\" \"max_chars\" \">\\n\") \"\" integer space \"</parameter>\\n\"\ntool-fetch-arg-raw ::= (\"<parameter=\" \"raw\" \">\\n\") \"\" boolean space \"</parameter>\\n\"\ntool-fetch-arg-start-index ::= (\"<parameter=\" \"start_index\" \">\\n\") \"\" integer space \"</parameter>\\n\"\ntool-fetch-arg-url ::= (\"<parameter=\" \"url\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-in-neovim ::= (\"<function=\" \"run_in_neovim\" \">\\n\") space tool-run-in-neovim-arg-lua space \"</function>\\n\"\ntool-run-in-neovim-arg-lua ::= (\"<parameter=\" \"lua\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process ::= (\"<function=\" \"run_process\" \">\\n\") space (space (tool-run-process-arg-timeout-ms | tool-run-process-arg-stdin-text | tool-run-process-arg-argv | tool-run-process-arg-command-line | tool-run-process-arg-cwd))* space \"</function>\\n\"\ntool-run-process-arg-argv ::= (\"<parameter=\" \"argv\" \">\\n\") \"\" tool-run-process-arg-argv-schema space \"</parameter>\\n\"\ntool-run-process-arg-argv-schema ::= \"[\" space string (\",\" space string)* \"]\" space\ntool-run-process-arg-command-line ::= (\"<parameter=\" \"command_line\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-cwd ::= (\"<parameter=\" \"cwd\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-stdin-text ::= (\"<parameter=\" \"stdin_text\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-timeout-ms ::= (\"<parameter=\" \"timeout_ms\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-semantic-grep ::= (\"<function=\" \"semantic_grep\" \">\\n\") space tool-semantic-grep-arg-query (space (tool-semantic-grep-arg-filetype | tool-semantic-grep-arg-embed-top-k | tool-semantic-grep-arg-top-k | tool-semantic-grep-arg-instruct))* space \"</function>\\n\"\ntool-semantic-grep-arg-embed-top-k ::= (\"<parameter=\" \"embed_top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-semantic-grep-arg-filetype ::= (\"<parameter=\" \"filetype\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-instruct ::= (\"<parameter=\" \"instruct\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-query ::= (\"<parameter=\" \"query\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-top-k ::= (\"<parameter=\" \"top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\nuntil-suffix ::= ([^<] | \"<\" [^/] | \"</\" [^p] | \"</p\" [^a] | \"</pa\" [^r] | \"</par\" [^a] | \"</para\" [^m] | \"</param\" [^e] | \"</parame\" [^t] | \"</paramet\" [^e] | \"</paramete\" [^r] | \"</parameter\" [^>] | \"</parameter>\" [^\\n])*\n",
+        "chat_format":"peg-native",
+        "post_sampling_probs":false,
+        "reasoning_format":"deepseek",
+        "dynatemp_exponent":1,
+        "reasoning_in_content":false,
+        "generation_prompt":"<|im_start|>assistant\n<think>\n",
+        "preserved_tokens":[29,248058,248059,248068,248069],
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "n_predict":8192,
+        "ignore_eos":false
+      },
+      "tokens_evaluated":9260
+    },
+    "created":1779902690,
+    "timings":{
+      "prompt_ms":810.75,
+      "prompt_per_token_ms":0.12014671013634,
+      "predicted_ms":2250.629,
+      "predicted_n":513,
+      "prompt_per_second":8323.1575701511,
+      "prompt_n":6748,
+      "predicted_per_second":227.93627914685,
+      "cache_n":2512,
+      "predicted_per_token_ms":4.3871910331384
+    },
+    "system_fingerprint":"b9342-eebd4e1bb",
+    "id":"chatcmpl-TexZdpbcyC113mrzTIvOetcHnmIb5DH0"
+  }
+}
