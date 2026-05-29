@@ -1,0 +1,67 @@
+{
+  "request_body":{
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "model":"",
+    "max_tokens":8192,
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Recent yanks (copy to clipboard):\n```lua/ask-openai/logs/logger.lua\n        self.file = io.open(path, \"a\")\n        if not self.file then\n            error(\"Failed to open log file: \" .. path)\n        end\n\n        clear_iterm_scrollback(self.file)\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua:125-152\nfunction M.save_trace(request, frontend, response_message, sse_parsed)\n    local save_dir, trace_id = M.log_request_with(request, frontend)\n    local path = save_dir .. \"/\" .. trace_id .. \"-trace.json\"\n    -- log:info(\"trace path\", path)\n    local file = io.open(path, \"w\")\n    if file then\n        -- TODO move this logic for AgentsFrontend too? if I keep trace (I plan to ditch it)\n        local trace_data = {\n            -- 99.99% of the time this is all I need (input messages trace + output message):\n            request_body = request.body,\n            response_message = response_message,\n            --\n            -- FYI must use llama-server's --verbose flag .__verbose.* on last_sse\n            --   __verbose.prompt basically repeats request.body, thus not needed\n            --   rendered prompt can be nice for reproducibility\n            --     but, you can also use /apply-template endpoint to generate it too\n            --     obviously won't capture template changes when rendering\n            --\n            -- last_sse has:\n            --   .timings (top-level and under .__verbose.timings)\n            --   .__verbose.(prompt, generation_settings)\n            --   .__verbose.content (generated raw outputs, but ONLY for stream=false)\n            last_sse = sse_parsed,\n        }\n        file:write(json.encode(trace_data, { indent = true }))\n        file:close()\n    end\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua:113-132\n            -- PRN save to 123-sses.jsonl?\n            --   SSEs are fairly standardized => thus jsonl would likely read table-like\n            --   for all but first(s)/last(s)\n            local all_file = io.open(save_dir .. \"/\" .. trace_id .. \"/all_sses.json\", \"w\")\n            if all_file then\n                all_file:write(json.encode(all_sses, { indent = true }))\n                all_file:close()\n            end\n        end\n    end\nend\n\nfunction M.save_trace(request, frontend, response_message, sse_parsed)\n    local save_dir, trace_id = M.log_request_with(request, frontend)\n    local path = save_dir .. \"/\" .. trace_id .. \"-trace.json\"\n    -- log:info(\"trace path\", path)\n    local file = io.open(path, \"w\")\n    if file then\n        -- TODO move this logic for AgentsFrontend too? if I keep trace (I plan to ditch it)\n        local trace_data = {\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:143-153\n---@param message string\n---@param compact? boolean\n---@param ... any - lua value(s) that will be vim.json.encode()'d\nfunction Logger:_jsonify_trace(message, compact, ...)\n    if not self:is_enabled(local_share.LOG_LEVEL_NUMBERS.TRACE) then\n        return\n    end\n    local value = { ... }\n    local json = inspect.jq_json(value, compact)\n    self:trace(message, json)\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/frontend.lua:698-705\nfunction ask_dump_agent_trace_command()\n    local trace = AgentsFrontend.trace\n    if not trace then\n        print(\"no trace to dump\")\n        return\n    end\n    trace:dump()\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:137-141\n---@param message string\n---@param ... any - lua value(s) that will be vim.json.encode()'d\nfunction Logger:jsonify_compact_trace(message, ...)\n    self:_jsonify_trace(message, true, ...)\nend\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"I need this saved to disk as test.json\n\nHere is the code I selected:\n```lua/ask-openai/agents/trace.lua:83-85\nfunction AgentTrace:save()\n    local json = vim.json.encode(self)\nend\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "_logged":true
+      }],
+    "temperature":1,
+    "top_p":1
+  },
+  "response_message":{
+    "content":"---@class AgentTrace\nlocal AgentTrace = {}\nAgentTrace.__index = AgentTrace\n\n--- Saves the trace data to a JSON file named `test.json` in the current directory.\nfunction AgentTrace:save()\n    local json_content = vim.json.encode(self)\n\n    local file_path = \"test.json\"\n    local file_handle = io.open(file_path, \"w\")\n    if not file_handle then\n        error(\"Failed to open file for writing: \" .. file_path)\n    end\n\n    file_handle:write(json_content)\n    file_handle:close()\nend\n\nreturn AgentTrace",
+    "finish_reason":"stop",
+    "reasoning_content":"The user wants to save to disk as test.json. They have a function AgentTrace:save() that currently only encodes json but doesn't write to file. Need to modify to write to test.json file. Use proper Lua file operations, respecting indentation. Use snake_case for functions and variables, PascalCase for classes. The class is AgentTrace (PascalCase). The method is save (snake case already). Should add path variable maybe. Should use vim.fn.stdpath('data')? Not specified. Just save to test.json in current working directory? Probably just write to \"test.json\". Use io.open with \"w\". Then write json and close. Also handle errors maybe. Provide code snippet with modifications, preserving indentation.\n\nAlso include EmmyLua annotations? Could add @return void.\n\nLet's produce final code block (not markdown). No triple backticks. Just plain code.",
+    "role":"assistant",
+    "_logged":true
+  },
+  "last_sse":{
+    "id":"chatcmpl-WUHUyFrM8XLvMthZxyokrJJw88EVIIC2",
+    "created":1780077409,
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "timings":{
+      "prompt_n":1413,
+      "predicted_per_token_ms":3.7191797385621,
+      "cache_n":0,
+      "prompt_ms":268.396,
+      "predicted_ms":1138.069,
+      "predicted_per_second":268.87649167142,
+      "predicted_n":306,
+      "prompt_per_second":5264.6090105665,
+      "prompt_per_token_ms":0.18994762915782
+    },
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "system_fingerprint":"b9403-147f7e15b"
+  }
+}
