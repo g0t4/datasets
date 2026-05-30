@@ -1,0 +1,55 @@
+{
+  "response_message":{
+    "reasoning_content":"User asks: \"spelling of remediate? Here is the code I selected: ```README.md:5   TODO would be super easy to remediate```\". They want help with spelling of remediate? Probably they want correct spelling? The word \"remediate\" is correct, but maybe they meant \"remediate\" vs \"remediate\"? Actually \"remediate\" is correct verb meaning to fix. Could be \"remediate\" vs \"remediate\"? Maybe they think it's misspelled? The line says \"TODO would be super easy to remediate\". That is fine. Perhaps they want to change to \"remediate\"? It's already remediate. Could be \"remediate\" vs \"remediate\"? There's also \"remediate\" is correct. Maybe they meant \"remediate\" vs \"remediate\"? Could be \"remediate\" is correct, not \"remediate\"? Wait the line is \"TODO would be super easy to remediate\". That uses \"remediate\". It's fine.\n\nMaybe they want to replace \"remediate\" with \"remedy\"? Or \"fix\"? Could be they think \"remediate\" is wrong and want \"remediate\"? Actually \"remediate\" is correct. But if they ask \"spelling of remediate?\" maybe they want to confirm correct spelling. So answer: \"remediate\" is spelled correctly. If they want to change code: nothing needed.\n\nThus respond succinctly.",
+    "role":"assistant",
+    "_logged":true,
+    "content":"The word **“remediate”** is spelled correctly; no change is needed in the code.",
+    "finish_reason":"stop"
+  },
+  "last_sse":{
+    "system_fingerprint":"b9403-147f7e15b",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "timings":{
+      "prompt_n":272,
+      "cache_n":0,
+      "prompt_ms":86.608,
+      "prompt_per_token_ms":0.31841176470588,
+      "predicted_n":340,
+      "predicted_per_token_ms":3.6178852941176,
+      "predicted_per_second":276.404561976,
+      "prompt_per_second":3140.5874745982,
+      "predicted_ms":1230.081
+    },
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-2d5ZvsqwYwphQ9amcbWeoVVos5x9LAL4",
+    "created":1780121317
+  },
+  "request_body":{
+    "temperature":1,
+    "max_tokens":8192,
+    "model":"",
+    "messages":[{
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system",
+        "_logged":true
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user",
+        "_logged":true
+      },{
+        "content":"spelling of remediate?\n\nHere is the code I selected:\n```README.md:5\n  TODO would be super easy to remediate \n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user",
+        "_logged":true
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "top_p":1,
+    "stream":true
+  }
+}
