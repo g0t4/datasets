@@ -1,0 +1,1 @@
+this is a test run of my progress changes to delegate tool in MCP subagents server ... I am tempted to ask this agent to fix the tool :)... instead of going back to the original agent/trace that performed the edit :)... tempting

@@ -1,0 +1,439 @@
+{
+  "request_body":{
+    "stream":true,
+    "top_p":1,
+    "temperature":1,
+    "max_tokens":8192,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "model":"",
+    "tools":[{
+        "function":{
+          "description":"Run a process on this darwin machine",
+          "parameters":{
+            "properties":{
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "argv":{
+                "minItems":1,
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "items":{
+                  "type":"string"
+                },
+                "type":"array"
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_process"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Fetch a URL and extract HTML contents as markdown",
+          "parameters":{
+            "properties":{
+              "url":{
+                "type":"string"
+              },
+              "raw":{
+                "description":"Do not convert HTML to markdown",
+                "default":false,
+                "type":"boolean"
+              },
+              "start_index":{
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required",
+                "default":0,
+                "type":"integer"
+              },
+              "max_chars":{
+                "description":"Maximum number of characters to return",
+                "default":50000,
+                "type":"integer"
+              }
+            },
+            "required":["url"],
+            "type":"object"
+          },
+          "name":"fetch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Run a read-only shell-like query against a virtualized, in-memory filesystem rooted at `/` that contains ONLY the Model Context Protocol documentation pages and OpenAPI specs. This is NOT a shell on any real machine — nothing runs on the user's computer, the server host, or any network. The filesystem is a sandbox backed by documentation chunks.\n\nThis is how you read documentation pages: there is no separate \"get page\" tool. To read a page, pass its `.mdx` path (e.g. `/quickstart.mdx`, `/api-reference/create-customer.mdx`) to `head` or `cat`. To search the docs with exact keyword or regex matches, use `rg`. To understand the docs structure, use `tree` or `ls`.\n\n**Workflow:** Start with the search tool for broad or conceptual queries like \"how to authenticate\" or \"rate limiting\". Use this tool when you need exact keyword/regex matching, structural exploration, or to read the full content of a specific page by path.\n\nSupported commands: rg (ripgrep), grep, find, tree, ls, cat, head, tail, stat, wc, sort, uniq, cut, sed, awk, jq, plus basic text utilities. No writes, no network, no process control. Run `--help` on any command for usage.\n\nEach call is STATELESS: the working directory always resets to `/` and no shell variables, aliases, or history carry over between calls. If you need to operate in a subdirectory, chain commands in one call with `&&` or pass absolute paths (e.g., `cd /api-reference && ls` or `ls /api-reference`). Do NOT assume that `cd` in one call affects the next call.\n\nExamples:\n- `tree / -L 2` — see the top-level directory layout\n- `rg -il \"rate limit\" /` — find all files mentioning \"rate limit\"\n- `rg -C 3 \"apiKey\" /api-reference/` — show matches with 3 lines of context around each hit\n- `head -80 /quickstart.mdx` — read the top 80 lines of a specific page\n- `head -80 /quickstart.mdx /installation.mdx /guides/first-deploy.mdx` — read multiple pages in one call\n- `cat /api-reference/create-customer.mdx` — read a full page when you need everything\n- `cat /openapi/spec.json | jq '.paths | keys'` — list OpenAPI endpoints\n\nOutput is truncated to 30KB per call. Prefer targeted `rg -C` or `head -N` over broad `cat` on large files. To read only the relevant sections of a large file, use `rg -C 3 \"pattern\" /path/file.mdx`. Batch multiple file reads into a single `head` or `cat` call whenever possible.\n\nWhen referencing pages in your response to the user, convert filesystem paths to URL paths by removing the `.mdx` extension. For example, `/quickstart.mdx` becomes `/quickstart` and `/api-reference/overview.mdx` becomes `/api-reference/overview`.",
+          "parameters":{
+            "properties":{
+              "command":{
+                "description":"A shell command to run against the virtualized documentation filesystem (e.g., `rg -il \"keyword\" /`, `tree / -L 2`, `head -80 /path/file.mdx`).",
+                "type":"string"
+              }
+            },
+            "required":["command"],
+            "type":"object"
+          },
+          "name":"query_docs_filesystem_model_context_protocol"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Count to, for testing progress and cancellation",
+          "parameters":{
+            "properties":{
+              "to":{
+                "description":"the integer to count to",
+                "type":"integer"
+              }
+            },
+            "required":["to"],
+            "type":"object"
+          },
+          "name":"count"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings.",
+          "parameters":{
+            "properties":{
+              "description":{
+                "description":"describe the task for the agent to perform",
+                "type":"string"
+              },
+              "agent_type":{
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder",
+                "type":"string"
+              }
+            },
+            "required":["description"],
+            "type":"object"
+          },
+          "name":"delegate"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Search across the Model Context Protocol knowledge base to find relevant information, code examples, API references, and guides. Use this tool when you need to answer questions about Model Context Protocol, find specific documentation, understand how features work, or locate implementation details. The search returns contextual content with titles and direct links to the documentation pages. If you need the full content of a specific page, use the query_docs_filesystem tool to `head` or `cat` the page path (append `.mdx` to the path returned from search — e.g. `head -200 /api-reference/create-customer.mdx`).",
+          "parameters":{
+            "properties":{
+              "version":{
+                "description":"Filter to specific version (e.g., 'v0.7')",
+                "type":"string"
+              },
+              "query":{
+                "description":"Search query",
+                "type":"string"
+              }
+            },
+            "required":["query"],
+            "type":"object"
+          },
+          "name":"search_model_context_protocol"
+        },
+        "type":"function"
+      },{
+        "type":"function",
+        "function":{
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "parameters":{
+            "properties":{
+              "lua":{
+                "description":"Lua code to execute. Should be a valid Lua chunk.",
+                "type":"string"
+              }
+            },
+            "type":"object",
+            "required":["lua"]
+          },
+          "name":"run_in_neovim"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "parameters":{
+            "properties":{
+              "top_k":{
+                "description":"number of matches to return (post reranking)",
+                "type":"number"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              }
+            },
+            "required":["query"],
+            "type":"object"
+          },
+          "name":"semantic_grep"
+        }
+      }],
+    "messages":[{
+        "role":"system",
+        "_logged":true,
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/mcp-servers/src/agents\nRepository root: ~/repos/github/g0t4/mcp-servers\nYou are 2 levels deep, so you need ../../ to build relative paths from repo root.\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n"
+      },{
+        "role":"user",
+        "_logged":true,
+        "content":"I want you to test my delegate tool, as a subagent to call `sleep <random time>` with random time being 500ms up to 3 seconds, and to serially call that as a single tool call 10 times back to back (not  in parallel)"
+      },{
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"description\":\"Run 10 serial `sleep` commands with random durations between 0.5 and 3 seconds. Generate each random value, then run them one after another. Here's a template of what to execute via the run_process tool:\\n\\nsleep 0.5\\nsleep 2.3\\nsleep 1.7\\n... (10 total)\\n\\nGenerate a fresh random float between 0.5 and 3.0 for each of the 10 calls. Use the shell command: sleep <random_float> — one at a time, serially, not in parallel. Log each sleep duration used and the total elapsed time at the end.\",\"agent_type\":\"command-runner\"}",
+              "name":"delegate"
+            },
+            "id":"qop1Gh5olEjC7jQ8GdMUgcYPGxdZkSbj",
+            "type":"function"
+          }],
+        "_logged":true,
+        "reasoning_content":"The user wants me to test their delegate tool by creating a subagent that calls `sleep` with random times (500ms to 3 seconds) serially 10 times. I need to use the `delegate` function with `agent_type` set appropriately.\n\nLet me think about which agent type to use - `command-runner` seems most appropriate since this involves running shell commands.\n\nI need to craft a task description that tells the subagent to:\n1. Call `sleep` with random durations between 500ms and 3 seconds\n2. Do this 10 times serially (one at a time)\n3. Each call should be a separate sleep command\n\nI'll use a command_line that chains 10 sleep commands together, but with a single `delegate` call as requested. The subagent will execute the commands.\n\n\nThe user wants to test the delegate tool itself by having it run a shell command with 10 serial sleep calls using random durations, so I'll set up a task that generates and executes those sleep commands in sequence.\n",
+        "role":"assistant",
+        "timings":{
+          "cache_n":0,
+          "prompt_ms":364.12,
+          "prompt_per_token_ms":0.12452804377565,
+          "predicted_ms":1724.763,
+          "predicted_per_token_ms":4.3011546134663,
+          "predicted_per_second":232.49571100493,
+          "predicted_n":401,
+          "prompt_per_second":8030.3196748325,
+          "prompt_n":2924
+        }
+      },{
+        "role":"tool",
+        "_logged":true,
+        "tool_call_id":"qop1Gh5olEjC7jQ8GdMUgcYPGxdZkSbj",
+        "content":"{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}"
+      },{
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"description\":\"Use the run_process tool to execute 10 individual `sleep` commands serially. Each command should sleep for a random duration between 0.5 and 3.0 seconds. Call run_process 10 separate times in sequence (not in parallel), each time with a different random sleep duration. Example: run_process(command_line=\\\"sleep 0.523\\\"), then run_process(command_line=\\\"sleep 2.187\\\"), etc. Report each sleep time and the total elapsed time at the end.\",\"agent_type\":\"command-runner\"}",
+              "name":"delegate"
+            },
+            "id":"ekue65O3bli0rHcpRfkM94Mw3vQBVq4r",
+            "type":"function"
+          }],
+        "_logged":true,
+        "reasoning_content":"The error suggests the tool expects a different format. Let me look at the delegate tool parameters again:\n- agent_type: string (required? no, description is required)\n- description: string (required)\n\nBut the error says \"Message as a sequence must be (role string, template)\". This seems like the tool might be expecting something different. Let me try with just the required fields and see if there's a different format needed.\n\nWait, the error format looks like it's coming from some message validation layer. Let me re-examine - maybe the tool has some internal issue. Let me try a simpler description or see if there's a specific format expected.\n\nActually, looking at the error more carefully, it seems like this is an internal error in how the delegate tool processes messages. Let me try a more concise description.\n",
+        "role":"assistant",
+        "timings":{
+          "cache_n":2854,
+          "prompt_ms":89.554,
+          "prompt_per_token_ms":0.17456920077973,
+          "predicted_ms":1358.584,
+          "predicted_per_token_ms":4.2588840125392,
+          "predicted_per_second":234.80329519559,
+          "predicted_n":319,
+          "prompt_per_second":5728.3873417156,
+          "prompt_n":513
+        }
+      },{
+        "role":"tool",
+        "_logged":true,
+        "tool_call_id":"ekue65O3bli0rHcpRfkM94Mw3vQBVq4r",
+        "content":"{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}"
+      },{
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"description\":\"Call run_process 10 times serially, each time running `sleep X` where X is a random float between 0.5 and 3.0. Log each duration and total time.\"}",
+              "name":"delegate"
+            },
+            "id":"gYvqe5ajnvOHuXVqvBPSJEkGlMQjE1Bx",
+            "type":"function"
+          }],
+        "_logged":true,
+        "reasoning_content":"Same error. The delegate tool seems to have a bug - \"Message as a sequence must be (role string, template)\" suggests it's expecting a different message format internally. This might be a tool implementation issue rather than a user error.\n\nLet me try with an even shorter description, or maybe the agent_type parameter is the issue. Let me try without specifying agent_type.\n",
+        "role":"assistant",
+        "timings":{
+          "cache_n":3326,
+          "prompt_ms":86.374,
+          "prompt_per_token_ms":0.21486069651741,
+          "predicted_ms":621.446,
+          "predicted_per_token_ms":4.2858344827586,
+          "predicted_per_second":233.32678945556,
+          "predicted_n":145,
+          "prompt_per_second":4654.1783407044,
+          "prompt_n":402
+        }
+      },{
+        "role":"tool",
+        "_logged":true,
+        "tool_call_id":"gYvqe5ajnvOHuXVqvBPSJEkGlMQjE1Bx",
+        "content":"{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}"
+      },{
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"description\":\"Test delegating a task: run 10 serial sleep commands with random durations.\"}",
+              "name":"delegate"
+            },
+            "id":"eC4U1RX5Q7ejQAY2mIGGkCMzHUS53dyd",
+            "type":"function"
+          }],
+        "_logged":true,
+        "reasoning_content":"Same error regardless. The delegate tool appears to have an internal bug - the error \"Message as a sequence must be (role string, template)\" suggests the tool's internal message formatting is broken. This isn't something I can work around by changing my parameters.\n\nLet me try a completely different approach - maybe the tool needs specific formatting.\n",
+        "role":"assistant",
+        "timings":{
+          "cache_n":3687,
+          "prompt_ms":66.368,
+          "prompt_per_token_ms":0.29108771929825,
+          "predicted_ms":495.452,
+          "predicted_per_token_ms":4.3845309734513,
+          "predicted_per_second":228.07456625465,
+          "predicted_n":113,
+          "prompt_per_second":3435.3905496625,
+          "prompt_n":228
+        }
+      },{
+        "role":"tool",
+        "_logged":true,
+        "tool_call_id":"eC4U1RX5Q7ejQAY2mIGGkCMzHUS53dyd",
+        "content":"{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}"
+      }]
+  },
+  "response_message":{
+    "role":"assistant",
+    "content":"The delegate tool appears to have an internal bug. Every invocation fails with this error:\n\n```\nMessage as a sequence must be (role string, template)\n```\n\nThis suggests the tool's internal message formatting is broken — it's expecting messages in a `(role, template)` tuple format but isn't receiving them correctly. I tried:\n\n1. **Long detailed description** with `agent_type: \"command-runner\"`\n2. **Shorter description** with `agent_type: \"command-runner\"`\n3. **Short description** without `agent_type`\n4. **Minimal description** without `agent_type`\n\nAll returned the same error. This looks like a bug in the delegate tool's implementation, not a problem with how I'm calling it. You may need to debug the delegate tool's internal message handling — specifically where it constructs the `(role, template)` sequence.",
+    "finish_reason":"stop",
+    "reasoning_content":"The delegate tool is consistently failing with the same error: \"Message as a sequence must be (role string, template)\". This appears to be an internal bug in the delegate tool's implementation, not a user-side error. The tool expects messages in a (role, template) tuple format but is receiving them differently.\n\nI should inform the user that the delegate tool appears to have a bug and report the error.\n"
+  },
+  "last_sse":{
+    "created":1780122642,
+    "__verbose":{
+      "stop":true,
+      "timings":{
+        "cache_n":3687,
+        "prompt_ms":86.715,
+        "prompt_per_token_ms":0.22640992167102,
+        "predicted_ms":1146.459,
+        "predicted_per_token_ms":4.2778320895522,
+        "predicted_per_second":233.76326584727,
+        "predicted_n":268,
+        "prompt_per_second":4416.767571931,
+        "prompt_n":383
+      },
+      "stopping_word":"",
+      "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+      "tokens_cached":4337,
+      "stop_type":"eos",
+      "generation_settings":{
+        "seed":4294967295,
+        "dynatemp_range":0,
+        "top_k":20,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":262144,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "n_predict":8192,
+        "ignore_eos":false,
+        "stream":true,
+        "n_probs":0,
+        "min_keep":0,
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "value":"<tool_call>\n",
+            "type":1
+          }],
+        "n_discard":0,
+        "preserved_tokens":[29,248058,248059,248068,248069],
+        "n_keep":0,
+        "reasoning_format":"deepseek",
+        "reasoning_in_content":false,
+        "generation_prompt":"<|im_start|>assistant\n<think>\n",
+        "chat_format":"peg-native",
+        "grammar":"boolean ::= (\"true\" | \"false\") space\nchar ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\ninteger ::= (\"-\"? integral-part) space\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (\",\" space json-value)* space \"]\") space\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)? space\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\") space\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\" space\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\" space\ntool-call ::= \"<tool_call>\\n\" space (tool-run-process | tool-fetch | tool-query-docs-filesystem-model-context-protocol | tool-count | tool-delegate | tool-search-model-context-protocol | tool-run-in-neovim | tool-semantic-grep) space \"</tool_call>\" (space \"<tool_call>\\n\" space (tool-run-process | tool-fetch | tool-query-docs-filesystem-model-context-protocol | tool-count | tool-delegate | tool-search-model-context-protocol | tool-run-in-neovim | tool-semantic-grep) space \"</tool_call>\")* space\ntool-count ::= (\"<function=\" \"count\" \">\\n\") space tool-count-arg-to space \"</function>\\n\"\ntool-count-arg-to ::= (\"<parameter=\" \"to\" \">\\n\") \"\" integer space \"</parameter>\\n\"\ntool-delegate ::= (\"<function=\" \"delegate\" \">\\n\") space tool-delegate-arg-description (space (tool-delegate-arg-agent-type))* space \"</function>\\n\"\ntool-delegate-arg-agent-type ::= (\"<parameter=\" \"agent_type\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-delegate-arg-description ::= (\"<parameter=\" \"description\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-fetch ::= (\"<function=\" \"fetch\" \">\\n\") space tool-fetch-arg-url (space (tool-fetch-arg-raw | tool-fetch-arg-start-index | tool-fetch-arg-max-chars))* space \"</function>\\n\"\ntool-fetch-arg-max-chars ::= (\"<parameter=\" \"max_chars\" \">\\n\") \"\" integer space \"</parameter>\\n\"\ntool-fetch-arg-raw ::= (\"<parameter=\" \"raw\" \">\\n\") \"\" boolean space \"</parameter>\\n\"\ntool-fetch-arg-start-index ::= (\"<parameter=\" \"start_index\" \">\\n\") \"\" integer space \"</parameter>\\n\"\ntool-fetch-arg-url ::= (\"<parameter=\" \"url\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-query-docs-filesystem-model-context-protocol ::= (\"<function=\" \"query_docs_filesystem_model_context_protocol\" \">\\n\") space tool-query-docs-filesystem-model-context-protocol-arg-command space \"</function>\\n\"\ntool-query-docs-filesystem-model-context-protocol-arg-command ::= (\"<parameter=\" \"command\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-in-neovim ::= (\"<function=\" \"run_in_neovim\" \">\\n\") space tool-run-in-neovim-arg-lua space \"</function>\\n\"\ntool-run-in-neovim-arg-lua ::= (\"<parameter=\" \"lua\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process ::= (\"<function=\" \"run_process\" \">\\n\") space (space (tool-run-process-arg-stdin-text | tool-run-process-arg-command-line | tool-run-process-arg-argv | tool-run-process-arg-cwd | tool-run-process-arg-timeout-ms))* space \"</function>\\n\"\ntool-run-process-arg-argv ::= (\"<parameter=\" \"argv\" \">\\n\") \"\" tool-run-process-arg-argv-schema space \"</parameter>\\n\"\ntool-run-process-arg-argv-schema ::= \"[\" space string (\",\" space string)* \"]\" space\ntool-run-process-arg-command-line ::= (\"<parameter=\" \"command_line\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-cwd ::= (\"<parameter=\" \"cwd\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-stdin-text ::= (\"<parameter=\" \"stdin_text\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-timeout-ms ::= (\"<parameter=\" \"timeout_ms\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-search-model-context-protocol ::= (\"<function=\" \"search_model_context_protocol\" \">\\n\") space tool-search-model-context-protocol-arg-query (space (tool-search-model-context-protocol-arg-version))* space \"</function>\\n\"\ntool-search-model-context-protocol-arg-query ::= (\"<parameter=\" \"query\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-search-model-context-protocol-arg-version ::= (\"<parameter=\" \"version\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep ::= (\"<function=\" \"semantic_grep\" \">\\n\") space tool-semantic-grep-arg-query (space (tool-semantic-grep-arg-top-k | tool-semantic-grep-arg-instruct | tool-semantic-grep-arg-embed-top-k | tool-semantic-grep-arg-filetype))* space \"</function>\\n\"\ntool-semantic-grep-arg-embed-top-k ::= (\"<parameter=\" \"embed_top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-semantic-grep-arg-filetype ::= (\"<parameter=\" \"filetype\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-instruct ::= (\"<parameter=\" \"instruct\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-query ::= (\"<parameter=\" \"query\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-top-k ::= (\"<parameter=\" \"top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\nuntil-suffix ::= ([^<] | \"<\" [^/] | \"</\" [^p] | \"</p\" [^a] | \"</pa\" [^r] | \"</par\" [^a] | \"</para\" [^m] | \"</param\" [^e] | \"</parame\" [^t] | \"</paramet\" [^e] | \"</paramete\" [^r] | \"</parameter\" [^>] | \"</parameter>\" [^\\n])*\n",
+        "max_tokens":8192,
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "post_sampling_probs":false,
+        "repeat_penalty":1,
+        "speculative.types":"none",
+        "timings_per_token":false,
+        "top_p":1,
+        "backend_sampling":false,
+        "lora":[],
+        "temperature":1,
+        "dynatemp_exponent":1,
+        "stop":[],
+        "logit_bias":[]
+      },
+      "has_new_line":true,
+      "index":0,
+      "prompt":"<|im_start|>system\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"run_process\", \"description\": \"Run a process on this darwin machine\", \"parameters\": {\"properties\": {\"stdin_text\": {\"description\": \"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\", \"type\": \"string\"}, \"command_line\": {\"description\": \"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\", \"type\": \"string\"}, \"argv\": {\"minItems\": 1, \"description\": \"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\", \"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"cwd\": {\"description\": \"Optional to set working directory\", \"type\": \"string\"}, \"timeout_ms\": {\"description\": \"Optional timeout in milliseconds, defaults to 30,000ms\", \"type\": \"number\"}}, \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"fetch\", \"description\": \"Fetch a URL and extract HTML contents as markdown\", \"parameters\": {\"properties\": {\"url\": {\"type\": \"string\"}, \"raw\": {\"description\": \"Do not convert HTML to markdown\", \"default\": false, \"type\": \"boolean\"}, \"start_index\": {\"description\": \"Start at this character offset, useful if a previous fetch was truncated and more context is required\", \"default\": 0, \"type\": \"integer\"}, \"max_chars\": {\"description\": \"Maximum number of characters to return\", \"default\": 50000, \"type\": \"integer\"}}, \"required\": [\"url\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"query_docs_filesystem_model_context_protocol\", \"description\": \"Run a read-only shell-like query against a virtualized, in-memory filesystem rooted at `/` that contains ONLY the Model Context Protocol documentation pages and OpenAPI specs. This is NOT a shell on any real machine — nothing runs on the user's computer, the server host, or any network. The filesystem is a sandbox backed by documentation chunks.\\n\\nThis is how you read documentation pages: there is no separate \\\"get page\\\" tool. To read a page, pass its `.mdx` path (e.g. `/quickstart.mdx`, `/api-reference/create-customer.mdx`) to `head` or `cat`. To search the docs with exact keyword or regex matches, use `rg`. To understand the docs structure, use `tree` or `ls`.\\n\\n**Workflow:** Start with the search tool for broad or conceptual queries like \\\"how to authenticate\\\" or \\\"rate limiting\\\". Use this tool when you need exact keyword/regex matching, structural exploration, or to read the full content of a specific page by path.\\n\\nSupported commands: rg (ripgrep), grep, find, tree, ls, cat, head, tail, stat, wc, sort, uniq, cut, sed, awk, jq, plus basic text utilities. No writes, no network, no process control. Run `--help` on any command for usage.\\n\\nEach call is STATELESS: the working directory always resets to `/` and no shell variables, aliases, or history carry over between calls. If you need to operate in a subdirectory, chain commands in one call with `&&` or pass absolute paths (e.g., `cd /api-reference && ls` or `ls /api-reference`). Do NOT assume that `cd` in one call affects the next call.\\n\\nExamples:\\n- `tree / -L 2` — see the top-level directory layout\\n- `rg -il \\\"rate limit\\\" /` — find all files mentioning \\\"rate limit\\\"\\n- `rg -C 3 \\\"apiKey\\\" /api-reference/` — show matches with 3 lines of context around each hit\\n- `head -80 /quickstart.mdx` — read the top 80 lines of a specific page\\n- `head -80 /quickstart.mdx /installation.mdx /guides/first-deploy.mdx` — read multiple pages in one call\\n- `cat /api-reference/create-customer.mdx` — read a full page when you need everything\\n- `cat /openapi/spec.json | jq '.paths | keys'` — list OpenAPI endpoints\\n\\nOutput is truncated to 30KB per call. Prefer targeted `rg -C` or `head -N` over broad `cat` on large files. To read only the relevant sections of a large file, use `rg -C 3 \\\"pattern\\\" /path/file.mdx`. Batch multiple file reads into a single `head` or `cat` call whenever possible.\\n\\nWhen referencing pages in your response to the user, convert filesystem paths to URL paths by removing the `.mdx` extension. For example, `/quickstart.mdx` becomes `/quickstart` and `/api-reference/overview.mdx` becomes `/api-reference/overview`.\", \"parameters\": {\"properties\": {\"command\": {\"description\": \"A shell command to run against the virtualized documentation filesystem (e.g., `rg -il \\\"keyword\\\" /`, `tree / -L 2`, `head -80 /path/file.mdx`).\", \"type\": \"string\"}}, \"required\": [\"command\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"count\", \"description\": \"Count to, for testing progress and cancellation\", \"parameters\": {\"properties\": {\"to\": {\"description\": \"the integer to count to\", \"type\": \"integer\"}}, \"required\": [\"to\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"delegate\", \"description\": \"Delegate to a subagent to perform relevent tasks and summarize findings.\", \"parameters\": {\"properties\": {\"description\": {\"description\": \"describe the task for the agent to perform\", \"type\": \"string\"}, \"agent_type\": {\"description\": \"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder\", \"type\": \"string\"}}, \"required\": [\"description\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"search_model_context_protocol\", \"description\": \"Search across the Model Context Protocol knowledge base to find relevant information, code examples, API references, and guides. Use this tool when you need to answer questions about Model Context Protocol, find specific documentation, understand how features work, or locate implementation details. The search returns contextual content with titles and direct links to the documentation pages. If you need the full content of a specific page, use the query_docs_filesystem tool to `head` or `cat` the page path (append `.mdx` to the path returned from search — e.g. `head -200 /api-reference/create-customer.mdx`).\", \"parameters\": {\"properties\": {\"version\": {\"description\": \"Filter to specific version (e.g., 'v0.7')\", \"type\": \"string\"}, \"query\": {\"description\": \"Search query\", \"type\": \"string\"}}, \"required\": [\"query\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"run_in_neovim\", \"description\": \"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()\", \"parameters\": {\"properties\": {\"lua\": {\"description\": \"Lua code to execute. Should be a valid Lua chunk.\", \"type\": \"string\"}}, \"type\": \"object\", \"required\": [\"lua\"]}}}\n{\"type\": \"function\", \"function\": {\"name\": \"semantic_grep\", \"description\": \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\", \"parameters\": {\"properties\": {\"top_k\": {\"description\": \"number of matches to return (post reranking)\", \"type\": \"number\"}, \"instruct\": {\"description\": \"instructions for the query, explain the type of query\", \"type\": \"string\"}, \"query\": {\"description\": \"query text, what you are looking for\", \"type\": \"string\"}, \"embed_top_k\": {\"description\": \"number of embeddings matches to consider for reranking\", \"type\": \"number\"}, \"filetype\": {\"description\": \"limit matches to a vim compatible filetype. default includes all filetypes\", \"type\": \"string\"}}, \"required\": [\"query\"], \"type\": \"object\"}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/mcp-servers/src/agents\nRepository root: ~/repos/github/g0t4/mcp-servers\nYou are 2 levels deep, so you need ../../ to build relative paths from repo root.\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`<|im_end|>\n<|im_start|>user\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```<|im_end|>\n<|im_start|>user\n## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors<|im_end|>\n<|im_start|>user\nI want you to test my delegate tool, as a subagent to call `sleep <random time>` with random time being 500ms up to 3 seconds, and to serially call that as a single tool call 10 times back to back (not  in parallel)<|im_end|>\n<|im_start|>assistant\n<think>\nThe user wants me to test their delegate tool by creating a subagent that calls `sleep` with random times (500ms to 3 seconds) serially 10 times. I need to use the `delegate` function with `agent_type` set appropriately.\n\nLet me think about which agent type to use - `command-runner` seems most appropriate since this involves running shell commands.\n\nI need to craft a task description that tells the subagent to:\n1. Call `sleep` with random durations between 500ms and 3 seconds\n2. Do this 10 times serially (one at a time)\n3. Each call should be a separate sleep command\n\nI'll use a command_line that chains 10 sleep commands together, but with a single `delegate` call as requested. The subagent will execute the commands.\n\n\nThe user wants to test the delegate tool itself by having it run a shell command with 10 serial sleep calls using random durations, so I'll set up a task that generates and executes those sleep commands in sequence.\n</think>\n\n<tool_call>\n<function=delegate>\n<parameter=description>\nRun 10 serial `sleep` commands with random durations between 0.5 and 3 seconds. Generate each random value, then run them one after another. Here's a template of what to execute via the run_process tool:\n\nsleep 0.5\nsleep 2.3\nsleep 1.7\n... (10 total)\n\nGenerate a fresh random float between 0.5 and 3.0 for each of the 10 calls. Use the shell command: sleep <random_float> — one at a time, serially, not in parallel. Log each sleep duration used and the total elapsed time at the end.\n</parameter>\n<parameter=agent_type>\ncommand-runner\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nThe error suggests the tool expects a different format. Let me look at the delegate tool parameters again:\n- agent_type: string (required? no, description is required)\n- description: string (required)\n\nBut the error says \"Message as a sequence must be (role string, template)\". This seems like the tool might be expecting something different. Let me try with just the required fields and see if there's a different format needed.\n\nWait, the error format looks like it's coming from some message validation layer. Let me re-examine - maybe the tool has some internal issue. Let me try a simpler description or see if there's a specific format expected.\n\nActually, looking at the error more carefully, it seems like this is an internal error in how the delegate tool processes messages. Let me try a more concise description.\n</think>\n\n<tool_call>\n<function=delegate>\n<parameter=description>\nUse the run_process tool to execute 10 individual `sleep` commands serially. Each command should sleep for a random duration between 0.5 and 3.0 seconds. Call run_process 10 separate times in sequence (not in parallel), each time with a different random sleep duration. Example: run_process(command_line=\"sleep 0.523\"), then run_process(command_line=\"sleep 2.187\"), etc. Report each sleep time and the total elapsed time at the end.\n</parameter>\n<parameter=agent_type>\ncommand-runner\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nSame error. The delegate tool seems to have a bug - \"Message as a sequence must be (role string, template)\" suggests it's expecting a different message format internally. This might be a tool implementation issue rather than a user error.\n\nLet me try with an even shorter description, or maybe the agent_type parameter is the issue. Let me try without specifying agent_type.\n</think>\n\n<tool_call>\n<function=delegate>\n<parameter=description>\nCall run_process 10 times serially, each time running `sleep X` where X is a random float between 0.5 and 3.0. Log each duration and total time.\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nSame error regardless. The delegate tool appears to have an internal bug - the error \"Message as a sequence must be (role string, template)\" suggests the tool's internal message formatting is broken. This isn't something I can work around by changing my parameters.\n\nLet me try a completely different approach - maybe the tool needs specific formatting.\n</think>\n\n<tool_call>\n<function=delegate>\n<parameter=description>\nTest delegating a task: run 10 serial sleep commands with random durations.\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"Message as a sequence must be (role string, template)\",\"type\":\"text\"}],\"isError\":true}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n",
+      "tokens":[],
+      "id_slot":2,
+      "tokens_predicted":268,
+      "tokens_evaluated":4070,
+      "truncated":false,
+      "content":""
+    },
+    "id":"chatcmpl-G8TCUabaPhel4giAVYVcpxGnKW82aMFw",
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "system_fingerprint":"b9403-147f7e15b",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "timings":{
+      "cache_n":3687,
+      "prompt_ms":86.715,
+      "prompt_per_token_ms":0.22640992167102,
+      "predicted_ms":1146.459,
+      "predicted_per_token_ms":4.2778320895522,
+      "predicted_per_second":233.76326584727,
+      "predicted_n":268,
+      "prompt_per_second":4416.767571931,
+      "prompt_n":383
+    },
+    "object":"chat.completion.chunk"
+  }
+}
