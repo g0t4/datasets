@@ -1,0 +1,3 @@
+ask another agent instance to review the commit from a different agent trace! all via the git commit!
+- no real feedback on the quality of the review yet... I haven't had time to check original code yet...
+- I just wanted to note a fun way to use another agent instance to maybe speed up finding issues
