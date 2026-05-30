@@ -1,0 +1,61 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1780119568,
+    "timings":{
+      "cache_n":931,
+      "predicted_per_second":267.67640153691,
+      "predicted_n":48,
+      "prompt_per_second":7648.5693323551,
+      "prompt_ms":163.56,
+      "prompt_per_token_ms":0.13074340527578,
+      "predicted_ms":179.321,
+      "predicted_per_token_ms":3.7358541666667,
+      "prompt_n":1251
+    },
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "system_fingerprint":"b9403-147f7e15b",
+    "id":"chatcmpl-OOiepCQWLMPJuYwiCMhtQXRfgmhYX4v5"
+  },
+  "response_message":{
+    "content":"console",
+    "finish_reason":"stop",
+    "reasoning_content":"We need to complete the call: rich.inspect(e, console=...). Likely console variable defined earlier: console = Console(file=file). So just \"console\". So insert \"console\".",
+    "role":"assistant",
+    "_logged":true
+  },
+  "request_body":{
+    "options":[],
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: agents\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n\n\n## Recent yanks (copy to clipboard):\n```subagents/server.py\n            console.print(\"FUCK\")\n```\n\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/mcp-servers/src/agents/subagents/delegate.py:0-19\nfrom asyncio import CancelledError\nimport asyncio\nimport os\nimport rich\nfrom rich.console import Console\n# log to a log tmp file\nfile = open('agent.log', 'a')\nconsole = Console(file=file)\n\n# might be helpful within your agent's tooling:\n# import markdownify\n# import readabilipy.simple_json\n\nfrom langchain_core.messages import HumanMessage\nfrom langchain_core.runnables import RunnableConfig\nfrom langchain.tools import tool\nfrom langchain_llama_server import ChatLlamaServer\nfrom deepagents import create_deep_agent\nfrom langgraph.checkpoint.memory import InMemorySaver\nfrom mcp.types import TextContent, Tool\n\n\n## ~/repos/github/g0t4/mcp-servers/src/git/tests/test_server.py:424-430\n\n\n\n# Tests for argument injection protection in git_show, git_create_branch,\n# git_log, and git_branch — matching the existing guards on git_diff and\n# git_checkout.\n\n\n\n## ~/repos/github/g0t4/mcp-servers/src/fetch/src/mcp_server_fetch/server.py:84-103\n\n    url: Annotated[AnyUrl, Field(description=\"URL to fetch\")]\n    max_length: Annotated[\n        int,\n        Field(\n            default=50000, # 12K tokens worse case is FINE! stop making agent request tool call repeatedly (wastes time and hundreds of tokens) esp. NBD when I get my research subagent working! (langchain)\n            description=\"Maximum number of characters to return.\",\n            gt=0,\n            lt=1000000, # fine b/c that's like 250K tokens ;)\n        ),\n    ]\n    start_index: Annotated[\n        int,\n        Field(\n            default=0,\n            description=\"On return output starting at this character index, useful if a previous fetch was truncated and more context is required.\",\n            ge=0,\n        ),\n    ]\n    raw: Annotated[\n\n\n## ~/repos/github/g0t4/mcp-servers/src/git/tests/test_server.py:314-316\n\n# Tests for argument injection protection\n\n\n\n## ~/repos/github/g0t4/mcp-servers/src/git/src/mcp_server_git/server.py:70-72\nclass GitShow(BaseModel):\n    repo_path: str\n    revision: str\n",
+        "_logged":true
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```subagents/server.py\nimport asyncio\nfrom mcp.shared.exceptions import McpError\nfrom mcp.server import Server\nfrom mcp.server.stdio import stdio_server\nfrom mcp.types import (\n    ErrorData,\n    GetPromptResult,\n    Prompt,\n    PromptArgument,\n    TextContent,\n    Tool,\n    INVALID_PARAMS,\n    INTERNAL_ERROR,\n)\nfrom subagents.delegate import *\n\nasync def serve() -> None:\n    server = Server(\"subagents\")\n    await setup_agent()  # PRN await this after server running?\n\n    @server.list_tools()\n    async def list_tools() -> list[Tool]:\n        return [DELEGATE_TOOL, COUNT_TOOL]\n\n        # @server.list_prompts()\n        # async def list_prompts() -> list[Prompt]:\n        #     return [Prompt( arguments=[PromptArgument(description=\"\", agent_type=\"\", required=True)],)]\n\n    async def count(count_to: int):\n        try:\n            # for testing cancellation timing and progress notifications\n            for i in range(0, count_to):\n                await asyncio.sleep(0.2)\n\n                ctx = server.request_context\n                if ctx.meta and ctx.meta.progressToken:\n                    await ctx.session.send_progress_notification(\n                        progress_token=ctx.meta.progressToken,\n                        progress=(i + 1),\n                        total=100,\n                    )\n                else:\n                    return [TextContent(type=\"text\", text=f\"Missing a progressToken, cannot count, please add one and try again\")]\n            return [TextContent(type=\"text\", text=f\"DONE counting to {count_to}\")]\n\n        except asyncio.CancelledError as c:\n            # FYI nothing to do here and cannot send a progress notification... server will send the confirmation message that cancel is rx'd\n            # just let counting stop\n            # TODO add logging for this? trace/info level log that cancel called\n            raise  # stop tool\n\n    @server.call_tool()\n    async def call_tool(requested_tool, arguments: dict) -> list[TextContent]:\n        try:\n            if requested_tool == COUNT_TOOL_NAME:\n                # PRN remove unregistered count tool, purely for testing cancel and progress notifications\n                to = int(arguments['to'])\n                return await count(to)\n            elif requested_tool != DELEGATE_TOOL_NAME:\n                raise McpError(ErrorData(code=1, message=f\"You made up a tool... you asked for {requested_tool}...\", data={\"valid_tools\": DELEGATE_TOOL}))\n\n            description = arguments.get(\"description\")\n            agent_type = arguments.get(\"agent_type\", \"general\")\n            return await delegate_tool(description, agent_type)\n\n        except asyncio.CancelledError:\n            # TODO log unhandled cancellation? so I know that I need to push it inside the inner tool function?\n            raise\n        # FYI put unhandled exceptions here (outside of tool logic)\n        except ValueError as e:\n            console.print(\"ValueErorr\", str(e))\n            raise McpError(ErrorData(code=INVALID_PARAMS, message=str(e)))\n        except Exception as e:\n            rich.inspect(e, console=<|fim_middle|>)\n            raise McpError(ErrorData(code=INTERNAL_ERROR, message=str(e)))\n\n    # * start the server\n    options = server.create_initialization_options()\n    async with stdio_server() as (read_stream, write_stream):\n        await server.run(read_stream, write_stream, options, raise_exceptions=False)\n```\n\n## Reminders about the cursor line:\nText before cursor: `            rich.inspect(e, console=`\nText after cursor: `)`",
+        "_logged":true
+      }],
+    "temperature":1,
+    "max_tokens":4096,
+    "model":"gpt-oss:120b",
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "raw":false,
+    "top_p":1,
+    "stream":true
+  }
+}
