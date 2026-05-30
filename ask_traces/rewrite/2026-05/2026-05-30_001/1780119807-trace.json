@@ -1,0 +1,63 @@
+{
+  "last_sse":{
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "system_fingerprint":"b9403-147f7e15b",
+    "timings":{
+      "prompt_n":2300,
+      "prompt_ms":247.328,
+      "prompt_per_token_ms":0.10753391304348,
+      "predicted_ms":1044.968,
+      "predicted_per_token_ms":3.786115942029,
+      "predicted_per_second":264.12292051048,
+      "predicted_n":276,
+      "prompt_per_second":9299.391900634,
+      "cache_n":0
+    },
+    "created":1780119734,
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-YO2f84dlV2cVZW66BV90p73Mn5FCmHwJ"
+  },
+  "request_body":{
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "max_tokens":8192,
+    "messages":[{
+        "_logged":true,
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "_logged":true,
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"## Fish Shell Code Preferences\n\n- Use snake_case for functions and variables.\n- When a condition is ambiguous, assign it to a well‑named variable before the `if`.\n- Prefer long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n- Fish shell does not do word splitting like bash, no need to wrap everything in quotes!\n\n## Fish syntax examples\n\n```fish\n# exploit fish-isms!\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\n    exit 1\nend\n\n# if + set\nif set -l message (some_command)\n    echo \"ok: $message\"\nelse\n    echo \"fail: $message\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use begin/end\nbegin\n    echo $header\n    echo $table\nend > out.html\n# or multi-line strings\necho \"\nfoo\nbar\n\" > test\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nfor i in *.tmp\n    if grep DONE $i\n        break\n    end\n    if grep SKIP $i\n        continue\n    end\n    ...\nend\n\n# combine conditions\nwhile test -f foo.txt; or test -f bar.txt\n    ...\nend\n\n# conditional execution\nmake; and make install; or make clean\n```\n\n### builtin fish commands\n\nNow that we have more than 2KB of system RAM, we can fix most of what sucks about bash...\n\n```fish\n# *** string command\n\n# match: test, filter, extract\nstring match --quiet '*.lua' $file\nset lua_files (string match '*.lua' $files)\nset version (string match --regex 'v([0-9.]+)' $tag)\nstring match --index --regex 'ERROR' $line\n\n# replace: transform text\nset fixed (string replace foo bar $text)\nset cleaned (string replace --regex '\\s+' ' ' $line)\nset base (string replace --regex '\\.[^.]+$' '' $file)\nset normalized (string replace --filter --regex '^./' '' $paths)\n\n# split: tokenize\nset parts (string split ':' $PATH)\nset lines (string split '\\n' $text)\nset ext (string split --right --max 1 . $file)[2]\n\n# trim: clean edges\nset clean (string trim $line)\nset unquoted (string trim --chars '\"' $s)\n\n# join: build strings\nstring join ' ' $argv\nstring join --no-empty ':' $PATH\n\n# length and slicing\nstring length $name\nstring sub --start 2 --length 4 $word\nstring sub --start -5 $word\n\n# case conversion\nset key (string lower $key)\nset name (string upper $name)\n\n# shell-safe encoding\nset escaped (string escape $path)\nstring unescape $escaped\n\n# normalize piped output\nset text (some_command | string collect)\n\n\n# path command\npath basename foo/bar.txt # bar.txt\npath basename --no-extension foo/bar.txt # bar\npath dirname foo/bar.txt # foo\npath extension ./foo.mp4 # .mp4\npath change-extension mov ./foo.mp4 # ./foo.mov\n\npath normalize path/to//hello.txt # path/to/hello.txt\npath normalize path/to/../hello.txt # path/hello.txt\n# resolve = normalize + absolute path and follow symlinks\npath resolve foo  # ~/foo\n\npath sort 10-foo 2-bar\n# 2-bar\n# 10-foo\n\n\n# math command\nmath [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...\nmath 10 / 6\nmath $status - 128\nmath \"5 * 2\"\nmath \"sin(pi)\"\nmath max 5,2,3,1\n\n\n# count STRING1 STRING2 ...\n# COMMAND | count\n# count [...] < FILE\ncount $PATH\ncount *.txt\ngit ls-files --others --exclude-standard | count\nprintf '%s\\n' foo bar | count baz # Returns 3 (2 lines from stdin plus 1 argument)\ncount < /etc/hosts # number of entries in hosts file\n\n\n# contains [OPTIONS] KEY [VALUES ...]\nif contains -- -q $argv\n    echo '$argv contains a -q option'\nend\n\n# scripts\nstatus filename # current running script\nstatus basename\nstatus dirname\nstatus function # current function name\nstatus line-number\nstatus stack-trace\n\n```\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/bash/fish_to_bash_aliases.fish:0-19\n#!/usr/bin/env fish\n\nset file_abbrs \"$WES_DOTFILES/bash/.generated.abbrs.bash\"\nset file_skipped \"$WES_DOTFILES/bash/.generated.skipped.bash\"\n\n# skip options I am not ready to parse yet\n#  ' -- ' after arg ensures not a match in the abbr's \"key value\" positional args\n# | rg_grep -vE '\\-\\-(regex).* -- '\nabbr | sort \\\n    | rg_grep --invert-match \"\\\\\\'\" \\\n    | rg_grep --invert-match \"\\-- -F\" >\"$file_abbrs\"\n\n# * produce skipped list BEFORE any mods for regexs (or otherwise)\n# sort both just to be safe, else comm won't work\ncomm -23 (abbr | sort | psub) (sort \"$file_abbrs\" | psub) >\"$file_skipped\"\n\n# ** MAKE SURE TO TEST THIS IN SAME SHELL (fish, see shebang above)...\n#   b/c bash treats \\ as literal inside  '' but fish doesn't\n#   hence 4 \\ => 8 \\ in fish\n#\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/misc-specific.fish:735-754\nabbr els \"env | bat --language dotenv -p\"\nabbr egr \"env | rg_grep -i \"\nabbr envb \"env | bat -l env\" # do this to fix color issues with LESS_TERMCAP_** env vars\n# alternative: strip CSI escape codes from LESS_TERMCAP_* env vars (and possibly others)\n# env | string replace --regex \"\\\\x1b\\[1(;\\\\d+)+m\" \"\"\n#\n# shell variables names and values\nabbr vls \"set | bat --language ini -p\"\nabbr vgr \"set | rg_grep -i \"\n#\n# abbr's\nabbr --add agr --set-cursor \"abbr | rg_grep -i '%'\"\nabbr --add agrs --set-cursor \"abbr | rg_grep -i '\\-\\- %'\" # starts with b/c `-- name` is consistent format of abbr's list output\n#\n# complete's\nabbr --set-cursor completeC \"complete -C '%'\"\n#\n#   abbr --list | rg_grep -i '^an' # another avenue if I have too much trouble relying on `abbr --show` + grep\n#\n# AFAICT there's no way to lookup an abbr by name... and get its executable format\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/gitignore-wrappers.fish:8-10\nfunction gitignores_for\n    zsh -ic \"gitignores_for $argv\"\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/gitignore-wrappers.fish:18-20\nfunction gitignore_init\n    zsh -ic \"gitignore_init $argv\"\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/gitignore-wrappers.fish:15-25\nend\n\nabbr gii gitignore_init\nfunction gitignore_init\n    zsh -ic \"gitignore_init $argv\"\nend\n\nabbr gic commit_gitignores_for\nfunction commit_gitignores_for --wraps gitignores_for\n    zsh -ic \"commit_gitignores_for $argv\"\nend\n\n",
+        "role":"user"
+      },{
+        "_logged":true,
+        "content":"ignore egg-info too\n\nHere is the code I selected:\n```fish/load_last_interactive_only/git-aliases.fish:16-18\nabbr gstiv --set-cursor 'git status --ignored --untracked-files --short \".%\" | rg_grep -i -v \"node_modules|\\.venv/|\\.rag/|__pycache__|DS_Store|\\.pytest_cache/|/bin/|/obj/|/target/|iterm2env/\"'\n# also skip image files (don't always do this, hence a separte abbr)\nabbr gstiv_all --set-cursor 'git status --ignored --untracked-files --short \".%\" | rg_grep -i -v \"node_modules|\\.venv/|\\.rag/|__pycache__|DS_Store|\\.pytest_cache/|/bin/|/obj/|/target/|iterm2env/|.*\\.(png|bmp|jpg|svg)\\$\"'\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      }],
+    "top_p":1,
+    "model":"",
+    "temperature":1
+  },
+  "response_message":{
+    "_logged":true,
+    "content":"abbr gstiv --set-cursor 'git status --ignored --untracked-files --short \".%\" | rg_grep -i -v \"node_modules|\\.venv/|\\.rag/|__pycache__|DS_Store|\\.pytest_cache/|/bin/|/obj/|/target/|iterm2env/|egg-info/\"'\nabbr gstiv_all --set-cursor 'git status --ignored --untracked-files --short \".%\" | rg_grep -i -v \"node_modules|\\.venv/|\\.rag/|__pycache__|DS_Store|\\.pytest_cache/|/bin/|/obj/|/target/|iterm2env/|egg-info/|.*\\.(png|bmp|jpg|svg)\\$\"'",
+    "finish_reason":"stop",
+    "reasoning_content":"We need to modify fish code to ignore egg-info directories too. Probably add pattern `egg-info/` to regexes. Provide updated code with same indentation. Also follow preferences: snake_case functions, but only need to modify abbr lines. So add `egg-info/` into the -v pattern. Ensure proper quoting. Provide code snippet with modifications.\n\nWe must not wrap answer in markdown code blocks. Also no explanation, just code. Provide the modified lines. Ensure preserve indentation.",
+    "role":"assistant"
+  }
+}
