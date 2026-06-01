@@ -1,0 +1,1 @@
+in the time it took me to get up, grab my adderall pills for the day and walk back to my desk... Qwen3.6 was friggin done... took me 10 minutes to type up the request... I should've asked it to help me refine the specs so I didn't have to write them all out!!!
