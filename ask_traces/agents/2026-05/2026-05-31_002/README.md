@@ -11,3 +11,8 @@
 - good use of `extract_model_info` to isolate the extraction of details into the `ModelInfo` type... testable and isolated, I love it!
 - model left behind deprecated method `M.get_llama_server_model(`... not the end of the world, the code still works is what matters... I didn't say to get rid of it either... so I followed up by asking to have it removed and now it's gone... which is a great workflow! for when I care about what the code contains
 
+## complaints:
+- minor, the model left a `<` file behind... I saw it and asked about it since its contents included the new ModelInfo code... must've been a failed tool call
+  NBD just leave this as is for now, it is super easy to spot and cleanup with git repos.. in fact most of the time I bet the model will find it when committing... remaining times, it's fine for me to handle it
+
+
