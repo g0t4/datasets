@@ -1,0 +1,1 @@
+while reviewing another trace I realized my formatter for showing argv style run_process tool calls was not correctly showing quotation of argv values... so I missed cases when qwen had wrapped a command line into argv[2] and thus was failing b/c argv[1] was cat... anyways I asked qwen to fix it and then add tests, good to go now!
