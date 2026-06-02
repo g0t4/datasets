@@ -1,0 +1,3 @@
+primarily a fix for start_time_ms and duration_ms on tool calls, but I had instructions to run stylua and that was a shotgun cleanup across the entire file so I had Qwen revert that and just change the timing to use vim.uv.hrtime() ... Qwen did that excellently!
+
+complaint => it didn't realize it used `git reset HEAD~1` which uses `--mixed` by default and thus only resets the index not the working tree files... so the changes were still there! Qwen didn't realize this and instead assumed stylua had run again automatically? .. then it did a `git checkout` to wipe all changes... all good as this works at the end of the day, just interesting it didn't use `git reset --hard` instead to wipe the changes fully
