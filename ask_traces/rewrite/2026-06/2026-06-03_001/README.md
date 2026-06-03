@@ -1,0 +1,3 @@
+great transformation to a function for a dynamic abbr that can find fish shell built from source in more than one spot...
+- only issue is that it should've echo'd the path back, not executed it! but NBD and easy to fix!
+  b/c you cannot start a new shell in an abbr, or you shouldn't try to lol!
