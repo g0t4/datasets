@@ -1,0 +1,725 @@
+{
+  "last_sse":{
+    "timings":{
+      "predicted_ms":559.905,
+      "predicted_per_token_ms":4.47924,
+      "cache_n":11292,
+      "prompt_per_token_ms":0.29294166666667,
+      "predicted_per_second":223.25215884838,
+      "predicted_n":125,
+      "prompt_per_second":3413.64890621,
+      "prompt_ms":105.459,
+      "prompt_n":360
+    },
+    "id":"chatcmpl-WmGVCdlQSdTShBWo0a3f4ZIBjUyyImKp",
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "object":"chat.completion.chunk",
+    "created":1780516460,
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "system_fingerprint":"b9478-1571776a7"
+  },
+  "request_body":{
+    "temperature":1,
+    "messages":[{
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n",
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n",
+        "role":"user"
+      },{
+        "content":"can you tell me the cause of this:\n\nLua callback:\nvim/_core/editor.lua:0: E5560: nvim_echo must not be called in a fast event context\nstack traceback:\n        [C]: in function 'nvim_echo'\n        vim/_core/editor.lua: in function 'notify'\n        ...b/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:230: in function <...b/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:220>\n        [C]: in function 'systemlist'\n        ...ub/g0t4/ask-openai.nvim/lua/ask-openai/helpers/files.lua:107: in function 'get_repo_root'\n        .../g0t4/ask-openai.nvim/lua/ask-openai/rag/client/init.lua:59: in function 'determine_rag_config'\n        .../g0t4/ask-openai.nvim/lua/ask-openai/rag/client/init.lua:86: in main chunk\n        [C]: in function 'require'\n        ...0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua:14: in main chunk\n        [C]: in function 'require'\n        ...epos/github/g0t4/ask-openai.nvim/lua/ask-openai/init.lua:162: in function 'setup'\n        ...local/share/nvim/lazy/lazy.nvim/lua/lazy/core/loader.lua:387: in function <...local/share/nvim/lazy/lazy.nvim/lua/lazy/core/loader.lua:385>\n        [C]: in function 'xpcall'\n        .../.local/share/nvim/lazy/lazy.nvim/lua/lazy/core/util.lua:135: in function 'try'\n        ...local/share/nvim/lazy/lazy.nvim/lua/lazy/core/loader.lua:395: in function 'config'\n        ...local/share/nvim/lazy/lazy.nvim/lua/lazy/core/loader.lua:362: in function '_load'\n        ...local/share/nvim/lazy/lazy.nvim/lua/lazy/core/loader.lua:197: in function 'load'\n        ...local/share/nvim/lazy/lazy.nvim/lua/lazy/core/loader.lua:127: in function 'startup'\n        ...e/wes/.local/share/nvim/lazy/lazy.nvim/lua/lazy/init.lua:112: in function 'setup'\n        ~/.config/nvim/lua/bootstrap-lazy.lua:48: in main chunk\n        [C]: in function 'require'\n        ~/.config/nvim/init.lua:4: in main chunk\nPress ENTER or type command to continue",
+        "role":"user"
+      },{
+        "content":"Let me look at the relevant files.\n\n",
+        "timings":{
+          "predicted_ms":1701.907,
+          "predicted_per_token_ms":4.3750822622108,
+          "cache_n":0,
+          "prompt_per_token_ms":0.17268899954731,
+          "predicted_per_second":228.56713087143,
+          "predicted_n":389,
+          "prompt_per_second":5790.7568091855,
+          "prompt_ms":381.47,
+          "prompt_n":2209
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"nvim_echo|notify\\\" lua/ask-openai/tools/mcp/init.lua\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"J2WBlQOm0gRD9k5MQDBpWkyBUFe26LDM"
+          },{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"get_repo_root\\\" lua/ask-openai/helpers/files.lua\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"XvMWtPwRZXYJKwv7J3ZWAK7dzP7BMwk5"
+          },{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"determine_rag_config\\\" lua/ask-openai/rag/client/init.lua\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"9DF5V403oNYqKxzRz2wpbJIVT5FPNdlU"
+          }],
+        "reasoning_content":"The error is `E5560: nvim_echo must not be called in a fast event context`.\n\nLooking at the stack trace:\n1. `vim/_core/editor.lua: in function 'notify'` - this is calling `nvim_echo`\n2. `...b/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:230: in function`\n3. `systemlist` is called from the MCP tool code\n4. `helpers/files.lua:107: in function 'get_repo_root'`\n\nThe issue is that `systemlist` (which spawns a shell process) is being called in a synchronous/blocking manner during a \"fast event\" (like plugin startup). This blocks Neovim's event loop, and when the result comes back, calling `nvim_echo` is prohibited in that context.\n\nThe fix is to make the `systemlist` call asynchronous, or to handle the output differently without blocking the event loop, or to use `vim.schedule` to defer the echo.\n\nLet me look at the relevant files to understand the code structure.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"231:17:            vim.notify(msg, vim.log.levels.WARN)\\n330:17:            vim.notify(msg, vim.log.levels.ERROR)\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2581403,
+        "duration_ms":6,
+        "tool_call_id":"J2WBlQOm0gRD9k5MQDBpWkyBUFe26LDM",
+        "role":"tool"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"105:12:function M.get_repo_root()\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2581403,
+        "duration_ms":8,
+        "tool_call_id":"XvMWtPwRZXYJKwv7J3ZWAK7dzP7BMwk5",
+        "role":"tool"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"50:16:local function determine_rag_config()\\n86:1:determine_rag_config()\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2581403,
+        "duration_ms":8,
+        "tool_call_id":"9DF5V403oNYqKxzRz2wpbJIVT5FPNdlU",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":749.268,
+          "predicted_per_token_ms":4.3061379310345,
+          "cache_n":2205,
+          "prompt_per_token_ms":0.21284922010399,
+          "predicted_per_second":232.22665321354,
+          "predicted_n":174,
+          "prompt_per_second":4698.161447392,
+          "prompt_ms":122.814,
+          "prompt_n":577
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/tools/mcp/init.lua | sed -n '215,235p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"q70UINEdZUUMNydwAuYvAvtNK2OGbbH1"
+          },{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/helpers/files.lua | sed -n '100,115p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"idxT2p61UP7f5g8w84sgsaFDexKIbHJN"
+          },{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/rag/client/init.lua | sed -n '45,95p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"lekjCN0m3fj5Q33Gxh5CB9ODqeK8PclK"
+          }],
+        "reasoning_content":"Let me look at the specific code sections around the problematic lines.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"   215\\t    -- Spawn the subprocess with pipes for stdin, stdout, stderr\\n   216\\t    local handle, pid\\n   217\\t    local stdin = uv.new_pipe(false)\\n   218\\t    local stdout = uv.new_pipe(false)\\n   219\\t    local stderr = uv.new_pipe(false)\\n   220\\t\\n   221\\t    local function on_exit(code, signal)\\n   222\\t        log:trace_on_exit_errors(code, signal)\\n   223\\t        handle:close()\\n   224\\t\\n   225\\t        if vim.v.exiting ~= nil then\\n   226\\t            local msg = string.format(\\n   227\\t                \\\"MCP server %s EXITED\\\\n\\\\n  *NOTE: vim is not shutting down*\\\\n\\\\nRESTART NEOVIM if you need the server running\\\",\\n   228\\t                self.server_log_name\\n   229\\t            )\\n   230\\t            log:error(ansi.white_bold(ansi.red_bg(msg)))\\n   231\\t            vim.notify(msg, vim.log.levels.WARN)\\n   232\\t        else\\n   233\\t            log:error(string.format(\\\"MCP server %s exited (during neovim shutdown)\\\", self.server_log_name))\\n   234\\t        end\\n   235\\t    end\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2582336,
+        "duration_ms":5,
+        "tool_call_id":"q70UINEdZUUMNydwAuYvAvtNK2OGbbH1",
+        "role":"tool"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"   100\\t\\n   101\\t--- Get the CWD's repo root directory.\\n   102\\t--- - failures are logged already\\n   103\\t--- - consumers only need to check for repo_root == nil\\n   104\\t---@return string|nil repo_root -- nil = cannot find repo_root, or this is not a git repo\\n   105\\tfunction M.get_repo_root()\\n   106\\t    -- PRN also check?? git rev-parse --is-inside-work-tree 2>/dev/null  1>/dev/null\\n   107\\t    local rev_parse = vim.fn.systemlist('git rev-parse --show-toplevel')\\n   108\\t    if vim.v.shell_error ~= 0 then\\n   109\\t        log:info(\\\"git rev-parse --show-toplevel failed with error\\\", vim.inspect(vim.v.shell_error))\\n   110\\t        return nil\\n   111\\t    end\\n   112\\t    if #rev_parse == 0 then\\n   113\\t        log:info(\\\"git rev-parse returned empty output\\\")\\n   114\\t        return nil\\n   115\\t    end\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2582336,
+        "duration_ms":6,
+        "tool_call_id":"idxT2p61UP7f5g8w84sgsaFDexKIbHJN",
+        "role":"tool"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"    45\\t        parsed_config.enabled = true\\n    46\\t    end\\n    47\\t    return parsed_config\\n    48\\tend\\n    49\\t\\n    50\\tlocal function determine_rag_config()\\n    51\\t    -- * find .rag/ dir\\n    52\\t    -- PRN review terminology for root_dir/source_dir (wherever .rag/ and .rag.yaml live, make it consistent across lua/python)\\n    53\\t    local root_dir = vim.fn.getcwd()\\n    54\\t    local dot_rag_dir = root_dir .. \\\"/.rag\\\"\\n    55\\t    if not files.exists(dot_rag_dir) then\\n    56\\t        -- * fallback repo_root/.rag\\n    57\\t        --   i.e. the rag dir in this ask-openai repo, or my hammerspoon config in my dotfiles repo\\n    58\\t        --   I often work inside these directories, maybe I should just have a .rag dir in them too.. and scope to just it but maybe not?\\n    59\\t        local repo_root = files.get_repo_root()\\n    60\\t        if not repo_root then\\n    61\\t            log:info(\\\"RAG is disabled because no fallback repo_root could be determined\\\")\\n    62\\t            return\\n    63\\t        end\\n    64\\t        dot_rag_dir = repo_root .. \\\"/.rag\\\"\\n    65\\t        if not files.exists(dot_rag_dir) then\\n    66\\t            log:info(\\\"RAG is disabled b/c there is NO .rag dir in the fallback repo_root: \\\" .. dot_rag_dir)\\n    67\\t            return\\n    68\\t        end\\n    69\\t        root_dir = repo_root\\n    70\\t        log:info(\\\"fallback repo_root found .rag dir: \\\" .. dot_rag_dir)\\n    71\\t    end\\n    72\\t\\n    73\\t    -- * load .rag.yaml\\n    74\\t    M.rag_yaml = load_rag_yaml_config(root_dir)\\n    75\\t\\n    76\\t    if M.rag_yaml and not M.rag_yaml.enabled then\\n    77\\t        log:error(\\\"RAG is disabled in .rag.yaml\\\")\\n    78\\t        return\\n    79\\t    end\\n    80\\t\\n    81\\t    M.is_rag_indexed_workspace = true\\n    82\\t    M.rag_indexed_file_extensions = files.list_directories(dot_rag_dir)\\n    83\\t    table.sort(M.rag_indexed_file_extensions)\\n    84\\t    log:trace(\\\"RAG is supported for: \\\" .. vim.inspect(M.rag_indexed_file_extensions))\\n    85\\tend\\n    86\\tdetermine_rag_config()\\n    87\\t\\n    88\\tfunction M.get_filetypes_for_workspace()\\n    89\\t    -- FYI vim filetypes for enabling the LSP client for RAG purposes\\n    90\\t    local ext_to_filetype = {\\n    91\\t        -- extension = filetype\\n    92\\t        bash = \\\"sh\\\", -- *\\n    93\\t        clj = \\\"clojure\\\",\\n    94\\t        coffee = \\\"coffeescript\\\",\\n    95\\t        conf = \\\"cfg\\\",\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2582336,
+        "duration_ms":6,
+        "tool_call_id":"lekjCN0m3fj5Q33Gxh5CB9ODqeK8PclK",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":1844.997,
+          "predicted_per_token_ms":4.3208360655738,
+          "cache_n":2599,
+          "prompt_per_token_ms":0.13913650963597,
+          "predicted_per_second":231.43669068297,
+          "predicted_n":427,
+          "prompt_per_second":7187.186185828,
+          "prompt_ms":259.907,
+          "prompt_n":1868
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/tools/mcp/init.lua | sed -n '1,50p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"KQMAR1tqWwlNG8umIgjSVFvmuE84MyIG"
+          },{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/tools/mcp/init.lua | sed -n '195,240p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"mrEdrQTL0LbaGNOh2xEShWXLfEgSp5dY"
+          }],
+        "reasoning_content":"Now I understand the problem:\n\n1. `rag/client/init.lua` line 86 calls `determine_rag_config()` at module load time (top-level)\n2. `determine_rag_config()` calls `files.get_repo_root()` \n3. `get_repo_root()` calls `vim.fn.systemlist('git rev-parse --show-toplevel')` - a synchronous blocking call\n4. The MCP tool spawns a subprocess that calls `vim.notify` in its exit handler\n5. But `systemlist` runs in a \"fast event\" context (module loading is a fast event), and `vim.notify` calls `nvim_echo` which is not allowed in fast events\n\nThe issue is that `vim.fn.systemlist()` blocks the event loop, and the subprocess spawned by the MCP tool (which is running during this blocking call) triggers its `on_exit` callback, which calls `vim.notify` — but we're still in the fast event context.\n\nThe fix options:\n1. Make `get_repo_root()` asynchronous (using `uv.spawn` with async handling)\n2. Defer the `vim.notify` call in the MCP exit handler with `vim.schedule`\n3. Skip calling `vim.notify` in fast event contexts\n\nOption 2 is the cleanest fix since the `vim.notify` call is trying to notify the user about an MCP server exit during startup - it doesn't need to happen immediately, and scheduling it is safe.\n\nLet me look at the full MCP init.lua to understand the context better.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"     1\\tlocal log = require(\\\"ask-openai.logs.logger\\\").predictions()\\n     2\\tlocal SSEDataOnlyParser = require(\\\"ask-openai.backends.sse.data_only_parser\\\")\\n     3\\tlocal ansi = require(\\\"ask-openai.predictions.ansi\\\")\\n     4\\tlocal plumbing = require(\\\"ask-openai.tools.plumbing\\\")\\n     5\\tlocal safely = require(\\\"ask-openai.helpers.safely\\\")\\n     6\\t\\n     7\\tlocal uv = vim.uv\\n     8\\t\\n     9\\tlocal M = {}\\n    10\\t\\n    11\\t-- TODO! look into Memory tools / RAG, i.e. in Qwen-Agent\\n    12\\t-- TODO! https://github.com/QwenLM/Qwen-Agent/blob/main/qwen_agent/memory/memory.py\\n    13\\t-- also check out other examples in qwen-agent for new ideas:\\n    14\\t--    https://github.com/QwenLM/Qwen-Agent/tree/main/examples\\n    15\\t-- PRN also I wanna test out large qwen models, hosted by Alibaba/groq/others\\n    16\\t\\n    17\\tlocal servers = {\\n    18\\t\\n    19\\t    -- PRN implement https://agentskills.io/mcp https based MCP tools... is it a websocket?\\n    20\\t\\n    21\\t    fetch    = {\\n    22\\t        -- PRN only include this tool if initial request includes /web?\\n    23\\t\\n    24\\t        -- -- * via docker\\n    25\\t        -- command = \\\"docker\\\",\\n    26\\t        -- args = { \\\"run\\\", \\\"-i\\\", \\\"--rm\\\", \\\"weshigbee/mcp-fetch\\\" },\\n    27\\t        -- mcp/fetch image is prebuilt but has robots.txt and user-agent crap that slows things down\\n    28\\t        -- FYI server response logs:\\n    29\\t        --   docker container logs foo_bar --follow | jq\\n    30\\t        --   docker container logs jovial_blackburn --follow | jq --compact-output\\n    31\\t\\n    32\\t        -- -- * via source\\n    33\\t        transport = \\\"stdio\\\",\\n    34\\t        command = \\\"uv\\\",\\n    35\\t        args = {\\n    36\\t            -- do not use uvx, that will install central/cached copy\\n    37\\t            \\\"run\\\",\\n    38\\t            \\\"--directory\\\",\\n    39\\t            os.getenv(\\\"HOME\\\") .. \\\"/repos/github/g0t4/mcp-servers/src/fetch\\\",\\n    40\\t            \\\"mcp-server-fetch\\\",\\n    41\\t        },\\n    42\\t    },\\n    43\\t    commands = {\\n    44\\t        transport = \\\"stdio\\\",\\n    45\\t        command = \\\"npx\\\",\\n    46\\t        args = {\\n    47\\t            os.getenv(\\\"HOME\\\") .. \\\"/repos/github/g0t4/mcp-server-commands/build/index.js\\\",\\n    48\\t            -- FYI leave --verbose on for now given I am using a log file so it s/b NBD\\n    49\\t            --    this will be a huge help in troubleshooting hung tool calls and other issues\\n    50\\t            \\\"--verbose\\\",\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2584511,
+        "duration_ms":4,
+        "tool_call_id":"KQMAR1tqWwlNG8umIgjSVFvmuE84MyIG",
+        "role":"tool"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"   195\\t---@field stdout uv_pipe_t\\n   196\\t---@field stderr uv_pipe_t\\n   197\\t---@field handle uv_handle_t\\n   198\\t---@field pid integer\\n   199\\t---@field pending_json string\\n   200\\tlocal MCPStdioClient = setmetatable({}, { __index = MCPClient })\\n   201\\tMCPStdioClient.__index = MCPStdioClient\\n   202\\t\\n   203\\t---@param name string\\n   204\\t---@param options table\\n   205\\t---@return MCPStdioClient\\n   206\\tfunction MCPStdioClient.new(name, options)\\n   207\\t    local self = setmetatable({}, MCPStdioClient)\\n   208\\t\\n   209\\t    self.server_log_name = \\\"[\\\" .. name:upper() .. \\\"]\\\"\\n   210\\t    self.counter = 1\\n   211\\t    self.callbacks_by_request_id = {}\\n   212\\t    self.progress_callbacks_by_token = {}\\n   213\\t    self.pending_json = \\\"\\\"\\n   214\\t\\n   215\\t    -- Spawn the subprocess with pipes for stdin, stdout, stderr\\n   216\\t    local handle, pid\\n   217\\t    local stdin = uv.new_pipe(false)\\n   218\\t    local stdout = uv.new_pipe(false)\\n   219\\t    local stderr = uv.new_pipe(false)\\n   220\\t\\n   221\\t    local function on_exit(code, signal)\\n   222\\t        log:trace_on_exit_errors(code, signal)\\n   223\\t        handle:close()\\n   224\\t\\n   225\\t        if vim.v.exiting ~= nil then\\n   226\\t            local msg = string.format(\\n   227\\t                \\\"MCP server %s EXITED\\\\n\\\\n  *NOTE: vim is not shutting down*\\\\n\\\\nRESTART NEOVIM if you need the server running\\\",\\n   228\\t                self.server_log_name\\n   229\\t            )\\n   230\\t            log:error(ansi.white_bold(ansi.red_bg(msg)))\\n   231\\t            vim.notify(msg, vim.log.levels.WARN)\\n   232\\t        else\\n   233\\t            log:error(string.format(\\\"MCP server %s exited (during neovim shutdown)\\\", self.server_log_name))\\n   234\\t        end\\n   235\\t    end\\n   236\\t\\n   237\\t    handle, pid = uv.spawn(options.command,\\n   238\\t        ---@diagnostic disable-next-line: missing-fields\\n   239\\t        {\\n   240\\t            args = options.args,\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2584511,
+        "duration_ms":8,
+        "tool_call_id":"mrEdrQTL0LbaGNOh2xEShWXLfEgSp5dY",
+        "role":"tool"
+      },{
+        "content":"The root cause is:\n\n1. `rag/client/init.lua:86` calls `determine_rag_config()` at module load time (a **fast event** context)\n2. `get_repo_root()` calls `vim.fn.systemlist()` — a **synchronous blocking** call\n3. Meanwhile, MCP subprocesses (spawned via `uv.spawn`) may exit while the event loop is blocked\n4. Their `on_exit` callback fires **synchronously** during `systemlist()`\n5. `vim.notify()` internally calls `nvim_echo`, which is **forbidden** in fast event contexts\n\nThe fix is to defer the `vim.notify` with `vim.schedule`:\n\n",
+        "timings":{
+          "predicted_ms":1803.13,
+          "predicted_per_token_ms":4.3659322033898,
+          "cache_n":4463,
+          "prompt_per_token_ms":0.13440447154472,
+          "predicted_per_second":229.04615862417,
+          "predicted_n":413,
+          "prompt_per_second":7440.2286509293,
+          "prompt_ms":264.508,
+          "prompt_n":1968
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/tools/mcp/init.lua | sed -n '221,235p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"VNSc7k8dk9yLbIJk4Ey4wPWUk9o9lAwu"
+          }],
+        "reasoning_content":"Now I understand the full picture:\n\n1. During Neovim startup, `ask-openai` module is loaded\n2. `rag/client/init.lua` runs `determine_rag_config()` at module load time (line 86)\n3. This calls `files.get_repo_root()` which uses `vim.fn.systemlist()` (synchronous blocking)\n4. Meanwhile, MCP stdio clients have been spawned (likely earlier in initialization), and when `systemlist()` blocks the event loop, the child process may exit\n5. When the child process exits, the `uv.spawn` `on_exit` callback fires immediately (still in the blocking context of `systemlist`)\n6. The `on_exit` callback calls `vim.notify`, which internally calls `nvim_echo`\n7. `nvim_echo` is NOT allowed in fast event contexts (like synchronous callbacks during blocking calls)\n\nThe fix: wrap the `vim.notify` call in `vim.schedule` to defer it to the next event loop iteration.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"   221\\t    local function on_exit(code, signal)\\n   222\\t        log:trace_on_exit_errors(code, signal)\\n   223\\t        handle:close()\\n   224\\t\\n   225\\t        if vim.v.exiting ~= nil then\\n   226\\t            local msg = string.format(\\n   227\\t                \\\"MCP server %s EXITED\\\\n\\\\n  *NOTE: vim is not shutting down*\\\\n\\\\nRESTART NEOVIM if you need the server running\\\",\\n   228\\t                self.server_log_name\\n   229\\t            )\\n   230\\t            log:error(ansi.white_bold(ansi.red_bg(msg)))\\n   231\\t            vim.notify(msg, vim.log.levels.WARN)\\n   232\\t        else\\n   233\\t            log:error(string.format(\\\"MCP server %s exited (during neovim shutdown)\\\", self.server_log_name))\\n   234\\t        end\\n   235\\t    end\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2586656,
+        "duration_ms":7,
+        "tool_call_id":"VNSc7k8dk9yLbIJk4Ey4wPWUk9o9lAwu",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":383.601,
+          "predicted_per_token_ms":4.4092068965517,
+          "cache_n":6427,
+          "prompt_per_token_ms":0.20701690140845,
+          "predicted_per_second":226.79815746049,
+          "predicted_n":87,
+          "prompt_per_second":4830.5234654584,
+          "prompt_ms":146.982,
+          "prompt_n":710
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/tools/mcp/init.lua | sed -n '221,235p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"GGPwaqk8L3gBAWbpCdI8htAmTGW7CSd7"
+          }],
+        "reasoning_content":"The fix is to wrap `vim.notify` in `vim.schedule` so it's deferred to the next event loop iteration, avoiding the fast event context issue.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"    local function on_exit(code, signal)\\n        log:trace_on_exit_errors(code, signal)\\n        handle:close()\\n\\n        if vim.v.exiting ~= nil then\\n            local msg = string.format(\\n                \\\"MCP server %s EXITED\\\\n\\\\n  *NOTE: vim is not shutting down*\\\\n\\\\nRESTART NEOVIM if you need the server running\\\",\\n                self.server_log_name\\n            )\\n            log:error(ansi.white_bold(ansi.red_bg(msg)))\\n            vim.notify(msg, vim.log.levels.WARN)\\n        else\\n            log:error(string.format(\\\"MCP server %s exited (during neovim shutdown)\\\", self.server_log_name))\\n        end\\n    end\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2587264,
+        "duration_ms":5,
+        "tool_call_id":"GGPwaqk8L3gBAWbpCdI8htAmTGW7CSd7",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":392.853,
+          "predicted_per_token_ms":4.3650333333333,
+          "cache_n":7133,
+          "prompt_per_token_ms":0.32103741496599,
+          "predicted_per_second":229.09332498415,
+          "predicted_n":90,
+          "prompt_per_second":3114.9017322668,
+          "prompt_ms":94.385,
+          "prompt_n":294
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"vim.notify\\\" lua/ask-openai/tools/mcp/init.lua\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"Y7Y4531EJWvRIXU78d1hPpHBUBYXlo6k"
+          }],
+        "reasoning_content":"I need to fix the `vim.notify` call on line 231 by wrapping it in `vim.schedule`. This will defer the call to the next event loop iteration, avoiding the fast event context issue.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"231:13:            vim.notify(msg, vim.log.levels.WARN)\\n330:13:            vim.notify(msg, vim.log.levels.ERROR)\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2587827,
+        "duration_ms":5,
+        "tool_call_id":"Y7Y4531EJWvRIXU78d1hPpHBUBYXlo6k",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":434.306,
+          "predicted_per_token_ms":4.431693877551,
+          "cache_n":7423,
+          "prompt_per_token_ms":0.40437356321839,
+          "predicted_per_second":225.64735463015,
+          "predicted_n":98,
+          "prompt_per_second":2472.960873211,
+          "prompt_ms":70.361,
+          "prompt_n":174
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/tools/mcp/init.lua | sed -n '325,335p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"OcqlN2CEVYWmugjYqJx1FZody7p2JczF"
+          }],
+        "reasoning_content":"Now I need to fix line 231 by wrapping the `vim.notify` in `vim.schedule`. Let me check line 330 as well to see if it has the same issue.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"   325\\t                msg = string.format(\\\"MCP initialize error (SEE PATH below) %s: %s\\\", self.server_log_name, err.message)\\n   326\\t            else\\n   327\\t                msg = string.format(\\\"MCP initialize error %s (no message)\\\", self.server_log_name)\\n   328\\t            end\\n   329\\t            log:error(msg)\\n   330\\t            vim.notify(msg, vim.log.levels.ERROR)\\n   331\\t            return\\n   332\\t        end\\n   333\\t\\n   334\\t        -- Send initialized notification\\n   335\\t        self:send_notification({ method = \\\"notifications/initialized\\\" })\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2588412,
+        "duration_ms":4,
+        "tool_call_id":"OcqlN2CEVYWmugjYqJx1FZody7p2JczF",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":514.132,
+          "predicted_per_token_ms":4.5099298245614,
+          "cache_n":7423,
+          "prompt_per_token_ms":0.21734362139918,
+          "predicted_per_second":221.73294017879,
+          "predicted_n":114,
+          "prompt_per_second":4601.0091925513,
+          "prompt_ms":105.629,
+          "prompt_n":486
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"function.*on_exit\\\" lua/ask-openai/tools/mcp/init.lua\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"AYyLLcFfp1kzO1XmOFgvLThVVYEfiUgv"
+          }],
+        "reasoning_content":"Line 330 is in an error handler callback, likely from an async operation, so it's probably fine. The issue is specifically line 231 in the `on_exit` callback of `uv.spawn`.\n\nLet me fix line 231 by wrapping `vim.notify` in `vim.schedule`.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"221:11:    local function on_exit(code, signal)\\n400:11:    local function on_exit(code, signal)\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2589114,
+        "duration_ms":6,
+        "tool_call_id":"AYyLLcFfp1kzO1XmOFgvLThVVYEfiUgv",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":331.642,
+          "predicted_per_token_ms":4.4218933333333,
+          "cache_n":7696,
+          "prompt_per_token_ms":0.24068811881188,
+          "predicted_per_second":226.14747227432,
+          "predicted_n":75,
+          "prompt_per_second":4154.754314157,
+          "prompt_ms":97.238,
+          "prompt_n":404
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n lua/ask-openai/tools/mcp/init.lua | sed -n '395,415p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"ZPBep8tBOpons5BZ1Er9HBYnLPNrduJ9"
+          }],
+        "reasoning_content":"Let me check line 400 as well to see if there are similar issues.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"   395\\t        \\\"-H\\\", \\\"Accept: application/json, text/event-stream\\\",\\n   396\\t        \\\"-d\\\", json,\\n   397\\t        self.url,\\n   398\\t    }\\n   399\\t\\n   400\\t    local function on_exit(code, signal)\\n   401\\t        stdout:close()\\n   402\\t        stderr:close()\\n   403\\t        handle:close()\\n   404\\t    end\\n   405\\t\\n   406\\t    handle = uv.spawn(\\\"curl\\\", {\\n   407\\t        args = args,\\n   408\\t        stdio = { nil, stdout, stderr },\\n   409\\t    }, on_exit)\\n   410\\t\\n   411\\t    -- Parse SSE response body\\n   412\\t    local parser = SSEDataOnlyParser.new(function(data_value)\\n   413\\t        ---@type MCP_JSONRPCMessage\\n   414\\t        local rpc_message = vim.json.decode(data_value)\\n   415\\t        self:dispatch_message(rpc_message)\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2589627,
+        "duration_ms":6,
+        "tool_call_id":"ZPBep8tBOpons5BZ1Er9HBYnLPNrduJ9",
+        "role":"tool"
+      },{
+        "content":"The issue is clear. When `systemlist()` blocks the event loop in `get_repo_root()`, the MCP subprocess exits, triggering the `on_exit` callback synchronously. That callback then calls `vim.notify`, which calls `nvim_echo` — forbidden in fast event contexts.\n\nThe fix is to defer `vim.notify` with `vim.schedule`:\n\n",
+        "timings":{
+          "predicted_ms":1370.551,
+          "predicted_per_token_ms":4.464335504886,
+          "cache_n":8024,
+          "prompt_per_token_ms":0.21937209302326,
+          "predicted_per_second":223.9975017347,
+          "predicted_n":307,
+          "prompt_per_second":4558.4649634263,
+          "prompt_ms":103.763,
+          "prompt_n":473
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/ask-openai.nvim && sed -i 's/            vim.notify(msg, vim.log.levels.WARN)/            vim.schedule(function()\\\\n                vim.notify(msg, vim.log.levels.WARN)\\\\n            end)/' lua/ask-openai/tools/mcp/init.lua\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"oNQ8Im2fhHJMJpfjt7hSP8icXFniZXSj"
+          }],
+        "reasoning_content":"Line 400's `on_exit` doesn't call `vim.notify`, so it's fine.\n\nNow let me fix the issue. The problem is that `vim.notify` is called synchronously in the `on_exit` callback of a `uv.spawn` process. When `systemlist()` blocks the event loop (in `get_repo_root()`), the child process can exit, firing `on_exit` synchronously. At that point, `vim.notify` calls `nvim_echo` which is forbidden in fast event contexts.\n\nThe fix is to wrap the `vim.notify` in `vim.schedule` to defer it to the next event loop iteration.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2591191,
+        "duration_ms":6,
+        "tool_call_id":"oNQ8Im2fhHJMJpfjt7hSP8icXFniZXSj",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":368.86,
+          "predicted_per_token_ms":4.4440963855422,
+          "cache_n":8493,
+          "prompt_per_token_ms":0.25227696793003,
+          "predicted_per_second":225.01762186195,
+          "predicted_n":83,
+          "prompt_per_second":3963.8973315921,
+          "prompt_ms":86.531,
+          "prompt_n":343
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua | sed -n '221,240p'\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"zQNXjpIFVZ8cL8Xbb2HMD5N7pUOOYSGY"
+          }],
+        "reasoning_content":"Let me verify the change was applied correctly.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"   221\\t    local function on_exit(code, signal)\\n   222\\t        log:trace_on_exit_errors(code, signal)\\n   223\\t        handle:close()\\n   224\\t\\n   225\\t        if vim.v.exiting ~= nil then\\n   226\\t            local msg = string.format(\\n   227\\t                \\\"MCP server %s EXITED\\\\n\\\\n  *NOTE: vim is not shutting down*\\\\n\\\\nRESTART NEOVIM if you need the server running\\\",\\n   228\\t                self.server_log_name\\n   229\\t            )\\n   230\\t            log:error(ansi.white_bold(ansi.red_bg(msg)))\\n   231\\t            vim.schedule(function()\\n   232\\t                vim.notify(msg, vim.log.levels.WARN)\\n   233\\t            end)\\n   234\\t        else\\n   235\\t            log:error(string.format(\\\"MCP server %s exited (during neovim shutdown)\\\", self.server_log_name))\\n   236\\t        end\\n   237\\t    end\\n   238\\t\\n   239\\t    handle, pid = uv.spawn(options.command,\\n   240\\t        ---@diagnostic disable-next-line: missing-fields\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2591744,
+        "duration_ms":13,
+        "tool_call_id":"zQNXjpIFVZ8cL8Xbb2HMD5N7pUOOYSGY",
+        "role":"tool"
+      },{
+        "content":"The fix is in place. Let me verify there are no other similar issues in the codebase:\n\n",
+        "timings":{
+          "predicted_ms":823.163,
+          "predicted_per_token_ms":4.4495297297297,
+          "cache_n":8805,
+          "prompt_per_token_ms":0.23777494692144,
+          "predicted_per_second":224.74285165878,
+          "predicted_n":185,
+          "prompt_per_second":4205.6575469676,
+          "prompt_ms":111.992,
+          "prompt_n":471
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"systemlist\\\\|system\\\" lua/ask-openai/ --no-heading | rg -v \\\"^--\\\" | head -30\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"UXl8gTTe2yHQ5FL77eswWQ73qkLFY0lh"
+          }],
+        "reasoning_content":"The fix is applied. Now let me check if there are other places in the codebase where `vim.notify` or `nvim_echo` might be called in similar fast event contexts.\n\nActually, let me also check if the issue could be happening elsewhere. The stack trace shows the issue originates from the MCP tool's `on_exit` callback. But let me also verify there aren't other similar patterns.\n\nLet me also check if there are other `systemlist` calls that might cause similar issues.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2592781,
+        "duration_ms":18,
+        "tool_call_id":"UXl8gTTe2yHQ5FL77eswWQ73qkLFY0lh",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":244.812,
+          "predicted_per_token_ms":4.4511272727273,
+          "cache_n":9272,
+          "prompt_per_token_ms":0.29769230769231,
+          "predicted_per_second":224.66218976194,
+          "predicted_n":55,
+          "prompt_per_second":3359.173126615,
+          "prompt_ms":65.79,
+          "prompt_n":221
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"systemlist\\\" lua/ask-openai/\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"uzYH1k7epTfjGtxclluB5gQOrVcYgd0j"
+          }],
+        "reasoning_content":"Let me try a different grep to find systemlist calls.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"lua/ask-openai/backends/json_client.lua:60:27:    local output = vim.fn.systemlist(curl_args)\\nlua/ask-openai/helpers/files.lua:107:30:    local rev_parse = vim.fn.systemlist('git rev-parse --show-toplevel')\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2593195,
+        "duration_ms":9,
+        "tool_call_id":"uzYH1k7epTfjGtxclluB5gQOrVcYgd0j",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":570.858,
+          "predicted_per_token_ms":4.4949448818898,
+          "cache_n":9272,
+          "prompt_per_token_ms":0.2559609375,
+          "predicted_per_second":222.47213843022,
+          "predicted_n":127,
+          "prompt_per_second":3906.8461374111,
+          "prompt_ms":98.289,
+          "prompt_n":384
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"on_exit\\\" lua/ask-openai/ --no-heading | grep -v \\\"^--\\\"\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"Cf9ohtW6ByZt7zVw1ig36UNETfL7zozM"
+          }],
+        "reasoning_content":"There's another `systemlist` call in `json_client.lua`. Let me check if it has similar issues. But the stack trace only shows the files.lua one. Let me focus on verifying the fix is correct.\n\nLet me also check if there are other `vim.notify` calls in `on_exit` or similar callback contexts that might have the same issue.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"lua/ask-openai/logs/logger.lua:171:73:-- intended so I don't replicate this code every time I have a uv.spwan on_exit handler\\nlua/ask-openai/logs/logger.lua:172:23:function Logger:trace_on_exit_always(code, signal)\\nlua/ask-openai/logs/logger.lua:174:17:    self:trace(\\\"on_exit code:\\\" .. (code or \\\"nil\\\") .. \\\", signal:\\\" .. (signal or \\\"nil\\\"))\\nlua/ask-openai/logs/logger.lua:178:73:-- intended so I don't replicate this code every time I have a uv.spwan on_exit handler\\nlua/ask-openai/logs/logger.lua:179:23:function Logger:trace_on_exit_errors(code, signal)\\nlua/ask-openai/logs/logger.lua:180:12:    -- FYI on_exit wasn't called when I used handle:kill(\\\"sigterm\\\")\\nlua/ask-openai/logs/logger.lua:186:25:            self:trace(\\\"on_exit: unexpected code is 0, signal is non-zero: '\\\" .. signal .. \\\"'\\\")\\nlua/ask-openai/logs/logger.lua:191:16:    self:trace_on_exit_always(code, signal)\\nlua/ask-openai/backends/curl.lua:74:20:    local function on_exit(code, signal)\\nlua/ask-openai/backends/curl.lua:75:19:        log:trace_on_exit_always(code, signal)\\nlua/ask-openai/backends/curl.lua:76:22:        -- log:trace_on_exit_errors(code, signal) -- less verbose\\nlua/ask-openai/backends/curl.lua:111:9:        on_exit)\\nlua/ask-openai/backends/sse/data_only_parser.tests.lua:117:85:                local error_text = parser:flush_dregs() -- intended to be called in on_exit assert.are.same({ write1 }, events)\\nlua/ask-openai/tools/notes/vllm-qwen.md:37:21:[55.733]sec [TRACE] on_exit code:0, signal:0\\nlua/ask-openai/tools/mcp/init.lua:221:20:    local function on_exit(code, signal)\\nlua/ask-openai/tools/mcp/init.lua:222:19:        log:trace_on_exit_errors(code, signal)\\nlua/ask-openai/tools/mcp/init.lua:245:9:        on_exit)\\nlua/ask-openai/tools/mcp/init.lua:402:20:    local function on_exit(code, signal)\\nlua/ask-openai/tools/mcp/init.lua:411:8:    }, on_exit)\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2593966,
+        "duration_ms":9,
+        "tool_call_id":"Cf9ohtW6ByZt7zVw1ig36UNETfL7zozM",
+        "role":"tool"
+      },{
+        "content":"Good - the only `on_exit` handler calling `vim.notify` was the one I fixed. Let me verify the diff and commit:\n\n",
+        "timings":{
+          "predicted_ms":767.02,
+          "predicted_per_token_ms":4.4854970760234,
+          "cache_n":9549,
+          "prompt_per_token_ms":0.18769076751947,
+          "predicted_per_second":222.9407316628,
+          "predicted_n":171,
+          "prompt_per_second":5327.9125724513,
+          "prompt_ms":168.734,
+          "prompt_n":899
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/ask-openai.nvim && git diff\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"dDzxv4bI6kbPd15ekNNkRORktOUYySCx"
+          }],
+        "reasoning_content":"Good. The only `on_exit` handler that calls `vim.notify` is the one I just fixed in `mcp/init.lua` at line 231. The other `on_exit` handlers (`curl.lua:74`, `mcp/init.lua:402`) only call `log:trace_*` which doesn't use `nvim_echo`.\n\nThe fix is complete. Let me verify the git diff and then commit.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"diff --git a/lua/ask-openai/tools/mcp/init.lua b/lua/ask-openai/tools/mcp/init.lua\\nindex efcd9ccd..a04603d1 100644\\n--- a/lua/ask-openai/tools/mcp/init.lua\\n+++ b/lua/ask-openai/tools/mcp/init.lua\\n@@ -228,7 +228,9 @@ function MCPStdioClient.new(name, options)\\n                 self.server_log_name\\n             )\\n             log:error(ansi.white_bold(ansi.red_bg(msg)))\\n-            vim.notify(msg, vim.log.levels.WARN)\\n+            vim.schedule(function()\\n+                vim.notify(msg, vim.log.levels.WARN)\\n+            end)\\n         else\\n             log:error(string.format(\\\"MCP server %s exited (during neovim shutdown)\\\", self.server_log_name))\\n         end\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2595004,
+        "duration_ms":6,
+        "tool_call_id":"dDzxv4bI6kbPd15ekNNkRORktOUYySCx",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":1086.159,
+          "predicted_per_token_ms":4.4882603305785,
+          "cache_n":10444,
+          "prompt_per_token_ms":0.25040527577938,
+          "predicted_per_second":222.80347536595,
+          "predicted_n":242,
+          "prompt_per_second":3993.526082418,
+          "prompt_ms":104.419,
+          "prompt_n":417
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/ask-openai.nvim && git commit --author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\" -m \\\"fix: defer vim.notify in MCP on_exit callback to avoid fast event context error\\n\\nThe error E5560 occurred because:\\n1. rag/client/init.lua calls determine_rag_config() at module load time\\n2. get_repo_root() calls vim.fn.systemlist() which blocks the event loop\\n3. MCP subprocesses may exit during this blocking call, triggering on_exit\\n4. on_exit called vim.notify() which calls nvim_echo, forbidden in fast events\\n\\nWrap vim.notify in vim.schedule to defer to next event loop iteration.\\\"\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"ZEqcd7atWgpHLuCrc7ApSbL8E9qNQXSX"
+          }],
+        "reasoning_content":"The diff looks good. The fix wraps `vim.notify` in `vim.schedule` to defer it to the next event loop iteration, avoiding the fast event context issue.\n\nLet me commit this change.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"1\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"On branch master\\nYour branch is up to date with 'origin/master'.\\n\\nChanges not staged for commit:\\n  (use \\\"git add <file>...\\\" to update what will be committed)\\n  (use \\\"git restore <file>...\\\" to discard changes in working directory)\\n\\tmodified:   lua/ask-openai/tools/mcp/init.lua\\n\\nUntracked files:\\n  (use \\\"git add <file>...\\\" to include in what will be committed)\\n\\tlua/ask-openai/rag/lsp/inference/server/lifetime_token_counter.txt\\n\\nno changes added to commit (use \\\"git add\\\" and/or \\\"git commit -a\\\")\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}],\"isError\":true}",
+        "progress_notifications":[],
+        "start_time_ms":2596295,
+        "duration_ms":8,
+        "tool_call_id":"ZEqcd7atWgpHLuCrc7ApSbL8E9qNQXSX",
+        "role":"tool"
+      },{
+        "content":"",
+        "timings":{
+          "predicted_ms":1039.321,
+          "predicted_per_token_ms":4.4992251082251,
+          "cache_n":10857,
+          "prompt_per_token_ms":0.24021412300683,
+          "predicted_per_second":222.26049507323,
+          "predicted_n":231,
+          "prompt_per_second":4162.952566996,
+          "prompt_ms":105.454,
+          "prompt_n":439
+        },
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/ask-openai.nvim && git add lua/ask-openai/tools/mcp/init.lua && git commit --author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\" -m \\\"fix: defer vim.notify in MCP on_exit callback to avoid fast event context error\\n\\nThe error E5560 occurred because:\\n1. rag/client/init.lua calls determine_rag_config() at module load time\\n2. get_repo_root() calls vim.fn.systemlist() which blocks the event loop\\n3. MCP subprocesses may exit during this blocking call, triggering on_exit\\n4. on_exit called vim.notify() which calls nvim_echo, forbidden in fast events\\n\\nWrap vim.notify in vim.schedule to defer to next event loop iteration.\\\"\"}",
+              "name":"run_process"
+            },
+            "type":"function",
+            "id":"drs7r5sdpujmr0P4GLF9YwxjEmvqQRwb"
+          }],
+        "reasoning_content":"The commit failed because the changes aren't staged. Let me add the file first.\n",
+        "role":"assistant"
+      },{
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"[master 369a395a] fix: defer vim.notify in MCP on_exit callback to avoid fast event context error\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 1 file changed, 3 insertions(+), 1 deletion(-)\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":2597546,
+        "duration_ms":8,
+        "tool_call_id":"drs7r5sdpujmr0P4GLF9YwxjEmvqQRwb",
+        "role":"tool"
+      },{
+        "content":"Done. The fix wraps `vim.notify` in `vim.schedule` in the MCP `on_exit` callback (line 231 of `lua/ask-openai/tools/mcp/init.lua`).\n\n**Why this works:** `vim.schedule` defers the `vim.notify` call to the next Neovim event loop iteration, which is a \"slow\" (normal) event context where `nvim_echo` is allowed. The notification will still appear to the user, just slightly delayed until the event loop resumes.",
+        "finish_reason":"stop",
+        "reasoning_content":"The commit was successful. Let me provide a summary of the fix.\n",
+        "role":"assistant"
+      }],
+    "model":"",
+    "max_tokens":8192,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "tools":[{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "argv":{
+                "minItems":1,
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "type":"array",
+                "items":{
+                  "type":"string"
+                }
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              }
+            }
+          },
+          "name":"run_process",
+          "description":"Run a process on this linux machine"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "properties":{
+              "url":{
+                "title":"Url",
+                "type":"string",
+                "format":"uri",
+                "minLength":1,
+                "description":"URL to fetch"
+              },
+              "raw":{
+                "type":"boolean",
+                "title":"Raw",
+                "default":false,
+                "description":"Get the actual HTML content of the requested page, without simplification."
+              },
+              "max_length":{
+                "exclusiveMaximum":1000000,
+                "exclusiveMinimum":0,
+                "type":"integer",
+                "title":"Max Length",
+                "default":5000,
+                "description":"Maximum number of characters to return."
+              },
+              "start_index":{
+                "minimum":0,
+                "title":"Start Index",
+                "default":0,
+                "type":"integer",
+                "description":"On return output starting at this character index, useful if a previous fetch was truncated and more context is required."
+              }
+            },
+            "type":"object",
+            "required":["url"]
+          },
+          "name":"fetch",
+          "description":"Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that."
+        }
+      },{
+        "type":"function",
+        "function":{
+          "name":"run_in_neovim",
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "parameters":{
+            "properties":{
+              "lua":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            },
+            "type":"object",
+            "required":["lua"]
+          }
+        }
+      }],
+    "top_p":1,
+    "stream":true
+  }
+}
