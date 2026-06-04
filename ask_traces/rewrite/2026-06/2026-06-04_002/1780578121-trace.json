@@ -1,0 +1,56 @@
+{
+  "request_body":{
+    "stream":true,
+    "top_p":1,
+    "temperature":1,
+    "max_tokens":8192,
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "messages":[{
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:17-36\n\n\n\n-- * log level constants\nlocal LEVEL_NUMBERS = {\n    TRACE = 0,\n    INFO = 1,\n    WARN = 2,\n    ERROR = 3,\n}\nM.LOG_LEVEL_NUMBERS = LEVEL_NUMBERS\nlocal LEVEL_TEXT_TO_NUMBER = {\n    [\"TRACE\"] = LEVEL_NUMBERS.TRACE,\n    [\"INFO\"]  = LEVEL_NUMBERS.INFO,\n    [\"WARN\"]  = LEVEL_NUMBERS.WARN,\n    [\"ERROR\"] = LEVEL_NUMBERS.ERROR,\n}\nM.LOG_LEVEL_TEXT_TO_NUMBER = LEVEL_TEXT_TO_NUMBER\nlocal LEVEL_NUMBER_TO_TEXT = {\n    [LEVEL_NUMBERS.TRACE] = \"TRACE\",\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/init.lua:179-183\nfunction M.print_verbose(msg, ...)\n    if local_share.is_trace_logging_enabled() then\n        print(msg, ...)\n    end\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:32-51\n    [\"ERROR\"] = LEVEL_NUMBERS.ERROR,\n}\nM.LOG_LEVEL_TEXT_TO_NUMBER = LEVEL_TEXT_TO_NUMBER\nlocal LEVEL_NUMBER_TO_TEXT = {\n    [LEVEL_NUMBERS.TRACE] = \"TRACE\",\n    [LEVEL_NUMBERS.INFO]  = \"INFO\",\n    [LEVEL_NUMBERS.WARN]  = \"WARN\",\n    [LEVEL_NUMBERS.ERROR] = \"ERROR\",\n}\nM.LOG_LEVEL_NUMBER_TO_TEXT = LEVEL_NUMBER_TO_TEXT\nlocal DEFAULT_LOG_LEVEL_NUMBER = LEVEL_NUMBERS.WARN\n\nlocal function load_config()\n    local default = {\n        predictions = { enabled = true },\n        notify_stats = false,\n        rag = { enabled = true },\n        log_threshold_text = LEVEL_NUMBER_TO_TEXT[DEFAULT_LOG_LEVEL_NUMBER],\n        fim = { semantic_grep = { all_files = false } },\n        gptoss = {} -- allow downstream to define defaults\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/apply_patch.lua:128-130\n    function log_it(call_output)\n        log:info(\"manual_test() result\", vim.inspect(call_output))\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:113-117\n\n\n-- * log threshold *\nlocal MAX_LOG_THRESHOLD = 2 -- must always show WARN/ERROR\n\n\n",
+        "role":"user"
+      },{
+        "content":"extract Logger:log_auto_inspect() function that takes the level and args and then use for all levels\n\nHere is the code I selected:\n```lua/ask-openai/logs/logger.lua:92-117\n\nfunction Logger:error(...)\n    self:log(local_share.LOG_LEVEL_NUMBERS.ERROR, ...)\nend\n\nfunction Logger:warn(...)\n    self:log(local_share.LOG_LEVEL_NUMBERS.WARN, ...)\nend\n\nfunction Logger:trace(...)\n    self:log(local_share.LOG_LEVEL_NUMBERS.TRACE, ...)\nend\n\n--- table arguments will be auto vim.inspect'd\nfunction Logger:info(...)\n    -- TODO port auto vim.inspect to other log levels\n    local processed_args = {}\n    for i, arg in ipairs({ ... }) do\n        if type(arg) == \"table\" then\n            processed_args[i] = vim.inspect(arg)\n        else\n            processed_args[i] = arg\n        end\n    end\n    self:log(local_share.LOG_LEVEL_NUMBERS.INFO, unpack(processed_args))\nend\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      },{
+        "reasoning_content":"We need to extract a function Logger:log_auto_inspect(level, ...) that processes args similarly to info, but for any level. Then modify other methods (error, warn, trace, info) to call that new function. Provide code only, no markdown. Ensure indentation preserved. Use snake_case for functions/variables, PascalCase for classes (Logger already PascalCase). Use EmmyLua annotations.\n\nWe'll need to add function definition in logger.lua before the specific methods, maybe after log method definition. Provide annotation: @param level integer, @vararg any. Also note that processed args conversion should happen for tables.\n\nImplement:\n\n---@param level integer\n---@vararg any\nfunction Logger:log_auto_inspect(level, ...)\n    local processed_args = {}\n    for i, arg in ipairs({ ... }) do\n        if type(arg) == \"table\" then\n            processed_args[i] = vim.inspect(arg)\n        else\n            processed_args[i] = arg\n        end\n    end\n    self:log(level, unpack(processed_args))\nend\n\nThen replace each level method:\n\nfunction Logger:error(...)\n    self:log_auto_inspect(local_share.LOG_LEVEL_NUMBERS.ERROR, ...)\nend\n\nSimilarly warn, trace, info can just call log_auto_inspect. Since info already does processing, we can replace it.\n\nMake sure to preserve indentation (4 spaces likely). Provide only modified code snippet? The request: \"extract Logger:log_auto_inspect() function that takes the level and args and then use for all levels\". So we should output the updated code block with the new function and updated methods.\n\nNo markdown.\n\nLet's produce code.",
+        "role":"assistant",
+        "content":"function Logger:log_auto_inspect(level, ...)\n    ---@param level integer\n    ---@vararg any\n    local processed_args = {}\n    for i, arg in ipairs({ ... }) do\n        if type(arg) == \"table\" then\n            processed_args[i] = vim.inspect(arg)\n        else\n            processed_args[i] = arg\n        end\n    end\n    self:log(level, unpack(processed_args))\nend\n\nfunction Logger:error(...)\n    self:log_auto_inspect(local_share.LOG_LEVEL_NUMBERS.ERROR, ...)\nend\n\nfunction Logger:warn(...)\n    self:log_auto_inspect(local_share.LOG_LEVEL_NUMBERS.WARN, ...)\nend\n\nfunction Logger:trace(...)\n    self:log_auto_inspect(local_share.LOG_LEVEL_NUMBERS.TRACE, ...)\nend\n\nfunction Logger:info(...)\n    self:log_auto_inspect(local_share.LOG_LEVEL_NUMBERS.INFO, ...)\nend",
+        "finish_reason":"stop"
+      }]
+  },
+  "last_sse":{
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "id":"chatcmpl-b1BSiCtE3M5XxHyf3r3WHtCtvnNJNgjW",
+    "created":1780578044,
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "predicted_per_second":267.82928926324,
+      "predicted_n":528,
+      "prompt_per_second":7391.0936252708,
+      "prompt_n":1037,
+      "prompt_ms":140.304,
+      "prompt_per_token_ms":0.13529797492768,
+      "predicted_ms":1971.405,
+      "predicted_per_token_ms":3.7337215909091,
+      "cache_n":141
+    }
+  }
+}
