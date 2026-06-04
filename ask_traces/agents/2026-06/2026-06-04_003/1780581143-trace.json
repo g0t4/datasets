@@ -1,0 +1,379 @@
+{
+  "request_body":{
+    "model":"",
+    "max_tokens":8192,
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "temperature":1,
+    "stream":true,
+    "messages":[{
+        "role":"system",
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n"
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/sse/parsers.lua:51-64\nfunction parse_sse_llamacpp_completions(sse)\n    -- FYI response_fields limits fields per SSE...\n    --    I set it to stop prompt and generation_settings on final SSE\n\n    -- {\"index\":0,\"content\":\"\\\",\",\"tokens\":[497],\"stop\":false,\"id_slot\":-1,\"tokens_predicted\":14,\"tokens_evaluated\":1963}\n    -- stop: true => a few fields (it returns entire prompt too so it's huge!... maybe skip logging the prompt field?)\n    -- \"truncated\": false,\n    -- \"stop_type\": \"eos\",\n    -- \"stopping_word\": \"\", -- FYI this is for last token that stopped generation (if applicable) ... and IIRC it does not get added into the content\n    -- log:info(\"sse /completions\", vim.inspect(sse))\n\n    -- ?? reasoning_content ... is there a way for this to be parsed in legacy completions endpoint?\n    return sse.content, sse.stop, sse.stop_type\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:0-6\nlocal local_share = require(\"ask-openai.config.local_share\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal uv = vim.loop\nlocal inspect = require(\"devtools.inspect\")\nlocal Logger = {}\nLogger.__index = Logger\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/sse/parsers.lua:4-30\n---@param sse OpenAIChatCompletionChunk\nfunction parse_sse_oai_chat_completions(sse)\n    local content = \"\"\n    local reasoning_content = \"\"\n    local done = false\n    local finish_reason = nil\n    if sse.choices and sse.choices[1] then\n        local first_choice = sse.choices[1]\n        content = first_choice.delta.content\n        if content == nil or content == vim.NIL then\n            -- content == vim.NIL => with llama-server the first response is content: null b/c it is setting the role to asssistant (maybe to do with roles/channels in harmony parser)... doesn't matter, just ignore it\n            --    vim.NIL == \"content\": null (in the JSON)\n            -- content == nil => then 2+ SSEs are for reasoning and use reasoning_content until thinking is complete (these don't even set the content field, so it's nil in this case)\n            --    skip these too\n            content = \"\"\n        end\n        -- llama-server's /v1/chat/comppletions endpoint uses delta.reasoning_content\n        reasoning_content = first_choice.delta.reasoning_content\n        if not reasoning_content then\n            -- ollama's uses delta.reasoning\n            reasoning_content = first_choice.delta.reasoning\n        end\n        finish_reason = first_choice.finish_reason\n        done = finish_reason ~= nil and finish_reason ~= vim.NIL -- vim.NIL == JSON null\n    end\n    return content, done, finish_reason, reasoning_content\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal completion_logger = require(\"ask-openai.logs.completion_logger\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal AgentWindow = require(\"ask-openai.agents.viewer.window\")\nlocal AgentTrace = require(\"ask-openai.agents.trace\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal LinesBuilder = require(\"ask-openai.agents.viewer.lines_builder\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal formatters = require(\"ask-openai.agents.viewer.formatters\")\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/curl.lua:0-19\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal completion_logger = require(\"ask-openai.logs.completion_logger\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal SSEDataOnlyParser = require(\"ask-openai.backends.sse.data_only_parser\")\nlocal safely = require(\"ask-openai.helpers.safely\")\nlocal json = require('dkjson')\n\nlocal Curl = {}\n\n---@enum CompletionsEndpoints\n_G.CompletionsEndpoints = {\n    -- llama-server non-openai:\n    llamacpp_completions = \"/completions\",\n\n    -- OpenAI compatible:\n    oai_v1_completions = \"/v1/completions\",\n    oai_v1_chat_completions = \"/v1/chat/completions\",\n\n    -- ollama specific\n    ollama_api_generate = \"/api/generate\",\n\n"
+      },{
+        "role":"user",
+        "content":"I want to change the current file ... refctor log sse function (outer one)... have the is raw completion check happen in the function for htat and then just or running both functions together at bottom of outer\n\nFYI, here is my current buffer in Neovim. Use this as context for my request:\n```lua/ask-openai/logs/completion_logger.lua\n\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal json = require(\"dkjson\")\nlocal tables = require(\"ask-openai.helpers.tables\")\n\nlocal M = {\n    last_done = {},\n}\n\n---@param request CurlRequest|CurlRequestForTrace\n---@param frontend StreamingFrontend\n---@return string save_dir\n---@return string trace_id\nfunction M.log_request_with(request, frontend)\n    local save_dir = vim.fn.stdpath(\"state\") .. \"/ask-openai\"\n    if request.type ~= \"\" then\n        -- add `agents/` or `fim/` or `rewrite/` intermediate path\n        save_dir = save_dir .. \"/\" .. request.type\n    end\n    local trace_id = tostring(request.start_time)\n    if frontend.trace then\n        -- multi-turn traces use trace's start_time\n        trace_id = tostring(frontend.trace.start_time)\n    end\n    return save_dir, trace_id\nend\n\n---@param sse_parsed table\n---@param request CurlRequest|CurlRequestForTrace\n---@param frontend StreamingFrontend\nfunction M.log_sse_to_request(sse_parsed, request, frontend)\n    local is_last_sse = sse_parsed.timings -- timings only on last sse\n\n    function M.log_raw_completion_sse()\n        -- * /v1/completions endpoint\n        -- raw as in there is no chat template that is used to transform messages => raw prompt\n        -- instead you provide the raw prompt in the request\n        --\n        -- NOTE: llama.cpp /completions endpoint works with raw prompt and response (content)\n        -- llama.cpp /completions SSEs are split: early SSEs have { content: \"...\", stop: false }\n        -- and the final SSE has { stop: true, timing: true, timings: {...} } WITHOUT content.\n        -- So we accumulate content across events, just like the chat endpoint does for delta.content.\n        --\n        -- TODO modify chat viewers to support this format (.content .request_body.prompt) => can even support raw prompt on regular chat completions too if .__verbose.prompt is present\n        --  if no messages => if prompt => show raw prompt, if content => show raw content\n        --    add model specific syntax prompt highligthing ... at least color key tags like <im_start> in basic chat formats\n        --    could lookup on model id/name\n        --\n        --  TODO look into llama-server option to return .__verbose.content with raw completion even on chat completions and even on streaming responses!\n        --     OR tag it onto my verbose flag that I already read off of request body!\n        local accum = request.accum or {}\n        request.accum = accum\n\n        if sse_parsed.content ~= nil and sse_parsed.content ~= vim.NIL then\n            accum.content = (accum.content or \"\") .. sse_parsed.content\n        end\n\n        if is_last_sse then\n            M.last_done = {\n                sse_parsed = sse_parsed,\n                request    = request,\n                frontend   = frontend,\n            }\n            local trace_data = {\n                -- put content on trace_data top-level\n                content = accum.content,\n            }\n            vim.schedule(function()\n                local no_messages = nil -- b/c not chat endpoint\n                M.save_trace(request, frontend, no_messages, sse_parsed, trace_data)\n            end)\n        end\n    end\n\n    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    -- Replace the original block with a call to the new helper:\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\n    if is_raw_completion then\n        M.log_raw_completion_sse()\n        return\n    end\n\n    function M.log_chat_completion_sse()\n        -- * /v1/chat/completions endpoint llama-server\n        -- FYI delta is the part that changes per SSE, except for last SSE which sets other fields like finish_reason\n        -- * key parts (in order):\n        --\n        -- first delta has role (not split apart on multiple SSEs)\n        -- delta = { content = vim.NIL, role = \"assistant\" },\n        --\n        -- reasoning_content SSEs\n        -- delta = { reasoning_content = \"User\" },\n        --\n        -- content SSEs\n        -- delta = { content = \"---@\" },\n        --\n        -- last SSE choices:\n        -- choices = { { delta = vim.empty_dict(), finish_reason = \"stop\", index = 0 } },\n        -- accum the full message (from streaming SSEs) so I can log for all frontends here\n        local accum = request.accum or {}\n        request.accum = accum\n\n        local choices = sse_parsed.choices\n        if not choices then\n            return\n        end\n        local first = choices[1]\n        if not first then\n            return\n        end\n        local delta = first.delta\n        if not delta then\n            return\n        end\n\n        if delta.role then\n            accum.role = delta.role\n        end\n        if delta.reasoning_content and delta.reasoning_content ~= vim.NIL then\n            accum.reasoning_content = (accum.reasoning_content or \"\") .. delta.reasoning_content\n        end\n        if delta.content and delta.content ~= vim.NIL then\n            accum.content = (accum.content or \"\") .. delta.content\n        end\n        if first.finish_reason and first.finish_reason ~= vim.NIL then\n            accum.finish_reason = first.finish_reason\n        end\n        -- PRN track tool call deltas too? on the response (for output.json)?\n        --   FYI request.body, on next turn, already has the tool call\n        --   so for now, this is not urgent to add to logs here... I can grab trace logs for after model responds to tool call result\n        if is_last_sse then\n            -- store for convenient access in-memory, that way if smth fails on save I can still see it here\n            M.last_done = {\n                sse_parsed = sse_parsed,\n                request = request,\n                frontend = frontend,\n            }\n\n            local messages_snapshot = tables.shallow_copy(request.body.messages or {})\n            -- FYI it is possible the distill in AgentsFrontend has a difference that you need to keep, if so then call save_trace from that spot and not here just for AgentsFrontend (find a way to pass last_sse, that's the only complexity)\n            table.insert(messages_snapshot, accum)\n            vim.schedule(function()\n                M.save_trace(request, frontend, messages_snapshot, sse_parsed, {})\n            end)\n        end\n    end\n\n    M.log_chat_completion_sse()\nend\n\n---@param request CurlRequest|CurlRequestForTrace\n---@param frontend StreamingFrontend\n---@param messages_snapshot? table[]\n---@param last_sse table\nfunction M.save_trace(request, frontend, messages_snapshot, last_sse, trace_data)\n    local save_dir, trace_id = M.log_request_with(request, frontend)\n    -- FYI if this doesn't exist before the save_trace io write happens, the io write will fail silently\n    vim.fn.mkdir(save_dir, \"p\")\n\n    local path = save_dir .. \"/\" .. trace_id .. \"-trace.json\"\n    -- log:info(\"trace path\", path)\n    local file = io.open(path, \"w\")\n    if file then\n        local request_body_copy = tables.shallow_copy(request.body)\n        -- this way I can avoid issues with timing and AgentsFrontend modifying request.body.messages to add its distilled version of the assistant message\n        -- TODO FYI it is confusing that you add the new message to the messages collection that is marked as request_body.messages... maybe you should just store them separately? and nuke request_body.messages to avoid duplication? like top-level messages?\n        if messages_snapshot ~= nil then\n            -- PRN move this out to caller of save_trace? use trace_data object?\n            request_body_copy.messages = messages_snapshot\n        end\n        trace_data = trace_data or {}\n        trace_data.request_body = request_body_copy\n        -- last_sse has:\n        --   .timings (top-level and under .__verbose.timings)\n        --   .__verbose.(prompt, generation_settings)\n        --   .__verbose.content (generated raw outputs, but ONLY for stream=false)\n        trace_data.last_sse = last_sse\n\n        file:write(json.encode(trace_data, { indent = true }))\n        file:close()\n    end\nend\n\nreturn M\n\n```"
+      },{
+        "content":"Looking at the current structure, I'll move the `is_raw_completion` check inside `log_raw_completion_sse` and call both functions at the bottom:\n\n```lua/ask-openai/logs/completion_logger.lua\n<<<<<<< SEARCH\nfunction M.log_sse_to_request(sse_parsed, request, frontend)\n    local is_last_sse = sse_parsed.timings -- timings only on last sse\n\n    function M.log_raw_completion_sse()\n=======\nfunction M.log_sse_to_request(sse_parsed, request, frontend)\n    local is_last_sse = sse_parsed.timings -- timings only on last sse\n\n    function M.log_raw_completion_sse()\n        -- /v1/completions endpoint — raw prompt, no chat template\n        -- Check if this is actually a raw completion SSE before processing\n        local is_raw_completion_sse = sse_parsed.content ~= nil\n        if not is_raw_completion_sse then\n            return\n        end\n>>>>>>> REPLACE\n```\n\n```lua/ask-openai/logs/completion_logger.lua\n<<<<<<< SEARCH\n    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    -- Replace the original block with a call to the new helper:\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\n    if is_raw_completion then\n        M.log_raw_completion_sse()\n        return\n    end\n\n    function M.log_chat_completion_sse()\n=======\n    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    function M.log_chat_completion_sse()\n>>>>>>> REPLACE\n```\n\n```lua/ask-openai/logs/completion_logger.lua\n<<<<<<< SEARCH\n        end\n    end\n\n    M.log_chat_completion_sse()\nend\n=======\n        end\n    end\n\n    M.log_raw_completion_sse()\n    M.log_chat_completion_sse()\nend\n>>>>>>> REPLACE\n```\n\nAlso need to clean up the `log_raw_completion_sse` doc comment that was inline:\n\n```lua/ask-openai/logs/completion_logger.lua\n<<<<<<< SEARCH\n    function M.log_raw_completion_sse()\n        -- /v1/completions endpoint — raw prompt, no chat template\n        -- Check if this is actually a raw completion SSE before processing\n        local is_raw_completion_sse = sse_parsed.content ~= nil\n        if not is_raw_completion_sse then\n            return\n        end\n        -- * /v1/completions endpoint\n=======\n    function M.log_raw_completion_sse()\n        -- /v1/completions endpoint\n>>>>>>> REPLACE\n```\n\nNow the flow is:\n1. `log_raw_completion_sse()` — checks `sse_parsed.content ~= nil` internally; returns early if not a raw completion\n2. `log_chat_completion_sse()` — proceeds normally for chat completions\n3. Both are always called at the bottom; each handles its own guard",
+        "role":"assistant",
+        "reasoning_content":"The user wants me to refactor the `log_sse_to_request` function in `completion_logger.lua`. Currently, it defines two inner functions (`log_raw_completion_sse` and `log_chat_completion_sse`) and then conditionally calls one or the other at the bottom.\n\nThe user wants me to:\n1. Move the `is_raw_completion` check INSIDE the `log_raw_completion_sse` function itself (or rather, restructure so the check happens within each function's logic)\n\n\n2. Have both functions run together at the bottom of the outer function instead of conditionally calling one or the other\n\nLooking at the current structure, the condition `local is_raw_completion = sse_parsed.content ~= nil` determines which function gets called. The user's feedback suggests they want both functions to execute at the end, with the raw completion check happening inside each function's own logic rather than gating the entire function call.\n\nRestructuring this means moving the conditional logic into `log_raw_completion_sse` so it can handle both raw and chat completion cases, while `log_chat_completion_sse` continues processing its own logic. Both functions would then be invoked at the bottom of `log_sse_to_request`, allowing them to each determine whether they should act based on the SSE parsed data.\n\nThe real issue is that `log_raw_completion_sse` is currently designed for raw completions but gets called for everything. I need to add the `is_raw_completion` check inside that function so it only processes the raw completion logic when appropriate, then call both functions at the end of the outer function. I'm seeing the structure now—both functions need to be called unconditionally at the end, but they should each check their own conditions to determine if they should actually execute. The `log_raw_completion_sse` function would verify it's dealing with a raw completion by checking `sse_parsed.content ~= nil`, while `log_chat_completion_sse` would handle the chat-specific logic. This way the outer function delegates to both, and each inner function decides whether to proceed based on its own criteria.\n",
+        "timings":{
+          "predicted_per_second":232.07498107457,
+          "predicted_n":1046,
+          "prompt_per_second":8435.9217300407,
+          "prompt_ms":613.211,
+          "prompt_per_token_ms":0.1185406920549,
+          "predicted_ms":4507.164,
+          "predicted_per_token_ms":4.3089521988528,
+          "prompt_n":5173,
+          "cache_n":0
+        },
+        "tool_calls":[]
+      },{
+        "role":"user",
+        "content":"have at it! "
+      },{
+        "content":"",
+        "role":"assistant",
+        "reasoning_content":"The user wants me to apply the refactoring I just described to the file `lua/ask-openai/logs/completion_logger.lua`.\n\nHere's the plan based on my previous response:\n1. Modify `log_raw_completion_sse` to contain its own `is_raw_completion` check.\n2. Remove the explicit `is_raw_completion` check from the main function body.\n3. Call both `M.log_raw_completion_sse()` and `M.log_chat_completion_sse()` at the bottom.\n\nLet's do the actual file editing using `run_process` to edit the file with a Lua script or `sed`. Actually, since it's a specific block replacement, I'll just use a python script or `sed` to modify the file. Or better, I'll write the new file content using a `run_process` command with `cat` or just use `sed`.\n\nWait, I can just use `run_process` to run a small lua script to do the string replacement, or I can use `sed` or `perl`. Let's use `perl` for reliable multi-line replacement, or just `python3`.\n\nActually, it's easier to just generate the full new file content and write it.\nLet's read the current file content, apply the changes, and write it back.\n\nCurrent content (from context):\n```lua\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal json = require(\"dkjson\")\nlocal tables = require(\"ask-openai.helpers.tables\")\n\nlocal M = {\n    last_done = {},\n}\n\n---@param request CurlRequest|CurlRequestForTrace\n---@param frontend StreamingFrontend\n---@return string save_dir\n---@return string trace_id\nfunction M.log_request_with(request, frontend)\n    local save_dir = vim.fn.stdpath(\"state\") .. \"/ask-openai\"\n    if request.type ~= \"\" then\n        -- add `agents/` or `fim/` or `rewrite/` intermediate path\n        save_dir = save_dir .. \"/\" .. request.type\n    end\n    local trace_id = tostring(request.start_time)\n    if frontend.trace then\n        -- multi-turn traces use trace's start_time\n        trace_id = tostring(frontend.trace.start_time)\n    end\n    return save_dir, trace_id\nend\n\n---@param sse_parsed table\n---@param request CurlRequest|CurlRequestForTrace\n---@param frontend StreamingFrontend\nfunction M.log_sse_to_request(sse_parsed, request, frontend)\n    local is_last_sse = sse_parsed.timings -- timings only on last sse\n\n    function M.log_raw_completion_sse()\n        -- * /v1/completions endpoint\n        -- raw as in there is no chat template that is used to transform messages => raw prompt\n        -- instead you provide the raw prompt in the request\n        --\n        -- NOTE: llama.cpp /completions endpoint works with raw prompt and response (content)\n        -- llama.cpp /completions SSEs are split: early SSEs have { content: \"...\", stop: false }\n        -- and the final SSE has { stop: true, timing: true, timings: {...} } WITHOUT content.\n        -- So we accumulate content across events, just like the chat endpoint does for delta.content.\n        --\n        -- TODO modify chat viewers to support this format (.content .request_body.prompt) => can even support raw prompt on regular chat completions too if .__verbose.prompt is present\n        --  if no messages => if prompt => show raw prompt, if content => show raw content\n        --    add model specific syntax prompt highligting ... at least color key tags like <im_start> in basic chat formats\n        --    could lookup on model id/name\n        --\n        --  TODO look into llama-server option to return .__verbose.content with raw completion even on chat completions and even on streaming responses!\n        --     OR tag it onto my verbose flag that I already read off of request body!\n        local accum = request.accum or {}\n        request.accum = accum\n\n        if sse_parsed.content ~= nil and sse_parsed.content ~= vim.NIL then\n            accum.content = (accum.content or \"\") .. sse_parsed.content\n        end\n\n        if is_last_sse then\n            M.last_done = {\n                sse_parsed = sse_parsed,\n                request    = request,\n                frontend   = frontend,\n            }\n            local trace_data = {\n                -- put content on trace_data top-level\n                content = accum.content,\n            }\n            vim.schedule(function()\n                local no_messages = nil -- b/c not chat endpoint\n                M.save_trace(request, frontend, no_messages, sse_parsed, trace_data)\n            end)\n        end\n    end\n\n    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    -- Replace the original block with a call to the new helper:\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\n    if is_raw_completion then\n        M.log_raw_completion_sse()\n        return\n    end\n\n    function M.log_chat_completion_sse()\n        -- * /v1/chat/completions endpoint llama-server\n        -- FYI delta is the part that changes per SSE, except for last SSE which sets other fields like finish_reason\n        -- * key parts (in order):\n        --\n        -- first delta has role (not split apart on multiple SSEs)\n        -- delta = { content = vim.NIL, role = \"assistant\" },\n        --\n        -- reasoning_content SSEs\n        -- delta = { reasoning_content = \"User\" },\n        --\n        -- content SSEs\n        -- delta = { content = \"---@\" },\n        --\n        -- last SSE choices:\n        -- choices = { { delta = vim.empty_dict(), finish_reason = \"stop\", index = 0 } },\n        -- accum the full message (from streaming SSEs) so I can log for all frontends here\n        local accum = request.accum or {}\n        request.accum = accum\n\n        local choices = sse_parsed.choices\n        if not choices then\n            return\n        end\n        local first = choices[1]\n        if not first then\n            return\n        end\n        local delta = first.delta\n        if not delta then\n            return\n        end\n\n        if delta.role then\n            accum.role = delta.role\n        end\n        if delta.reasoning_content and delta.reasoning_content ~= vim.NIL then\n            accum.reasoning_content = (accum.reasoning_content or \"\") .. delta.reasoning_content\n        end\n        if delta.content and delta.content ~= vim.NIL then\n            accum.content = (accum.content or \"\") .. delta.content\n        end\n        if first.finish_reason and first.finish_reason ~= vim.NIL then\n            accum.finish_reason = first.finish_reason\n        end\n        -- PRN track tool call deltas too? on the response (for output.json)?\n        --   FYI request.body, on next turn, already has the tool call\n        --   so for now, this is not urgent to add to logs here... I can grab trace logs for after model responds to tool call result\n        if is_last_sse then\n            -- store for convenient access in-memory, that way if smth fails on save I can still see it here\n            M.last_done = {\n                sse_parsed = sse_parsed,\n                request = request,\n                frontend = frontend,\n            }\n\n            local messages_snapshot = tables.shallow_copy(request.body.messages or {})\n            -- FYI it is possible the distill in AgentsFrontend has a difference that you need to keep, if so then call save_trace from that spot and not here just for AgentsFrontend (find a way to pass last_sse, that's the only complexity)\n            table.insert(messages_snapshot, accum)\n            vim.schedule(function()\n                M.save_trace(request, frontend, messages_snapshot, sse_parsed, {})\n            end)\n        end\n    end\n\n    M.log_chat_completion_sse()\nend\n...\n```\n\nI will rewrite the `log_sse_to_request` function.\n\nChanges:\n1. Move `local is_raw_completion = sse_parsed.content ~= nil` into `log_raw_completion_sse`.\n2. Add early return in `log_raw_completion_sse` if not raw completion.\n3. Remove the `if is_raw_completion then ... return end` block.\n4. Remove the comment `-- Replace the original block with a call to the new helper:`.\n5. Call both functions at the bottom.\n\nLet's do it carefully.\nI'll use a python script to modify the file safely.\nOr I can just use `sed` or write a small lua script to replace the text.\nActually, it's safer to just output the new file content using a here-doc and `cat` it to the file, or use `perl`.\n\nLet's construct the new file content programmatically to ensure accuracy.\nI'll read the file, apply the transformation, and write it back.\nSince I'm acting as an AI, I'll just generate the `run_process` command to do this via `python3`.\n\nWait, the prompt says \"have at it!\", meaning apply the changes now.\nI will use `python3` to do the replacement.\n\nLet's write a python script:\n```python\nimport re\n\nfile_path = \"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua\"\nwith open(file_path, 'r') as f:\n    content = f.read()\n\n# Old block to replace in log_raw_completion_sse\nold_raw_start = \"\"\"    function M.log_raw_completion_sse()\n        -- * /v1/completions endpoint\"\"\"\nnew_raw_start = \"\"\"    function M.log_raw_completion_sse()\n        -- /v1/completions endpoint — raw prompt, no chat template\n        local is_raw_completion_sse = sse_parsed.content ~= nil\n        if not is_raw_completion_sse then\n            return\n        end\n\n        -- * /v1/completions endpoint\"\"\"\n\n# Remove the manual check block\nmanual_check = \"\"\"    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    -- Replace the original block with a call to the new helper:\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\n    if is_raw_completion then\n        M.log_raw_completion_sse()\n        return\n    end\n\n    function M.log_chat_completion_sse()\"\"\"\n\nnew_check = \"\"\"    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    function M.log_chat_completion_sse()\"\"\"\n\n# Update the bottom calls\nold_bottom = \"\"\"    M.log_chat_completion_sse()\nend\"\"\"\nnew_bottom = \"\"\"    M.log_raw_completion_sse()\n    M.log_chat_completion_sse()\nend\"\"\"\n\ncontent = content.replace(old_raw_start, new_raw_start)\ncontent = content.replace(manual_check, new_check)\ncontent = content.replace(old_bottom, new_bottom)\n\nwith open(file_path, 'w') as f:\n    f.write(content)\nprint(\"Done\")\n```\n\nLet's verify this matches the request.\nThe user wants:\n- have the is raw completion check happen in the function for that\n- just or running both functions together at bottom of outer\n\nYes, this matches.\nI will run this python script.\nWait, I should check indentation. The file uses 4 spaces for indentation inside functions.\nThe strings in python use triple quotes, indentation should match.\nLet's be careful with exact spacing.\n\nActually, I'll just use `sed` or `perl` if it's simpler, but python is fine.\nLet's execute the python script.\nI'll run it via `run_process`.\nWait, the file content provided in the prompt has some extra spaces. I'll replicate them exactly.\n\nLet's do it. \nI'll generate the `run_process` call.\nOne thing: `sse_parsed.content ~= nil` might need to be `sse_parsed.content ~= nil and sse_parsed.content ~= vim.NIL`? The original code just used `sse_parsed.content ~= nil`. I'll stick to that as requested.\n\nProceeding. \nI will write the python script to a temp file or just run it inline.\nInline is fine.\n```python\npython3 << 'EOF'\nfile_path = \"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua\"\nwith open(file_path, 'r') as f:\n    content = f.read()\n\n# 1. Update log_raw_completion_sse header\nold_raw = \"\"\"    function M.log_raw_completion_sse()\n        -- * /v1/completions endpoint\"\"\"\nnew_raw = \"\"\"    function M.log_raw_completion_sse()\n        -- /v1/completions endpoint\n        local is_raw_completion_sse = sse_parsed.content ~= nil\n        if not is_raw_completion_sse then\n            return\n        end\n\n        -- * /v1/completions endpoint\"\"\"\n\n# 2. Remove manual check\nold_check = \"\"\"    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    -- Replace the original block with a call to the new helper:\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\n    if is_raw_completion then\n        M.log_raw_completion_sse()\n        return\n    end\n\n    function M.log_chat_completion_sse()\"\"\"\nnew_check = \"\"\"    log:info(\"sse_parsed\", vim.inspect(sse_parsed))\n\n    function M.log_chat_completion_sse()\"\"\"\n\n# 3. Update bottom calls\nold_bottom = \"    M.log_chat_completion_sse()\\nend\"\nnew_bottom = \"    M.log_raw_completion_sse()\\n    M.log_chat_completion_sse()\\nend\"\n\ncontent = content.replace(old_raw, new_raw)\ncontent = content.replace(old_check, new_check)\ncontent = content.replace(old_bottom, new_bottom)\n\nwith open(file_path, 'w') as f:\n    f.write(content)\nprint(\"Refactored successfully.\")\nEOF\n```\nWait, `old_raw` has `        -- * /v1/completions endpoint` but the original has `        -- * /v1/completions endpoint`. Matches.\nI will run this.\nOne minor point: `sse_parsed.content ~= nil` might be better as `sse_parsed.content ~= nil and sse_parsed.content ~= vim.NIL` to match the inner logic, but the prompt says `local is_raw_completion = sse_parsed.content ~= nil`. I'll stick to exactly what they asked or what's logically consistent. I'll use `sse_parsed.content ~= nil` as requested.\n\nLet's run it. \nActually, I'll just use `run_process` directly.\nI'll double check indentation in the file:\n```lua\n    function M.log_raw_completion_sse()\n        -- * /v1/completions endpoint\n```\nYes, 4 spaces for function def, 8 for body.\nI'll run the python script.\nDone. \nProceeding. \n(Self-Correction/Verification during thought)\nWait, the original code has:\n```lua\n    function M.log_raw_completion_sse()\n        -- * /v1/completions endpoint\n```\nI will insert the check right after the comment.\nThe python script looks solid.\nI will execute it. \nLet's do it. \n`run_process(argv=[\"python3\", \"-c\", \"...\"])` or heredoc. Heredoc is easier.\nI'll use `python3 << 'PYEOF' ... PYEOF`.\nAll good. \nOutput matches request.\nProceeds. \n[Done] \n`run_process` call coming up. \nWait, I need to make sure the exact string matches. I'll just copy-paste carefully.\nActually, I'll use `perl` for simplicity if python heredoc is tricky, but python is fine.\nLet's run it. \n`run_process(command_line=\"python3 << 'EOF'\\nimport sys\\nfile_path = '~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua'\\nwith open(file_path, 'r') as f:\\n    content = f.read()\\n\\nold_raw = \\\"\\\"\\\"    function M.log_raw_completion_sse()\\n        -- * /v1/completions endpoint\\\"\\\"\\\"\\nnew_raw = \\\"\\\"\\\"    function M.log_raw_completion_sse()\\n        -- /v1/completions endpoint\\n        local is_raw_completion_sse = sse_parsed.content ~= nil\\n        if not is_raw_completion_sse then\\n            return\\n        end\\n\\n        -- * /v1/completions endpoint\\\"\\\"\\\"\\n\\nold_check = \\\"\\\"\\\"    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\n\\n    -- Replace the original block with a call to the new helper:\\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\\n    if is_raw_completion then\\n        M.log_raw_completion_sse()\\n        return\\n    end\\n\\n    function M.log_chat_completion_sse()\\\"\\\"\\\"\\nnew_check = \\\"\\\"\\\"    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\n\\n    function M.log_chat_completion_sse()\\\"\\\"\\\"\\n\\nold_bottom = \\\"    M.log_chat_completion_sse()\\\\nend\\\"\\nnew_bottom = \\\"    M.log_raw_completion_sse()\\\\n    M.log_chat_completion_sse()\\\\nend\\\"\\n\\ncontent = content.replace(old_raw, new_raw)\\ncontent = content.replace(old_check, new_check)\\ncontent = content.replace(old_bottom, new_bottom)\\n\\nwith open(file_path, 'w') as f:\\n    f.write(content)\\nprint('Done')\\nEOF\"`\nThis looks correct. I will run it.\nOne detail: `old_bottom` might have trailing spaces or different newlines. I'll strip or just rely on exact match. It should be fine.\nLet's run it. \nActually, to be extremely safe, I'll just write a small Lua script to do the replacement using `vim` or just `sed`. But `python3` is fine.\nI'll execute it. \nWait, `python3 << 'EOF'` in `command_line` might not work as expected because `command_line` expects a shell command string. It should work.\nI'll use `argv` with `[\"bash\", \"-c\", \"python3 << 'EOF'\\n...\"]` or just `command_line`. `command_line` is fine.\nLet's go. \n`run_process(command_line=\"python3 << 'PYEOF'\\nfile_path = \\\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua\\\"\\nwith open(file_path, \\\"r\\\") as f:\\n    content = f.read()\\n\\nold_raw = \\\"\\\"\\\"    function M.log_raw_completion_sse()\\n        -- * /v1/completions endpoint\\\"\\\"\\\"\\nnew_raw = \\\"\\\"\\\"    function M.log_raw_completion_sse()\\n        -- /v1/completions endpoint\\n        local is_raw_completion_sse = sse_parsed.content ~= nil\\n        if not is_raw_completion_sse then\\n            return\\n        end\\n\\n        -- * /v1/completions endpoint\\\"\\\"\\\"\\n\\nold_check = \\\"\\\"\\\"    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\n\\n    -- Replace the original block with a call to the new helper:\\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\\n    if is_raw_completion then\\n        M.log_raw_completion_sse()\\n        return\\n    end\\n\\n    function M.log_chat_completion_sse()\\\"\\\"\\\"\\nnew_check = \\\"\\\"\\\"    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\n\\n    function M.log_chat_completion_sse()\\\"\\\"\\\"\\n\\nold_bottom = \\\"    M.log_chat_completion_sse()\\\\nend\\\"\\nnew_bottom = \\\"    M.log_raw_completion_sse()\\\\n    M.log_chat_completion_sse()\\\\nend\\\"\\n\\ncontent = content.replace(old_raw, new_raw)\\ncontent = content.replace(old_check, new_check)\\ncontent = content.replace(old_bottom, new_bottom)\\n\\nwith open(file_path, \\\"w\\\") as f:\\n    f.write(content)\\nprint(\\\"Refactored successfully.\\\")\\nPYEOF\"`)\nWait, `command_line` passes it to the shell. Newlines in `command_line` string are fine.\nI'll run it.\nActually, I'll just use `run_process(argv=[\"python3\", \"-c\", \"...\"])` but escaping is painful. Heredoc is better.\nI will use `command_line`.\nLet's do it. \n(Self-Correction/Refinement during thought)\nActually, `python3 << 'EOF'` inside `command_line` might get weird with quotes. I'll just write the python script to a temp file and run it, or use `perl`.\n`perl -i -0pe 's/OLD_TEXT/NEW_TEXT/g' file` is often cleaner for small blocks.\nBut I'll stick to python, it's robust. I'll format it carefully.\nI'll run it now. \n`run_process(command_line=\"python3 << 'PYEOF'\\nimport os\\nfp = '~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua'\\nwith open(fp, 'r') as f: c = f.read()\\nc = c.replace(\\n    '    function M.log_raw_completion_sse()\\\\n        -- * /v1/completions endpoint',\\n    '    function M.log_raw_completion_sse()\\\\n        -- /v1/completions endpoint\\\\n        local is_raw_completion_sse = sse_parsed.content ~= nil\\\\n        if not is_raw_completion_sse then\\\\n            return\\\\n        end\\\\n\\\\n        -- * /v1/completions endpoint'\\n)\\nc = c.replace(\\n    '    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\\\n\\\\n    -- Replace the original block with a call to the new helper:\\\\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\\\\n    if is_raw_completion then\\\\n        M.log_raw_completion_sse()\\\\n        return\\\\n    end\\\\n\\\\n    function M.log_chat_completion_sse()',\\n    '    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\\\n\\\\n    function M.log_chat_completion_sse()'\\n)\\nc = c.replace(\\n    '    M.log_chat_completion_sse()\\\\nend',\\n    '    M.log_raw_completion_sse()\\\\n    M.log_chat_completion_sse()\\\\nend'\\n)\\nwith open(fp, 'w') as f: f.write(c)\\nprint('Done')\\nPYEOF\"`\nThis is much safer with `\\n` escapes.\nI will run it.\nWait, `sse_parsed.content ~= nil` might be `sse_parsed.content ~= vim.NIL` in some places, but I'll stick to the prompt.\nLet's execute. \n`run_process` call generated.\nProceeds. \n[Output Generation]\n`run_process(command_line=\"...\")`\nDone. \n(Self-Correction/Verification during generation prep)\nI notice the prompt has `local is_raw_completion = sse_parsed.content ~= nil`. I will use exactly that.\nThe replacement strings look correct.\nI'll run it. \n`run_process(command_line=\"python3 << 'PYEOF'\\nimport os\\nfp = '~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua'\\nwith open(fp, 'r') as f: c = f.read()\\nc = c.replace(\\n    '    function M.log_raw_completion_sse()\\\\n        -- * /v1/completions endpoint',\\n    '    function M.log_raw_completion_sse()\\\\n        -- /v1/completions endpoint\\\\n        local is_raw_completion_sse = sse_parsed.content ~= nil\\\\n        if not is_raw_completion_sse then\\\\n            return\\\\n        end\\\\n\\\\n        -- * /v1/completions endpoint'\\n)\\nc = c.replace(\\n    '    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\\\n\\\\n    -- Replace the original block with a call to the new helper:\\\\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\\\\n    if is_raw_completion then\\\\n        M.log_raw_completion_sse()\\\\n        return\\\\n    end\\\\n\\\\n    function M.log_chat_completion_sse()',\\n    '    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\\\n\\\\n    function M.log_chat_completion_sse()'\\n)\\nc = c.replace(\\n    '    M.log_chat_completion_sse()\\\\nend',\\n    '    M.log_raw_completion_sse()\\\\n    M.log_chat_completion_sse()\\\\nend'\\n)\\nwith open(fp, 'w') as f: f.write(c)\\nprint('Refactored successfully.')\\nPYEOF\"`)\nLooks good. I will execute it now.\nWait, I should check indentation in the file again. The file uses 4 spaces. My strings use 4 spaces. It matches.\nExecuting. \n`run_process`...\nDone.\n",
+        "timings":{
+          "predicted_per_second":229.23834438616,
+          "predicted_n":5979,
+          "prompt_per_second":5047.9233226837,
+          "prompt_ms":125.2,
+          "prompt_per_token_ms":0.19810126582278,
+          "predicted_ms":26082.024,
+          "predicted_per_token_ms":4.3622719518314,
+          "prompt_n":632,
+          "cache_n":5169
+        },
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"python3 << 'PYEOF'\\nimport os\\nfp = '~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua'\\nwith open(fp, 'r') as f: c = f.read()\\nc = c.replace(\\n    '    function M.log_raw_completion_sse()\\\\n        -- * /v1/completions endpoint',\\n    '    function M.log_raw_completion_sse()\\\\n        -- /v1/completions endpoint\\\\n        local is_raw_completion_sse = sse_parsed.content ~= nil\\\\n        if not is_raw_completion_sse then\\\\n            return\\\\n        end\\\\n\\\\n        -- * /v1/completions endpoint'\\n)\\nc = c.replace(\\n    '    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\\\n\\\\n    -- Replace the original block with a call to the new helper:\\\\n    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\\\\n    if is_raw_completion then\\\\n        M.log_raw_completion_sse()\\\\n        return\\\\n    end\\\\n\\\\n    function M.log_chat_completion_sse()',\\n    '    log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\\\n\\\\n    function M.log_chat_completion_sse()'\\n)\\nc = c.replace(\\n    '    M.log_chat_completion_sse()\\\\nend',\\n    '    M.log_raw_completion_sse()\\\\n    M.log_chat_completion_sse()\\\\nend'\\n)\\nwith open(fp, 'w') as f: f.write(c)\\nprint('Refactored successfully.')\\nPYEOF\"}",
+              "name":"run_process"
+            },
+            "id":"sx4e87cAKJP7zpV4BvmOZN5dDmfQ3Fn2"
+          }]
+      },{
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"Refactored successfully.\\n\",\"name\":\"STDOUT\"}]}",
+        "tool_call_id":"sx4e87cAKJP7zpV4BvmOZN5dDmfQ3Fn2",
+        "role":"tool",
+        "progress_notifications":[],
+        "start_time_ms":511359257,
+        "duration_ms":35
+      },{
+        "content":"",
+        "role":"assistant",
+        "reasoning_content":"The refactoring was applied successfully. I should now commit the changes as requested, using the specified author.\nI'll run `git diff` first to verify, then `git add` and `git commit`.\nI'll use `luac` to check for syntax errors as per preferences.\nThen commit.\n",
+        "timings":{
+          "predicted_per_second":227.40775644834,
+          "predicted_n":111,
+          "prompt_per_second":8253.500771119,
+          "prompt_ms":732.053,
+          "prompt_per_token_ms":0.12116070837471,
+          "predicted_ms":488.11,
+          "predicted_per_token_ms":4.3973873873874,
+          "prompt_n":6042,
+          "cache_n":5787
+        },
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "arguments":"{\"argv\":[\"git\", \"diff\", \"lua/ask-openai/logs/completion_logger.lua\"]}",
+              "name":"run_process"
+            },
+            "id":"54ySWXFa5IH9wYCboBxfa3U6BoeYpihd"
+          }]
+      },{
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"diff --git a/lua/ask-openai/logs/completion_logger.lua b/lua/ask-openai/logs/completion_logger.lua\\nindex 41d29552..8169b6c7 100644\\n--- a/lua/ask-openai/logs/completion_logger.lua\\n+++ b/lua/ask-openai/logs/completion_logger.lua\\n@@ -31,6 +31,12 @@ function M.log_sse_to_request(sse_parsed, request, frontend)\\n     local is_last_sse = sse_parsed.timings -- timings only on last sse\\n \\n     function M.log_raw_completion_sse()\\n+        -- /v1/completions endpoint\\n+        local is_raw_completion_sse = sse_parsed.content ~= nil\\n+        if not is_raw_completion_sse then\\n+            return\\n+        end\\n+\\n         -- * /v1/completions endpoint\\n         -- raw as in there is no chat template that is used to transform messages => raw prompt\\n         -- instead you provide the raw prompt in the request\\n@@ -73,13 +79,6 @@ function M.log_sse_to_request(sse_parsed, request, frontend)\\n \\n     log:info(\\\"sse_parsed\\\", vim.inspect(sse_parsed))\\n \\n-    -- Replace the original block with a call to the new helper:\\n-    local is_raw_completion = sse_parsed.content ~= nil -- instead of sse_parsed.choices\\n-    if is_raw_completion then\\n-        M.log_raw_completion_sse()\\n-        return\\n-    end\\n-\\n     function M.log_chat_completion_sse()\\n         -- * /v1/chat/completions endpoint llama-server\\n         -- FYI delta is the part that changes per SSE, except for last SSE which sets other fields like finish_reason\\n@@ -145,6 +144,7 @@ function M.log_sse_to_request(sse_parsed, request, frontend)\\n         end\\n     end\\n \\n+    M.log_raw_completion_sse()\\n     M.log_chat_completion_sse()\\n end\\n \\n\",\"name\":\"STDOUT\"}]}",
+        "tool_call_id":"54ySWXFa5IH9wYCboBxfa3U6BoeYpihd",
+        "role":"tool",
+        "progress_notifications":[],
+        "start_time_ms":511360629,
+        "duration_ms":13
+      },{
+        "content":"",
+        "role":"assistant",
+        "reasoning_content":"The diff looks exactly as intended. The `is_raw_completion` check is now inside `log_raw_completion_sse`, the manual routing block is removed, and both functions are called at the bottom.\n\nNow I'll check syntax with `luac` and commit.\n",
+        "timings":{
+          "predicted_per_second":223.57242431416,
+          "predicted_n":102,
+          "prompt_per_second":5158.9035964036,
+          "prompt_ms":128.128,
+          "prompt_per_token_ms":0.19383963691377,
+          "predicted_ms":456.228,
+          "predicted_per_token_ms":4.4728235294118,
+          "prompt_n":661,
+          "cache_n":11781
+        },
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "arguments":"{\"argv\":[\"luac\", \"-p\", \"lua/ask-openai/logs/completion_logger.lua\"]}",
+              "name":"run_process"
+            },
+            "id":"S8TL5s0SCEPUkmum8sSuaZFPJDowsYOx"
+          }]
+      },{
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"}]}",
+        "tool_call_id":"S8TL5s0SCEPUkmum8sSuaZFPJDowsYOx",
+        "role":"tool",
+        "progress_notifications":[],
+        "start_time_ms":511361346,
+        "duration_ms":42
+      },{
+        "content":"",
+        "role":"assistant",
+        "reasoning_content":"Syntax is valid. Now I'll commit with the specified author.\n",
+        "timings":{
+          "predicted_per_second":224.38042953894,
+          "predicted_n":60,
+          "prompt_per_second":2173.5364067348,
+          "prompt_ms":63.491,
+          "prompt_per_token_ms":0.46007971014493,
+          "predicted_ms":267.403,
+          "predicted_per_token_ms":4.4567166666667,
+          "prompt_n":138,
+          "cache_n":12438
+        },
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "arguments":"{\"argv\":[\"git\", \"add\", \"lua/ask-openai/logs/completion_logger.lua\"]}",
+              "name":"run_process"
+            },
+            "id":"3u5CzthOSx38RYlAPAT8iBdk8Lomwbl4"
+          }]
+      },{
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"}]}",
+        "tool_call_id":"3u5CzthOSx38RYlAPAT8iBdk8Lomwbl4",
+        "role":"tool",
+        "progress_notifications":[],
+        "start_time_ms":511361846,
+        "duration_ms":12
+      },{
+        "content":"",
+        "role":"assistant",
+        "reasoning_content":"Staged. Now commit with the custom author.\n",
+        "timings":{
+          "predicted_per_second":223.84680738491,
+          "predicted_n":132,
+          "prompt_per_second":3272.5306621895,
+          "prompt_ms":70.282,
+          "prompt_per_token_ms":0.30557391304348,
+          "predicted_ms":589.689,
+          "predicted_per_token_ms":4.4673409090909,
+          "prompt_n":230,
+          "cache_n":12438
+        },
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "arguments":"{\"argv\":[\"git\", \"commit\", \"--author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\"\", \"-m\", \"refactor: move is_raw_completion check into log_raw_completion_sse\\n\\nSimplify outer function by removing explicit routing block.\\nBoth log functions are now called at the bottom, each handling\\nits own guard condition internally.\"]}",
+              "name":"run_process"
+            },
+            "id":"xUW0vROauQ7KOLmWtGavIEgduVFIUA7e"
+          }]
+      },{
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"[master 88a27a13] refactor: move is_raw_completion check into log_raw_completion_sse\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 1 file changed, 7 insertions(+), 7 deletions(-)\\n\",\"name\":\"STDOUT\"},{\"type\":\"text\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\",\"name\":\"STDERR\"}]}",
+        "tool_call_id":"xUW0vROauQ7KOLmWtGavIEgduVFIUA7e",
+        "role":"tool",
+        "progress_notifications":[],
+        "start_time_ms":511362647,
+        "duration_ms":1360
+      },{
+        "role":"assistant",
+        "reasoning_content":"Done. The refactoring is complete, syntax-checked, and committed. I'll provide a concise summary.\n",
+        "finish_reason":"stop",
+        "content":"Refactored and committed ✅\n\n- Moved `is_raw_completion_sse` check inside `log_raw_completion_sse`\n- Removed the manual routing block from the outer function\n- Both functions now run sequentially at the bottom, each handling its own guard\n- Syntax validated with `luac`\n- Committed with your specified author\n\nCommit: `88a27a13`"
+      }],
+    "tools":[{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["to"],
+            "properties":{
+              "to":{
+                "type":"integer",
+                "description":"the integer to count to"
+              }
+            }
+          },
+          "description":"Count to, for testing progress and cancellation",
+          "name":"count"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["description"],
+            "properties":{
+              "recursion_limit":{
+                "type":"integer",
+                "description":"LangChain's max messages for the subagent before stopping. Each subagent tool call produces 2 messages (input + output). Leave unset unless the task needs more or fewer than the default (50)."
+              },
+              "agent_type":{
+                "type":"string",
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder"
+              },
+              "description":{
+                "type":"string",
+                "description":"describe the task for the agent to perform"
+              }
+            }
+          },
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings.",
+          "name":"delegate"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "argv":{
+                "type":"array",
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "minItems":1,
+                "items":{
+                  "type":"string"
+                }
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              }
+            }
+          },
+          "description":"Run a process on this darwin machine",
+          "name":"run_process"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["url"],
+            "properties":{
+              "max_chars":{
+                "type":"integer",
+                "default":50000,
+                "description":"Maximum number of characters to return"
+              },
+              "url":{
+                "type":"string"
+              },
+              "start_index":{
+                "type":"integer",
+                "default":0,
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required"
+              },
+              "raw":{
+                "type":"boolean",
+                "default":false,
+                "description":"Do not convert HTML to markdown"
+              }
+            }
+          },
+          "description":"Fetch a URL and extract HTML contents as markdown",
+          "name":"fetch"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["lua"],
+            "properties":{
+              "lua":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            }
+          },
+          "name":"run_in_neovim",
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["query"],
+            "properties":{
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              },
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              }
+            }
+          },
+          "name":"semantic_grep",
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results."
+        }
+      }]
+  },
+  "last_sse":{
+    "created":1780581112,
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "timings":{
+      "predicted_per_second":222.1345678756,
+      "predicted_n":107,
+      "prompt_per_second":4635.5126805434,
+      "prompt_ms":111.746,
+      "prompt_per_token_ms":0.21572586872587,
+      "predicted_ms":481.69,
+      "predicted_per_token_ms":4.5017757009346,
+      "prompt_n":518,
+      "cache_n":12438
+    },
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "id":"chatcmpl-8UfbhCeWs46K2bGBfQQG9jUiwNldgJF9",
+    "object":"chat.completion.chunk"
+  }
+}
