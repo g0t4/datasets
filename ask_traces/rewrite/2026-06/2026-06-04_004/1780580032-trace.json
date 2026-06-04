@@ -1,0 +1,56 @@
+{
+  "request_body":{
+    "temperature":1,
+    "stream":true,
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:118-122\n\n\n-- TODO add unit test of info log method so I don't waste another hour on its quirks:\n-- log:info(\"foo\", nil, \"bar\") -- use to validate nil args don't interupt the rest of log args getting included -- nuke this is fine, just leaving as a reminder I had trouble with logging nil values\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:116-118\nfunction Logger:info(...)\n    self:log_auto_inspect(local_share.LOG_LEVEL_NUMBERS.INFO, ...)\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:0-6\nlocal local_share = require(\"ask-openai.config.local_share\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal uv = vim.loop\nlocal inspect = require(\"devtools.inspect\")\nlocal Logger = {}\nLogger.__index = Logger\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/selection.tests.lua:0-9\n-- testing modules:\nrequire(\"ask-openai.helpers.test_setup\").modify_package_path()\nlocal assert = require 'luassert'\nlocal should = require('devtools.tests.should')\nlocal describe = require('devtools.tests.define.describe')\nlocal buffers = require('devtools.tests.buffers')\n-- system under test:\nlocal Selection = require('ask-openai.helpers.selection')\nlocal log = require(\"ask-openai.logs.logger\").predictions()\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:128-141\n---@param message string\n---@param value any - will be vim.inspect()'d and piped through bat\nfunction Logger:luaify_trace(message, value)\n    -- bat is expensive, don't call if not logging it!\n    if not self:is_enabled(local_share.LOG_LEVEL_NUMBERS.TRACE) then\n        return\n    end\n\n    -- TODO update jsonify to use bat_inspect too (pass language as new arg to bat_inspect?)\n    -- PRN? --style=plain (add to bat_inspect?)\n    local text = inspect.bat_inspect(value)\n\n    self:trace(message, text)\nend\n"
+      },{
+        "role":"user",
+        "content":"take off INFO on front and just do a string match assertion\n\nHere is the code I selected:\n```lua/ask-openai/logs/logger.tests.lua:31\n        assert.equals(\"[INFO ] message first nil last\", captures[1])\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      },{
+        "role":"assistant",
+        "finish_reason":"stop",
+        "content":"        assert.matches(\"message first nil last\", captures[1])",
+        "reasoning_content":"The user says: \"take off INFO on front and just do a string match assertion\". They show a line of test code: `assert.equals(\"[INFO ] message first nil last\", captures[1])`. They want to remove INFO on front and just do a string match assertion. So likely they want to modify the test to not include the \"[INFO ]\" prefix, and use something like `assert.matches(\"message first nil last\", captures[1])` or `assert.is_true(captures[1]:find(\"message first nil last\") ~= nil)`. Since they use luassert, they can use `assert.matches`. So need to edit the test file at that line, change assertion.\n\nWe need to locate the file path: likely `lua/ask-openai/logs/logger.tests.lua`. Provide the diff or updated code snippet with proper indentation.\n\nWe must preserve indentation. Provide only code, no markdown.\n\nLet's output the modified line. Possibly also adjust surrounding code? Probably only that line.\n\nThus answer: show the modified line.\n\n"
+      }],
+    "max_tokens":8192,
+    "top_p":1
+  },
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "timings":{
+      "prompt_ms":122.119,
+      "prompt_per_token_ms":0.14316412661196,
+      "predicted_n":234,
+      "predicted_per_token_ms":3.6832606837607,
+      "prompt_n":853,
+      "predicted_per_second":271.49856767102,
+      "prompt_per_second":6984.9900506883,
+      "predicted_ms":861.883,
+      "cache_n":141
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1780579954,
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "id":"chatcmpl-LAAGz7hyTkkVlXM1Zx3EiiSvMGtq9FiM",
+    "system_fingerprint":"b9503-ac5f82a6a"
+  }
+}
