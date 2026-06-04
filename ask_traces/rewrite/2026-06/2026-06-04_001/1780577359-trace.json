@@ -1,0 +1,59 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-1jEEkwVtpo6PqdBYbkzbLKZVd5WZVIGy",
+    "timings":{
+      "prompt_n":1139,
+      "prompt_ms":142.194,
+      "prompt_per_token_ms":0.12484108867428,
+      "predicted_ms":1199.948,
+      "predicted_per_token_ms":3.7265465838509,
+      "predicted_per_second":268.344961615,
+      "predicted_n":322,
+      "prompt_per_second":8010.1832707428,
+      "cache_n":0
+    },
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "created":1780577282,
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }]
+  },
+  "request_body":{
+    "stream":true,
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "content":"## Recent yanks (copy to clipboard):\n```lua/ask-openai/logs/logger.lua\n    -- self:log(local_share.LOG_LEVEL_NUMBERS.INFO, ...) -- old before auto vim.inspect\n```\n\n```lua/ask-openai/logs/logger.lua\nargs_strings\n```\n\n"
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/apply_patch.lua:128-130\n    function log_it(call_output)\n        log:info(\"manual_test() result\", vim.inspect(call_output))\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/context/coc/learn/diagnostics.lua:38-59\nlocal function diagnostics_to_qflist(diagnostics)\n    local qf = {}\n    for _, diag in ipairs(diagnostics) do\n        log:info(\"diag\", vim.inspect(diag))\n        table.insert(qf, {\n            -- filename = vim.uri_to_fname(diag.location.uri),\n            filename = diag.file,\n            -- 1-based lnum/col\n            lnum     = diag.lnum,\n            col      = diag.col,\n            --\n            text     = diag.message,\n            type     = ({\n                Error = \"E\",\n                Warning = \"W\",\n                Information = \"I\",\n                Hint = \"H\",\n            })[diag.severity] or \"E\",\n        })\n    end\n    return qf\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:17-36\n\n\n\n-- * log level constants\nlocal LEVEL_NUMBERS = {\n    TRACE = 0,\n    INFO = 1,\n    WARN = 2,\n    ERROR = 3,\n}\nM.LOG_LEVEL_NUMBERS = LEVEL_NUMBERS\nlocal LEVEL_TEXT_TO_NUMBER = {\n    [\"TRACE\"] = LEVEL_NUMBERS.TRACE,\n    [\"INFO\"]  = LEVEL_NUMBERS.INFO,\n    [\"WARN\"]  = LEVEL_NUMBERS.WARN,\n    [\"ERROR\"] = LEVEL_NUMBERS.ERROR,\n}\nM.LOG_LEVEL_TEXT_TO_NUMBER = LEVEL_TEXT_TO_NUMBER\nlocal LEVEL_NUMBER_TO_TEXT = {\n    [LEVEL_NUMBERS.TRACE] = \"TRACE\",\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/selection.lua:63-65\nfunction Selection:log_info(message)\n    log:info(message, self:to_str())\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/trace.lua:96-102\nfunction AgentTrace:dump()\n    -- log:luaify_trace(\"last_request's RxAccumulatedMessages\", self.last_request.accumulated_model_response_messages)\n    -- log:luaify_trace(\"trace's TxChatMessages (history, sent on followup/toolresults)\", self.messages)\n    log:luaify_trace(\"AgentTrace:dump\", self)\n    messages:ensure_open()\n    messages:append(vim.inspect(self))\nend\n"
+      },{
+        "role":"user",
+        "content":"make this replace each arg that is a table with the result of vim.inspect on the arg\n\nHere is the code I selected:\n```lua/ask-openai/logs/logger.lua:108-110\nfunction Logger:info(...)\n    self:log(local_share.LOG_LEVEL_NUMBERS.INFO, ...)\nend\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"The user wants to modify the function Logger:info to replace each arg that is a table with the result of vim.inspect on the arg. So they want to process varargs, detect if any arg is a table, and replace it with vim.inspect(arg). Need to preserve indentation. Provide updated code snippet.\n\nOriginal:\n\nfunction Logger:info(...)\n    self:log(local_share.LOG_LEVEL_NUMBERS.INFO, ...)\nend\n\nWe need to modify to something like:\n\nfunction Logger:info(...)\n    local processed_args = {}\n    for i, arg in ipairs({ ... }) do\n        if type(arg) == \"table\" then\n            processed_args[i] = vim.inspect(arg)\n        else\n            processed_args[i] = arg\n        end\n    end\n    self:log(local_share.LOG_LEVEL_NUMBERS.INFO, unpack(processed_args))\nend\n\nBut need to keep indentation as original (4 spaces?). In the file likely indent with 4 spaces. Provide code with same indentation.\n\nAlso add EmmyLua annotation maybe? Not required but preferences mention.\n\nAdd doc comment:---@param ... any.\n\nBut just code.\n\nReturn final snippet only, no markdown.\n\n",
+        "role":"assistant",
+        "content":"function Logger:info(...)\n    local processed_args = {}\n    for i, arg in ipairs({ ... }) do\n        if type(arg) == \"table\" then\n            processed_args[i] = vim.inspect(arg)\n        else\n            processed_args[i] = arg\n        end\n    end\n    self:log(local_share.LOG_LEVEL_NUMBERS.INFO, unpack(processed_args))\nend"
+      }],
+    "top_p":1,
+    "max_tokens":8192,
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    },
+    "model":"",
+    "temperature":1
+  }
+}
