@@ -1,0 +1,59 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "created":1780578995,
+    "id":"chatcmpl-aWTGWQhZ01QtR80lRnEDVPYBYC1YAI8E",
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "timings":{
+      "prompt_per_second":7083.1153212392,
+      "prompt_n":907,
+      "prompt_ms":128.051,
+      "prompt_per_token_ms":0.14118081587652,
+      "cache_n":141,
+      "predicted_per_token_ms":3.7149390962672,
+      "predicted_ms":1890.904,
+      "predicted_per_second":269.18341703228,
+      "predicted_n":509
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }]
+  },
+  "request_body":{
+    "max_tokens":8192,
+    "temperature":1,
+    "top_p":1,
+    "messages":[{
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.",
+        "role":"system"
+      },{
+        "content":"## Recent yanks (copy to clipboard):\n```lua/ask-openai/logs/logger.tests.lua\n    end)\n```\n\n",
+        "role":"user"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/logger.lua:92-104\n---@param level integer\n---@vararg any\nfunction Logger:log_auto_inspect(level, ...)\n    local processed_args = {}\n    for i, arg in ipairs({ ... }) do\n        if type(arg) == \"table\" then\n            processed_args[i] = vim.inspect(arg)\n        else\n            processed_args[i] = arg\n        end\n    end\n    self:log(level, unpack(processed_args))\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/inproc/apply_patch.lua:128-130\n    function log_it(call_output)\n        log:info(\"manual_test() result\", vim.inspect(call_output))\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/tests/test.lua:11-30\n                        function()\n    local bello = function(boo)\n        return \"bello \" .. boo\n    end\n\n    local bounter\n\n    before_each(function()\n        bounter = 0\n    end)\n\n    it(\"some test\", function()\n        bounter = 100\n        assert.equals(\"bello Brian\", bello(\"Brian\"))\n    end)\n\n    it(\"some other test\", function()\n        assert.equals(0, bounter)\n    end)\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/selection.tests.lua:24-26\n\n\n        before_each(\n\n## ~/repos/github/g0t4/ask-openai.nvim/tests/test.lua:0-11\n-- FYI docs:\n--    guide: https://github.com/nvim-lua/plenary.nvim/blob/master/TESTS_README.md\n--    https://github.com/nvim-lua/plenary.nvim/blob/master/README.md#plenarytest_harness\n--\n-- busted style testing of nvim... (in floating window OR new instance(s))\n--   :PlenaryBustedFile tests/test.lua\n--   :PlenaryBustedDirectory tests\n--\n-- nvim --headless -c \"PlenaryBustedDirectory tests/plenary/ {options}\"\n\n\ndescribe(\"some basics\", \n",
+        "role":"user"
+      },{
+        "content":"is there a before each in busted testing\n\nHere is the code I selected:\n```lua/ask-openai/logs/logger.tests.lua:7-16\ndescribe(\"test log_auto_inspect\", function()\n    local captures = {}\n    -- TODO stub out innermost log function and capture calls to verify what would be logged without touching log files\n    log.log = function(self, level, ...)\n    end\n\n    it(\"table is vim.inspect'd\", function()\n        captures = {}\n    end)\nend)\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!",
+        "role":"user"
+      },{
+        "reasoning_content":"User asks: \"is there a before each in busted testing\". They provide code snippet from logger.tests.lua where they want to test log_auto_inspect. They ask about before_each in busted testing. They want help with code, probably showing how to use before_each to set up stub, capture calls, etc. Need to respond with Lua code, respecting their preferences: snake_case functions, PascalCase classes, EmmyLua annotations, use before_each. Provide example of before_each usage to stub log.log and capture calls. Also maybe show after_each. Provide code snippet preserving indentation.\n\nWe should not wrap in markdown. Just give code. No explanations. Provide a test file with describe, before_each, after_each, it blocks. Use proper annotations if needed. Use luac syntax.\n\nLet's produce code:\n\n```lua\n---@class Logger\nlocal Logger = {}\n-- ... existing logger methods\n\ndescribe(\"test log_auto_inspect\", function()\n    local captures = {}\n    local original_log\n\n    before_each(function()\n        captures = {}\n        original_log = log.log\n        log.log = function(self, level, ...)\n            table.insert(captures, { level = level, args = { ... } })\n        end\n    end)\n\n    after_each(function()\n        log.log = original_log\n    end)\n\n    it(\"table is vim.inspect'd\", function()\n        local tbl = { a = 1, b = 2 }\n        log:log_auto_inspect(1, tbl)\n        assert.equals(1, #captures)\n        assert.equals(vim.inspect(tbl), captures[1].args[1])\n    end)\nend)\n```\n\nMake sure indentation matches original (4 spaces). Provide only code.",
+        "role":"assistant",
+        "content":"describe(\"test log_auto_inspect\", function()\n    local captures = {}\n    local original_log\n\n    before_each(function()\n        captures = {}\n        original_log = log.log\n        log.log = function(self, level, ...)\n            table.insert(captures, { level = level, args = { ... } })\n        end\n    end)\n\n    after_each(function()\n        log.log = original_log\n    end)\n\n    it(\"table is vim.inspect'd\", function()\n        local tbl = { a = 1, b = 2 }\n        log:log_auto_inspect(1, tbl)\n        assert.equals(1, #captures)\n        assert.equals(vim.inspect(tbl), captures[1].args[1])\n    end)\nend)",
+        "finish_reason":"stop"
+      }],
+    "stream":true,
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"medium"
+    }
+  }
+}
