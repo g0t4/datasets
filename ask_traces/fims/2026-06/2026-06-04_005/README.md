@@ -1,0 +1,1 @@
+love it, exactly what I wanted! and this code isn't necessary given the context... but I yanked the condition on the first function and then I put cursor in the same spot in second hoping I'd get this!
