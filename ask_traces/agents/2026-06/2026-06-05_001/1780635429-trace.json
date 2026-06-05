@@ -1,0 +1,1481 @@
+{
+  "request_body":{
+    "tools":[{
+        "function":{
+          "description":"Fetch a URL and extract HTML contents as markdown",
+          "parameters":{
+            "properties":{
+              "url":{
+                "type":"string"
+              },
+              "raw":{
+                "default":false,
+                "description":"Do not convert HTML to markdown",
+                "type":"boolean"
+              },
+              "max_chars":{
+                "default":50000,
+                "description":"Maximum number of characters to return",
+                "type":"integer"
+              },
+              "start_index":{
+                "default":0,
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required",
+                "type":"integer"
+              }
+            },
+            "required":["url"],
+            "type":"object"
+          },
+          "name":"fetch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Count to, for testing progress and cancellation",
+          "parameters":{
+            "properties":{
+              "to":{
+                "description":"the integer to count to",
+                "type":"integer"
+              }
+            },
+            "required":["to"],
+            "type":"object"
+          },
+          "name":"count"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings.",
+          "parameters":{
+            "properties":{
+              "recursion_limit":{
+                "type":"integer",
+                "description":"LangChain's max messages for the subagent before stopping. Each subagent tool call produces 2 messages (input + output). Leave unset unless the task needs more or fewer than the default (50)."
+              },
+              "agent_type":{
+                "type":"string",
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder"
+              },
+              "description":{
+                "type":"string",
+                "description":"describe the task for the agent to perform"
+              }
+            },
+            "required":["description"],
+            "type":"object"
+          },
+          "name":"delegate"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Run a process on this darwin machine",
+          "parameters":{
+            "properties":{
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              },
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "argv":{
+                "minItems":1,
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "items":{
+                  "type":"string"
+                },
+                "type":"array"
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_process"
+        },
+        "type":"function"
+      },{
+        "type":"function",
+        "function":{
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "parameters":{
+            "properties":{
+              "lua":{
+                "description":"Lua code to execute. Should be a valid Lua chunk.",
+                "type":"string"
+              }
+            },
+            "required":["lua"],
+            "type":"object"
+          },
+          "name":"run_in_neovim"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "parameters":{
+            "properties":{
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "top_k":{
+                "description":"number of matches to return (post reranking)",
+                "type":"number"
+              }
+            },
+            "required":["query"],
+            "type":"object"
+          },
+          "name":"semantic_grep"
+        }
+      }],
+    "messages":[{
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n",
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal config = require(\"ask-openai.config\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal text_helpers = require(\"ask-openai.helpers.text\")\nlocal thinking = require(\"ask-openai.rewrites.thinking\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal Displayer = require(\"ask-openai.rewrites.displayer\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal human = require(\"devtools.humanize\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua:15-31\nlocal human = require(\"devtools.humanize\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal harmony = require(\"ask-openai.backends.models.gptoss.tokenizer\").harmony\nlocal rag_instructions = require(\"ask-openai.frontends.prompts.rag_instructions\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\n\n---@class RewriteFrontend : StreamingFrontend\nlocal RewriteFrontend = {}\n\n-- Initialize selection position variables at module level\n---@type Selection|nil\nRewriteFrontend.selection = nil\nRewriteFrontend.accumulated_chunks = \"\"\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/init.lua:0-19\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal SSEDataOnlyParser = require(\"ask-openai.backends.sse.data_only_parser\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal plumbing = require(\"ask-openai.tools.plumbing\")\nlocal safely = require(\"ask-openai.helpers.safely\")\n\nlocal uv = vim.uv\n\nlocal M = {}\n\n-- TODO! look into Memory tools / RAG, i.e. in Qwen-Agent\n-- TODO! https://github.com/QwenLM/Qwen-Agent/blob/main/qwen_agent/memory/memory.py\n-- also check out other examples in qwen-agent for new ideas:\n--    https://github.com/QwenLM/Qwen-Agent/tree/main/examples\n-- PRN also I wanna test out large qwen models, hosted by Alibaba/groq/others\n\nlocal servers = {\n\n    -- PRN implement https://agentskills.io/mcp https based MCP tools... is it a websocket?\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/frontend.lua:0-19\nlocal uv = vim.uv\nlocal Prediction = require(\"ask-openai.predictions.prediction\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal api = require(\"ask-openai.api\")\nlocal FIMPerformance = require(\"ask-openai.predictions.fim_performance\")\nrequire(\"devtools.performance\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nrequire(\"ask-openai.predictions.prefix_suffix\")\nlocal ps = require(\"ask-openai.predictions.prefix_suffix\")\nlocal lualine = require('ask-openai.status.lualine')\nlocal stats = require(\"ask-openai.predictions.stats\")\nlocal Curl = require(\"ask-openai.backends.curl\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal FimBackend = require(\"ask-openai.predictions.backends.fim_backend\")\nlocal llama_server_client = require(\"ask-openai.backends.llama_cpp.llama_server_client\")\n\n---@class PredictionsFrontend : StreamingFrontend\n---@field current_prediction Prediction|nil\nlocal PredictionsFrontend = {}\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/integration.tests.lua:9-40\n                                 function()\n    it(\"should give correct results for simple prompt\", function()\n        local code = \"def add(x, y):\"\n        local filename = \"add.py\"\n        local user_prompt = \"Finish this function\"\n        local response = rewrites_frontend.send_to_ollama(user_prompt, code, filename)\n\n        print(response)\n\n        -- just use assert to compare and if match then no need to look further\n        --   else, can visually compare\n        --   mostly looking for no ``` and ` in response\n        assert.is_nil(string.match(response, '```'), 'response has ```')\n        assert.is_nil(string.match(response, '`'), 'response has backtick')\n\n        assert.is_equal(\"def add(x, y):\\n    return x + y\", response)\n    end)\n\n    it(\"should leave existing comments in tact\", function()\n        -- TODO can I get it to repro removing a comment in an example? or did it remove it for another reason?\n        -- FYI I asked it to not add comments, which led it to remove comments in existing code which I don't wanna do :) either\n        local code = \"print(1+1)\\n# This is a comment\\ndef add(x, y):\"\n        local filename = \"add.py\"\n        local user_prompt = \"Finish this function\"\n        local response = rewrites_frontend.send_to_ollama(user_prompt, code, filename)\n\n        print(response)\n\n        local hasComment = string.match(response, '# This is a comment')\n        assert.is_not_nil(hasComment, 'response does not have original comment')\n    end)\nend\n",
+        "role":"user"
+      },{
+        "content":"make AskRewrite use qwen model now 8012",
+        "role":"user"
+      },{
+        "tool_calls":[{
+            "id":"DaV0eQuWKRO95UzHO3xKbOfKWY8tDYYc",
+            "type":"function",
+            "function":{
+              "arguments":"{\"query\":\"qwen 8012 model configuration rewrite\",\"instruct\":\"Find where Qwen models or 8012 model is configured, especially for rewrites\",\"top_k\":10}",
+              "name":"semantic_grep"
+            }
+          },{
+            "id":"T6uPajKb35iKHelHXvKwpdsSvmBla8OA",
+            "type":"function",
+            "function":{
+              "arguments":"{\"query\":\"RewriteFrontend send_to_ollama model parameters\",\"instruct\":\"Find how RewriteFrontend sends requests and what model it uses\",\"top_k\":10}",
+              "name":"semantic_grep"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"The user wants to make AskRewrite use the Qwen model (8012). I need to find where the rewrite frontend is configured and see how to change the model it uses.\n\nLet me look at the rewrite frontend code to understand how models are configured and used.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":8291.6814775588,
+          "prompt_n":3429,
+          "predicted_per_second":208.215475517,
+          "cache_n":0,
+          "prompt_ms":413.547,
+          "prompt_per_token_ms":0.12060279965004,
+          "predicted_ms":1018.176,
+          "predicted_per_token_ms":4.8027169811321,
+          "predicted_n":212
+        }
+      },{
+        "content":"{\"matches\":[{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua\",\"end_column_base0\":3,\"start_column_base0\":0,\"rerank_rank\":0,\"id\":\"0ce4f342e0a6e6dc\",\"signature\":\"function M.set_rewrite_reasoning_level(level)\\n    -- FYI I wanted a separate setting largely because I intend to leave this normally on a different level vs FIM...\\n    --  FIM will normally be low/off, Rewrite/Agents will be medium/high\",\"embed_rank\":2,\"text\":\"-- * separate reasoning level for RewriteFrontend and AgentsFrontend\\nfunction M.set_rewrite_reasoning_level(level)\\n    -- FYI I wanted a separate setting largely because I intend to leave this normally on a different level vs FIM...\\n    --  FIM will normally be low/off, Rewrite/Agents will be medium/high\\n    local cfg = get()\\n    cfg.gptoss = cfg.gptoss or {}\\n    cfg.gptoss.rewrite_reasoning_level = level\\n    save()\\nend\",\"rerank_score\":0.5078125,\"embed_score\":0.5459880232810974,\"end_line_base0\":260,\"start_line_base0\":252,\"id_int\":\"929134891707590364\",\"type\":\"ts\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/ask.notes.md\",\"end_column_base0\":46,\"start_column_base0\":0,\"rerank_rank\":1,\"id\":\"c5271d8eb1f0d647\",\"signature\":\"\",\"embed_rank\":0,\"text\":\"## old model notes in AskAgent\\n\\ntaken from AgentsFrontend right before sending a new question trace\\n**put notes here instead of bloating the code**\\n\\n```lua\\n    ---@type ChatParams\\n    local qwen25_body_overrides = ChatParams:new({\\n        messages = messages,\\n        -- avoid num_ctx (s/b set server side), instead use max_tokens to cap request:\\n        max_tokens = 20000, -- PRN what level for rewrites?\\n        -- temperature = ?\\n    })\\n\\n        -- model = \\\"qwen2.5-coder:7b-instruct-q8_0\\\", -- btw -base- does terrible here :) -- instruct works at random... seems to be a discrepency in published template and what it was actually trained with? (for tool calls)\\n        --\\n        -- * qwen3 related\\n        -- model = \\\"qwen3:8b\\\", -- btw as of Qwen3, no tag == \\\"-instruct\\\", and for base you'll use \\\"-base\\\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\\n        -- model = \\\"qwen3-coder:30b-a3b-q4_K_M\\\",\\n        -- model = \\\"qwen3-coder:30b-a3b-q8_0\\\",\\n\",\"rerank_score\":0.37744140625,\"embed_score\":0.548991322517395,\"end_line_base0\":19,\"start_line_base0\":0,\"id_int\":\"4982984011416655431\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/lsp/inference/qwen3/known.py\",\"id_int\":\"943388130002610963\",\"rerank_rank\":2,\"text\":\"\\n\\nexpected_scores_by_model_path = {\\n    # TODO ensure input_texts match! (for Qwen they appear to match\\n    # PRN might be useful to consolidate other config per model, i.e. embedding dimensions\\n    \\\"Qwen/Qwen3-Embedding-0.6B\\\": [[0.7646, 0.1414], [0.1355, 0.6000]],  # dimensions: 1024 (variable from 32+, IIUC)\\n    # \\\"0.6B\\\": [[0.7645568251609802, 0.14142508804798126], [0.13549736142158508, 0.5999549627304077]],\\n    \\\"Qwen/Qwen3-Embedding-4B\\\": [[0.7534, 0.1147], [0.0320, 0.6258]],  # dimension: 2560\\n    \\\"Qwen/Qwen3-Embedding-8B\\\": [[0.7493, 0.0751], [0.0880, 0.6318]],  # dimension: 4096\\n}\\n\\n\",\"embed_rank\":4,\"signature\":\"\",\"rerank_score\":0.262939453125,\"embed_score\":0.5404320955276489,\"end_line_base0\":29,\"start_line_base0\":19,\"id\":\"0d17968186202b13\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua\",\"id_int\":\"4393529863282813705\",\"rerank_rank\":3,\"text\":\"local human = require(\\\"devtools.humanize\\\")\\nlocal tool_router = require(\\\"ask-openai.tools.router\\\")\\nlocal model_params = require(\\\"ask-openai.agents.models.params\\\")\\nlocal MessageBuilder = require(\\\"ask-openai.rewrites.message_builder\\\")\\nlocal HLGroups = require(\\\"ask-openai.hlgroups\\\")\\nlocal harmony = require(\\\"ask-openai.backends.models.gptoss.tokenizer\\\").harmony\\nlocal rag_instructions = require(\\\"ask-openai.frontends.prompts.rag_instructions\\\")\\nlocal prompt_parser = require(\\\"ask-openai.frontends.context.prompt_parser\\\")\\n\\n---@class RewriteFrontend : StreamingFrontend\\nlocal RewriteFrontend = {}\\n\\n-- Initialize selection position variables at module level\\n---@type Selection|nil\\nRewriteFrontend.selection = nil\\nRewriteFrontend.accumulated_chunks = \\\"\\\"\\n\\n\",\"embed_rank\":3,\"signature\":\"\",\"rerank_score\":0.25830078125,\"embed_score\":0.5445502996444702,\"end_line_base0\":31,\"start_line_base0\":15,\"id\":\"3cf8f421fb0aeb09\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/models/qwen2.5-coder/build.fish\",\"end_column_base0\":0,\"start_column_base0\":0,\"rerank_rank\":4,\"id\":\"7acf3cea8aaac51f\",\"signature\":\"\",\"embed_rank\":6,\"text\":\"#!/usr/bin/env fish\\n\\nexport OLLAMA_HOST='ollama:11434'\\n\\nollama create fim_qwen:7b-instruct-q8_0 \\\\\\n    -f 7b-instruct-q8_0.Modelfile\\n\\n\",\"rerank_score\":0.1561279296875,\"embed_score\":0.4724404215812683,\"end_line_base0\":6,\"start_line_base0\":0,\"id_int\":\"8849358770852775199\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/NOTES.md\",\"end_column_base0\":157,\"start_column_base0\":0,\"rerank_rank\":5,\"id\":\"ee61344931e7fed4\",\"signature\":\"\",\"embed_rank\":1,\"text\":\"\\n- Things to guide it:\\n    - No markdown if not a markdown file\\n    - Comments have to be valid (not just willy nilly text) =>  esp happens w/ new files that have maybe one comment at the top, it thinks its time to write a guide doc with text and code\\n- Comments work well (as is expected)\\n- How about when there's a db schema... include it when relevant or always or?\\n    - i.e. usaspending db/repo... would rock to have that context when writing a sql query! there we go... if working in a sql file we include the repo level sql prompt!\\n\\n\\n### Tool use?\\n\\n- How about allow the model to request more data (i.e. read a file for a given symbol?)... what could that look like? Qwen has tool use BTW\\n\\n### Rewrite the Middle\\n\\n- Not just FIM, also RIM!\\n    - idea => mark a section inside the FIM that can be rewritten, basically whatever is replaced in that section will become the prediction and I can diff it with that same section to show it then\\n    - use vim.diff?\\n- As far as formatting/prompting...\\n    - can I get away w/o fine tuning or training a model on the new \\\"<|rewrite_start|>\\\" and \\\"<|rewrite_end|>\\\" and just use them with a good prompt somewhere?\\n\",\"rerank_score\":0.08319091796875,\"embed_score\":0.5481261610984802,\"end_line_base0\":154,\"start_line_base0\":135,\"id_int\":\"7953695905887551188\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer_web/src/components/RewritePreview.svelte\",\"end_column_base0\":42,\"start_column_base0\":0,\"rerank_rank\":6,\"id\":\"3c9d07b549a12457\",\"signature\":\"\",\"embed_rank\":7,\"text\":\"    <div class=\\\"px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/30\\\">\\n      <h3 class=\\\"text-sm font-semibold text-yellow-400\\\">TLDR</h3>\\n      <p class=\\\"text-xs text-gray-400 mt-1\\\">\\n        No user selection found in the last user message - cannot generate diff\\n      </p>\\n    </div>\\n  </div>\\n{:else if diffData}\\n  <div class=\\\"rewrite-preview mb-6 rounded-lg border border-purple-500/30 bg-gray-900 overflow-hidden\\\">\\n    <div class=\\\"px-4 py-2 bg-purple-500/10 border-b border-purple-500/30\\\">\\n      <h3 class=\\\"text-sm font-semibold text-purple-400\\\">TLDR</h3>\\n      <p class=\\\"text-xs text-gray-400 mt-1\\\">\\n        Red shows removed text, green shows the assistant's rewrite\\n      </p>\\n    </div>\\n\\n    <div class=\\\"p-2 bg-gray-900 font-mono text-sm overflow-x-auto\\\">\\n      <div class=\\\"whitespace-pre-wrap\\\">\\n        {#each diffData.wordDiff as segment}\\n          {#if segment.type === 'removed'}\\n\",\"rerank_score\":0.0216217041015625,\"embed_score\":0.4232905209064484,\"end_line_base0\":64,\"start_line_base0\":45,\"id_int\":\"4367655688825021527\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer_web/src/components/RewritePreview.svelte\",\"end_column_base0\":10,\"start_column_base0\":0,\"rerank_rank\":7,\"id\":\"d73855c2889b3979\",\"signature\":\"\",\"embed_rank\":9,\"text\":\"})\\n\\n// Generate word diff\\nconst diffData = $derived.by(() => {\\n  if (!userSelection) return null\\n\\n  return {\\n    wordDiff: computeWordDiff(userSelection, assistantCode),\\n    hasSelection: true\\n  }\\n})\\n</script>\\n\\n{#if !userSelection}\\n  <div class=\\\"rewrite-preview mb-6 rounded-lg border border-yellow-500/30 bg-gray-900 overflow-hidden\\\">\\n    <div class=\\\"px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/30\\\">\\n      <h3 class=\\\"text-sm font-semibold text-yellow-400\\\">TLDR</h3>\\n      <p class=\\\"text-xs text-gray-400 mt-1\\\">\\n        No user selection found in the last user message - cannot generate diff\\n      </p>\\n\",\"rerank_score\":0.0198822021484375,\"embed_score\":0.4179228842258453,\"end_line_base0\":49,\"start_line_base0\":30,\"id_int\":\"6284867573999417721\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tests/manual_prompting/repo_calc_03_pasteboard.py\",\"end_column_base0\":33,\"start_column_base0\":0,\"rerank_rank\":8,\"id\":\"c6be5093f645f964\",\"signature\":\"\",\"embed_rank\":5,\"text\":\"request_body = {\\n    \\\"prompt\\\": prompt,\\n    \\\"options\\\": {\\n        \\\"num_ctx\\\": 8192\\n    },\\n    \\\"raw\\\": True,\\n    \\\"num_predict\\\": 200,\\n    \\\"stream\\\": False,\\n    \\\"model\\\": \\\"qwen2.5-coder:7b-base-q8_0\\\",\\n}\\n\\nshow_completion_for(request_body)\\n\",\"rerank_score\":0.0197296142578125,\"embed_score\":0.5394906997680664,\"end_line_base0\":26,\"start_line_base0\":15,\"id_int\":\"5097600424652175716\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/typescript/decorators.ts\",\"id_int\":\"4467965162813636756\",\"rerank_rank\":9,\"text\":\";\\n\\n\",\"embed_rank\":10,\"signature\":\"\",\"rerank_score\":0.00560760498046875,\"embed_score\":0.3488484621047974,\"end_line_base0\":6,\"start_line_base0\":5,\"id\":\"3e0166a4ae53c094\",\"type\":\"uncovered\"}]}",
+        "start_time_ms":565604503,
+        "duration_ms":158,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"DaV0eQuWKRO95UzHO3xKbOfKWY8tDYYc"
+      },{
+        "content":"{\"matches\":[{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/integration.tests.lua\",\"end_column_base0\":3,\"start_column_base0\":33,\"rerank_rank\":0,\"id\":\"dac98beb7f372bfe\",\"signature\":\"function()\",\"embed_rank\":3,\"text\":\"function()\\n    it(\\\"should give correct results for simple prompt\\\", function()\\n        local code = \\\"def add(x, y):\\\"\\n        local filename = \\\"add.py\\\"\\n        local user_prompt = \\\"Finish this function\\\"\\n        local response = rewrites_frontend.send_to_ollama(user_prompt, code, filename)\\n\\n        print(response)\\n\\n        -- just use assert to compare and if match then no need to look further\\n        --   else, can visually compare\\n        --   mostly looking for no ``` and ` in response\\n        assert.is_nil(string.match(response, '```'), 'response has ```')\\n        assert.is_nil(string.match(response, '`'), 'response has backtick')\\n\\n        assert.is_equal(\\\"def add(x, y):\\\\n    return x + y\\\", response)\\n    end)\\n\\n    it(\\\"should leave existing comments in tact\\\", function()\\n        -- TODO can I get it to repro removing a comment in an example? or did it remove it for another reason?\\n        -- FYI I asked it to not add comments, which led it to remove comments in existing code which I don't wanna do :) either\\n        local code = \\\"print(1+1)\\\\n# This is a comment\\\\ndef add(x, y):\\\"\\n        local filename = \\\"add.py\\\"\\n        local user_prompt = \\\"Finish this function\\\"\\n        local response = rewrites_frontend.send_to_ollama(user_prompt, code, filename)\\n\\n        print(response)\\n\\n        local hasComment = string.match(response, '# This is a comment')\\n        assert.is_not_nil(hasComment, 'response does not have original comment')\\n    end)\\nend\",\"rerank_score\":0.9638671875,\"embed_score\":0.6834421753883362,\"end_line_base0\":40,\"start_line_base0\":9,\"id_int\":\"6541913777300253694\",\"type\":\"ts\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/models/qwen2.5-coder/OLLAMA-API-REVIEW.md\",\"end_column_base0\":102,\"start_column_base0\":0,\"rerank_rank\":1,\"id\":\"7206b67002ac1e64\",\"signature\":\"\",\"embed_rank\":1,\"text\":\"- OLLAMA_NUM_PARALLEL=1\\n- OLLAMA_HOST\\n- Model params\\n    - where to configure:\\n        - model itself has a `params` layer with json file of parameter names/values\\n            - usually few, if any, have any set though\\n        - via env vars\\n            - [available env vars](https://github.com/ollama/ollama/blob/main/envconfig/config.go#L236)\\n            - via `/api/generate`\\n            - or, Modelfile (if using `/v1/completions` and IIAC `/v1/chat/completions`\\n        - via API requests\\n            - `num_ctx` (defaults to 2048) => and in my testing, many models don't override it\\n        - via CLI args (i.e. ollama run has set param command)\\n        - indirectly via runner\\n            - moreso to validate correct config with above methods\\n            - runner's args: https://github.com/ollama/ollama/blob/main/llama/runner/runner.go#L891\\n                - equivalent to `llama-server` for ollama's purposes\\n- Runner recomendations:\\n    - model: qwen2.5-Coder:7b-instruct_q8_0\\n    - num_gpu/NumGPU: 1000  (set higher than model layers to make sure as many as possible are in gpu)\\n\",\"rerank_score\":0.9482421875,\"embed_score\":0.713407039642334,\"end_line_base0\":34,\"start_line_base0\":15,\"id_int\":\"8216455162381475428\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua\",\"id_int\":\"4393529863282813705\",\"rerank_rank\":2,\"text\":\"local human = require(\\\"devtools.humanize\\\")\\nlocal tool_router = require(\\\"ask-openai.tools.router\\\")\\nlocal model_params = require(\\\"ask-openai.agents.models.params\\\")\\nlocal MessageBuilder = require(\\\"ask-openai.rewrites.message_builder\\\")\\nlocal HLGroups = require(\\\"ask-openai.hlgroups\\\")\\nlocal harmony = require(\\\"ask-openai.backends.models.gptoss.tokenizer\\\").harmony\\nlocal rag_instructions = require(\\\"ask-openai.frontends.prompts.rag_instructions\\\")\\nlocal prompt_parser = require(\\\"ask-openai.frontends.context.prompt_parser\\\")\\n\\n---@class RewriteFrontend : StreamingFrontend\\nlocal RewriteFrontend = {}\\n\\n-- Initialize selection position variables at module level\\n---@type Selection|nil\\nRewriteFrontend.selection = nil\\nRewriteFrontend.accumulated_chunks = \\\"\\\"\\n\\n\",\"embed_rank\":2,\"signature\":\"\",\"rerank_score\":0.9189453125,\"embed_score\":0.6952603459358215,\"end_line_base0\":31,\"start_line_base0\":15,\"id\":\"3cf8f421fb0aeb09\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/models/qwen2.5-coder/README.md\",\"end_column_base0\":3,\"start_column_base0\":0,\"rerank_rank\":3,\"id\":\"0eb4b3b74f257ed2\",\"signature\":\"\",\"embed_rank\":0,\"text\":\"\\nMany parameters to ollama cannot be passed via API when using `/v1/completions`\\nSo, create custom models tuned to my use case\\n\\nDocs: https://github.com/ollama/ollama/blob/main/docs/modelfile.md\\n\\n- `num_ctx` will default to ridiculously low values and truncate my FIM prompts...\\n\\n\\n```sh\\n\\n# FYI show current modelfile:\\nollama show --modelfile qwen2.5-coder:7b-instruct-q8_0\\n\\n```\\n\",\"rerank_score\":0.8310546875,\"embed_score\":0.7386050224304199,\"end_line_base0\":14,\"start_line_base0\":0,\"id_int\":\"1059669412227153618\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tests/manual_prompting/show.py\",\"id_int\":\"3106597185543962244\",\"rerank_rank\":4,\"text\":\"import requests\\nimport json\\n\\nraw_print = print\\nfrom rich import print\\n\\nuse_llama_cpp_server = True\\nurl = \\\"http://localhost:11434/api/generate\\\"\\nif use_llama_cpp_server:\\n    url = \\\"http://ask.lan:8012/completions\\\"\\n\\ndef show_completion_for(body):\\n    print(\\\"[blue]## PROMPT\\\")\\n    raw_print(body[\\\"prompt\\\"])\\n\\n    # \\\"http://ollama:11434/api/generate\\\",\\n    response = requests.post(\\n        url,\\n        headers={\\\"Content-Type\\\": \\\"application/json\\\"},\\n        data=json.dumps(body),\\n\",\"embed_rank\":5,\"signature\":\"\",\"rerank_score\":0.4765625,\"embed_score\":0.641115128993988,\"end_line_base0\":19,\"start_line_base0\":0,\"id\":\"2b1cd9ae48937e84\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/models/qwen2.5-coder/build.fish\",\"end_column_base0\":0,\"start_column_base0\":0,\"rerank_rank\":5,\"id\":\"7acf3cea8aaac51f\",\"signature\":\"\",\"embed_rank\":4,\"text\":\"#!/usr/bin/env fish\\n\\nexport OLLAMA_HOST='ollama:11434'\\n\\nollama create fim_qwen:7b-instruct-q8_0 \\\\\\n    -f 7b-instruct-q8_0.Modelfile\\n\\n\",\"rerank_score\":0.08099365234375,\"embed_score\":0.6487787961959839,\"end_line_base0\":6,\"start_line_base0\":0,\"id_int\":\"8849358770852775199\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tests/manual_prompting/qwen2_5coder/edits/ring_buffer.py\",\"end_column_base0\":33,\"start_column_base0\":0,\"rerank_rank\":6,\"id\":\"f0c0292ce3d9f722\",\"signature\":\"\",\"embed_rank\":6,\"text\":\"    \\\"raw\\\": True,\\n    \\\"num_predict\\\": 200,\\n    \\\"stream\\\": False,\\n    \\\"model\\\": \\\"qwen2.5-coder:7b-base-q8_0\\\",\\n}\\n\\nshow_completion_for(request_body)\\n\",\"rerank_score\":0.0242156982421875,\"embed_score\":0.6181355118751526,\"end_line_base0\":21,\"start_line_base0\":15,\"id_int\":\"8124539000554387234\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer_web/src/components/RewritePreview.svelte\",\"end_column_base0\":42,\"start_column_base0\":0,\"rerank_rank\":7,\"id\":\"3c9d07b549a12457\",\"signature\":\"\",\"embed_rank\":9,\"text\":\"    <div class=\\\"px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/30\\\">\\n      <h3 class=\\\"text-sm font-semibold text-yellow-400\\\">TLDR</h3>\\n      <p class=\\\"text-xs text-gray-400 mt-1\\\">\\n        No user selection found in the last user message - cannot generate diff\\n      </p>\\n    </div>\\n  </div>\\n{:else if diffData}\\n  <div class=\\\"rewrite-preview mb-6 rounded-lg border border-purple-500/30 bg-gray-900 overflow-hidden\\\">\\n    <div class=\\\"px-4 py-2 bg-purple-500/10 border-b border-purple-500/30\\\">\\n      <h3 class=\\\"text-sm font-semibold text-purple-400\\\">TLDR</h3>\\n      <p class=\\\"text-xs text-gray-400 mt-1\\\">\\n        Red shows removed text, green shows the assistant's rewrite\\n      </p>\\n    </div>\\n\\n    <div class=\\\"p-2 bg-gray-900 font-mono text-sm overflow-x-auto\\\">\\n      <div class=\\\"whitespace-pre-wrap\\\">\\n        {#each diffData.wordDiff as segment}\\n          {#if segment.type === 'removed'}\\n\",\"rerank_score\":0.0098419189453125,\"embed_score\":0.4770463705062866,\"end_line_base0\":64,\"start_line_base0\":45,\"id_int\":\"4367655688825021527\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/typescript/decorators.ts\",\"id_int\":\"4467965162813636756\",\"rerank_rank\":8,\"text\":\";\\n\\n\",\"embed_rank\":10,\"signature\":\"\",\"rerank_score\":0.00711822509765625,\"embed_score\":0.3950930535793304,\"end_line_base0\":6,\"start_line_base0\":5,\"id\":\"3e0166a4ae53c094\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/typescript/decorators.ts\",\"id_int\":\"3772388025107243831\",\"rerank_rank\":9,\"text\":\";\\n\\n\",\"embed_rank\":11,\"signature\":\"\",\"rerank_score\":0.00711822509765625,\"embed_score\":0.3950930535793304,\"end_line_base0\":4,\"start_line_base0\":3,\"id\":\"b45a36ebff746337\",\"type\":\"uncovered\"}]}",
+        "start_time_ms":565604504,
+        "duration_ms":176,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"T6uPajKb35iKHelHXvKwpdsSvmBla8OA"
+      },{
+        "tool_calls":[{
+            "id":"BEEXbCcbDuealvB8WI4IWYaoyDrb12Au",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"send_to_ollama|model.*rewrite|rewrite.*model\\\" lua/ask-openai/rewrites/frontend.lua --no-heading -n\"}",
+              "name":"run_process"
+            }
+          },{
+            "id":"5tDh3q8ztaLqgAXctZQXgtnGqmoNjVJf",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"8012|localhost.*8012\\\" lua/ --include=\\\"*.lua\\\" -l\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me look at the RewriteFrontend more closely to understand how it sends requests and what model it uses.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":8150.2794481453,
+          "prompt_n":6991,
+          "predicted_per_second":202.49614275071,
+          "cache_n":3405,
+          "prompt_ms":857.762,
+          "prompt_per_token_ms":0.12269517951652,
+          "predicted_ms":661.741,
+          "predicted_per_token_ms":4.9383656716418,
+          "predicted_n":134
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"2\",\"type\":\"text\"},{\"name\":\"STDERR\",\"text\":\"rg: unrecognized flag --include\\n\\nsimilar flags that are available: --include-zero\\n\",\"type\":\"text\"}],\"isError\":true}",
+        "start_time_ms":565606305,
+        "duration_ms":13,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"5tDh3q8ztaLqgAXctZQXgtnGqmoNjVJf"
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"1\",\"type\":\"text\"}],\"isError\":true}",
+        "start_time_ms":565606305,
+        "duration_ms":14,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"BEEXbCcbDuealvB8WI4IWYaoyDrb12Au"
+      },{
+        "tool_calls":[{
+            "id":"bcGXKJHnOmfft7rBqDtHCttvEFMgWMft",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"send_to_ollama|model\\\" lua/ask-openai/rewrites/frontend.lua -n\"}",
+              "name":"run_process"
+            }
+          },{
+            "id":"i666TT6iZpyBMqaKxQhpJvV5lX4GZu6v",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"8012\\\" . --include=\\\"*.lua\\\" -l\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me fix the commands and search more broadly.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3213.6079675315,
+          "prompt_n":232,
+          "predicted_per_second":203.10184880712,
+          "cache_n":10392,
+          "prompt_ms":72.193,
+          "prompt_per_token_ms":0.31117672413793,
+          "predicted_ms":516.982,
+          "predicted_per_token_ms":4.9236380952381,
+          "predicted_n":105
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"2\",\"type\":\"text\"},{\"name\":\"STDERR\",\"text\":\"rg: unrecognized flag --include\\n\\nsimilar flags that are available: --include-zero\\n\",\"type\":\"text\"}],\"isError\":true}",
+        "start_time_ms":565607013,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"i666TT6iZpyBMqaKxQhpJvV5lX4GZu6v"
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"5:47:local agentica = require(\\\"ask-openai.backends.models.agentica\\\")\\n18:7:local model_params = require(\\\"ask-openai.agents.models.params\\\")\\n21:46:local harmony = require(\\\"ask-openai.backends.models.gptoss.tokenizer\\\").harmony\\n101:56:            -- NOW I have access to request (url, body.model, etc) to be able to dynamically swap in the right SSE parser!\\n364:79:        -- - FYI mentioning \\\"carefully preserved indentation\\\" resulted in the model not generating markdown wrapers and explanations! (gptoss120b)\\n415:26:            -- * current models only\\n416:16:            -- model = \\\"qwen3:8b\\\", -- btw as of Qwen3, no tag == \\\"-instruct\\\", and for base you'll use \\\"-base\\\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\\n417:16:            -- model = \\\"qwen3-coder:30b-a3b-q8_0\\\", # q4_K_M\\n424:22:        local body = model_params.new_gptoss_chat_body_llama_server({\\n425:29:            -- local body = model_params.new_qwen3coder_llama_server_chat_body({\\n427:13:            model = \\\"\\\", -- irrelevant for llama-server\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565607013,
+        "duration_ms":12,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"bcGXKJHnOmfft7rBqDtHCttvEFMgWMft"
+      },{
+        "tool_calls":[{
+            "id":"5YlNjbT3OVC1r9CzzHi7enPbJ6flowf5",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"model_params.new\\\" lua/ask-openai/rewrites/frontend.lua -n -A 10 -B 2\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me look at the rewrite frontend file more closely, especially around where it makes API calls and what model parameters it uses.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4818.9864255692,
+          "prompt_n":759,
+          "predicted_per_second":202.3162746172,
+          "cache_n":10392,
+          "prompt_ms":157.502,
+          "prompt_per_token_ms":0.20751251646904,
+          "predicted_ms":405.306,
+          "predicted_per_token_ms":4.942756097561,
+          "predicted_n":82
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"422-        }\\n423-\\n424:22:        local body = model_params.new_gptoss_chat_body_llama_server({\\n425:29:            -- local body = model_params.new_qwen3coder_llama_server_chat_body({\\n426-            messages = messages,\\n427-            model = \\\"\\\", -- irrelevant for llama-server\\n428-            -- tools = tool_router.openai_tools(),\\n429-        }, context)\\n430-\\n431-        RewriteFrontend.last_request = CurlRequest:new({\\n432-            body = body,\\n433-            base_url = config.get_endpoints().rewrite.base_url,\\n434-            endpoint = CompletionsEndpoints.oai_v1_chat_completions,\\n435-            type = \\\"rewrite\\\",\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565607700,
+        "duration_ms":11,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"5YlNjbT3OVC1r9CzzHi7enPbJ6flowf5"
+      },{
+        "tool_calls":[{
+            "id":"BMvhNMJK9EfJyW5Xu6r7qc5HSXqgPjME",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"new_qwen\\\" lua/ask-openai/agents/models/params.lua -n -A 15\"}",
+              "name":"run_process"
+            }
+          },{
+            "id":"HzDKCYYTkLzUSN1QPrEKls5b0yQoT3QO",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/agents/models/params.lua | head -100\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me look at the model_params module to see what functions are available and understand how to switch to qwen 8012.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3411.5677417317,
+          "prompt_n":324,
+          "predicted_per_second":201.82981773337,
+          "cache_n":11147,
+          "prompt_ms":94.971,
+          "prompt_per_token_ms":0.29312037037037,
+          "predicted_ms":629.243,
+          "predicted_per_token_ms":4.9546692913386,
+          "predicted_n":127
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"local log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal api = require(\\\"ask-openai.api\\\")\\nlocal local_share = require(\\\"ask-openai.config.local_share\\\")\\nlocal gptoss_tokenizer = require(\\\"ask-openai.backends.models.gptoss.tokenizer\\\")\\n\\nlocal M = {}\\n\\nfunction default_to_recommended(request_body, recommended)\\n    -- rightmost wins\\n    local merged = vim.tbl_deep_extend(\\\"force\\\", recommended, request_body or {})\\n    -- log:luaify_trace(\\\"merged request body: \\\", merged)\\n    return merged\\nend\\n\\nlocal function throw_if_no_messages(request_body)\\n    if request_body.messages == nil then\\n        error(\\\"messages are required for gpt-oss chat\\\")\\n    end\\nend\\n\\n---@param request_body table\\n---@param context CurrentContext\\n---@return table\\nfunction M.new_gptoss_chat_body_llama_server(request_body, context)\\n    throw_if_no_messages(request_body)\\n\\n    local level = context.includes:get_reasoning_level()\\n        or api.get_rewrite_reasoning_level()\\n\\n    local max_tokens = gptoss_tokenizer.get_gptoss_max_tokens_for_level(level)\\n\\n    local recommended = {\\n\\n        -- We recommend sampling with temperature=1.0 and top_p=1.0.\\n        --   https://github.com/openai/gpt-oss?tab=readme-ov-file#recommended-sampling-parameters\\n        temperature = 1.0,\\n        top_p = 1.0,\\n\\n        chat_template_kwargs = {\\n            reasoning_effort = level,\\n        },\\n        max_tokens = max_tokens,\\n\\n        -- verbose = true, -- * my build of llama-server will one-off add __verbose if verbose is set on body of request!\\n\\n    }\\n    return default_to_recommended(request_body, recommended)\\nend\\n\\nfunction M.new_qwen3coder_llama_server_chat_body(request_body) -- this is a duplicate\\n    throw_if_no_messages(request_body)\\n\\n    local recommended = {\\n        -- official recommended settings (for transformers):\\n        -- https://huggingface.co/Qwen/Qwen3-Coder-480B-A35B-Instruct/blob/main/generation_config.json\\n        --   \\\"repetition_penalty\\\": 1.05,\\n        --   \\\"temperature\\\": 0.7,\\n        --   \\\"top_p\\\": 0.8,\\n        --   \\\"top_k\\\": 20\\n        repeat_penalty = 1.05,\\n        temperature = 0.7,\\n        top_p = 0.8,\\n        top_k = 20,\\n        --  FYI I inlined these values into predictions handler, it's not using chat completions endpoint so not gonna conflate the two here\\n    }\\n    return default_to_recommended(request_body, recommended)\\nend\\n\\nfunction M.new_qwen25coder_ollama_body(request_body)\\n    -- get values from rewrite/ask/predictions\\n    -- PRN I should run some tests too, I never optimized using 2.5-Coder!\\n    --   keep in mind it had both base and instruct variants\\nend\\n\\nreturn M\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565608548,
+        "duration_ms":9,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"HzDKCYYTkLzUSN1QPrEKls5b0yQoT3QO"
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"50:12:function M.new_qwen3coder_llama_server_chat_body(request_body) -- this is a duplicate\\n51-    throw_if_no_messages(request_body)\\n52-\\n53-    local recommended = {\\n54-        -- official recommended settings (for transformers):\\n55-        -- https://huggingface.co/Qwen/Qwen3-Coder-480B-A35B-Instruct/blob/main/generation_config.json\\n56-        --   \\\"repetition_penalty\\\": 1.05,\\n57-        --   \\\"temperature\\\": 0.7,\\n58-        --   \\\"top_p\\\": 0.8,\\n59-        --   \\\"top_k\\\": 20\\n60-        repeat_penalty = 1.05,\\n61-        temperature = 0.7,\\n62-        top_p = 0.8,\\n63-        top_k = 20,\\n64-        --  FYI I inlined these values into predictions handler, it's not using chat completions endpoint so not gonna conflate the two here\\n65-    }\\n--\\n69:12:function M.new_qwen25coder_ollama_body(request_body)\\n70-    -- get values from rewrite/ask/predictions\\n71-    -- PRN I should run some tests too, I never optimized using 2.5-Coder!\\n72-    --   keep in mind it had both base and instruct variants\\n73-end\\n74-\\n75-return M\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565608548,
+        "duration_ms":12,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"BMvhNMJK9EfJyW5Xu6r7qc5HSXqgPjME"
+      },{
+        "tool_calls":[{
+            "id":"Phhi0GI5gs1V1qTKXsazwGPe9kMeXS5B",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | head -60\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now let me look at the rewrite frontend more closely to understand the full flow - how it sends requests, what URL/base_url it uses, etc. I need to find where \"8012\" comes in (that's likely a port for llama.cpp server).\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":5908.9967418122,
+          "prompt_n":1255,
+          "predicted_per_second":199.39821618356,
+          "cache_n":11467,
+          "prompt_ms":212.388,
+          "prompt_per_token_ms":0.16923346613546,
+          "predicted_ms":501.509,
+          "predicted_per_token_ms":5.01509,
+          "predicted_n":100
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"local buffers = require(\\\"ask-openai.helpers.buffers\\\")\\nlocal config = require(\\\"ask-openai.config\\\")\\nlocal curl = require(\\\"ask-openai.backends.curl\\\")\\nlocal log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal agentica = require(\\\"ask-openai.backends.models.agentica\\\")\\nlocal text_helpers = require(\\\"ask-openai.helpers.text\\\")\\nlocal thinking = require(\\\"ask-openai.rewrites.thinking\\\")\\nlocal Selection = require(\\\"ask-openai.helpers.selection\\\")\\nlocal Displayer = require(\\\"ask-openai.rewrites.displayer\\\")\\nlocal CurrentContext = require(\\\"ask-openai.frontends.context\\\")\\nlocal TxChatMessage = require(\\\"ask-openai.agents.messages.tx\\\")\\nlocal files = require(\\\"ask-openai.helpers.files\\\")\\nlocal api = require(\\\"ask-openai.api\\\")\\nlocal rag_client = require(\\\"ask-openai.rag.client\\\")\\nlocal CurlRequest = require(\\\"ask-openai.backends.curl_request\\\")\\nlocal human = require(\\\"devtools.humanize\\\")\\nlocal tool_router = require(\\\"ask-openai.tools.router\\\")\\nlocal model_params = require(\\\"ask-openai.agents.models.params\\\")\\nlocal MessageBuilder = require(\\\"ask-openai.rewrites.message_builder\\\")\\nlocal HLGroups = require(\\\"ask-openai.hlgroups\\\")\\nlocal harmony = require(\\\"ask-openai.backends.models.gptoss.tokenizer\\\").harmony\\nlocal rag_instructions = require(\\\"ask-openai.frontends.prompts.rag_instructions\\\")\\nlocal prompt_parser = require(\\\"ask-openai.frontends.context.prompt_parser\\\")\\n\\n---@class RewriteFrontend : StreamingFrontend\\nlocal RewriteFrontend = {}\\n\\n-- Initialize selection position variables at module level\\n---@type Selection|nil\\nRewriteFrontend.selection = nil\\nRewriteFrontend.accumulated_chunks = \\\"\\\"\\n\\nfunction RewriteFrontend.strip_md_from_completion(lines)\\n    local isFirstLineStartOfCodeBlock = lines[1]:match(\\\"^```(%S*)$\\\")\\n    local isLastLineEndOfCodeBlock = lines[#lines]:match(\\\"^```\\\")\\n\\n    if isLastLineEndOfCodeBlock then\\n        table.remove(lines, #lines)\\n    end\\n    if isFirstLineStartOfCodeBlock then\\n        table.remove(lines, 1)\\n    end\\n\\n    return lines\\nend\\n\\nlocal function ensure_new_lines_around(code, response_lines)\\n    -- * Ensure preserve blank line at start of selection (if present)\\n    local selected_lines = text_helpers.split_lines(code)\\n    local selected_first_line = selected_lines[1]\\n    local response_first_line = response_lines[1]\\n\\n    local selection_starts_with_newline = selected_first_line:match(\\\"^%s*$\\\")\\n    local response_starts_with_newline =\\n        response_first_line == nil or response_first_line:match(\\\"^%s*$\\\")\\n\\n    if selection_starts_with_newline and not response_starts_with_newline\\n    then\\n        table.insert(response_lines, 1, selected_first_line) -- add back the blank line at start\\n    end\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565609398,
+        "duration_ms":9,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"Phhi0GI5gs1V1qTKXsazwGPe9kMeXS5B"
+      },{
+        "tool_calls":[{
+            "id":"Ymt3Q86fQyeVw178YdWtQg7ZAeK5r73v",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '380,500p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me look at where the rewrite request is actually sent - around line 424.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4982.5610363727,
+          "prompt_n":820,
+          "predicted_per_second":199.40179461615,
+          "cache_n":12718,
+          "prompt_ms":164.574,
+          "prompt_per_token_ms":0.2007,
+          "predicted_ms":371.11,
+          "predicted_per_token_ms":5.015,
+          "predicted_n":74
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"            local message = MessageBuilder:new()\\n                :plain_text(\\\"FYI, here is my current buffer in Neovim. Use this as context for my request.\\\")\\n                :md_current_buffer()\\n                :to_user_message()\\n\\n            table.insert(messages, message)\\n        end\\n        if context.includes.open_files then\\n            -- TODO! /files => open_files\\n            -- FYI buffers.get_text_in_all_buffers()\\n        end\\n        if context.includes.yanks and context.yanks then\\n            table.insert(messages, TxChatMessage:user_context(context.yanks.content))\\n        end\\n        if context.includes.commits and context.commits then\\n            for _, commit in pairs(context.commits) do\\n                table.insert(messages, TxChatMessage:user_context(commit.content))\\n            end\\n        end\\n        if context.includes.project and context.project then\\n            -- TODO does any of this belong in the system_message?\\n            vim.iter(context.project)\\n                :each(function(value)\\n                    table.insert(messages, TxChatMessage:user_context(value.content))\\n                end)\\n        end\\n        local rag_message = rag_instructions.semantic_grep_user_message(rag_matches)\\n        if rag_message then\\n            table.insert(messages, rag_message)\\n        end\\n\\n        table.insert(messages, TxChatMessage:user(user_message_with_code))\\n\\n        local qwen25_chat_body = {\\n            messages = messages,\\n            -- * current models only\\n            -- model = \\\"qwen3:8b\\\", -- btw as of Qwen3, no tag == \\\"-instruct\\\", and for base you'll use \\\"-base\\\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\\n            -- model = \\\"qwen3-coder:30b-a3b-q8_0\\\", # q4_K_M\\n            temperature = 0.2,\\n\\n            -- avoid num_ctx (s/b set server side), use max_tokens to cap request:\\n            max_tokens = 8192, -- PRN set high if using /think only?\\n        }\\n\\n        local body = model_params.new_gptoss_chat_body_llama_server({\\n            -- local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n            -- tools = tool_router.openai_tools(),\\n        }, context)\\n\\n        RewriteFrontend.last_request = CurlRequest:new({\\n            body = body,\\n            base_url = config.get_endpoints().rewrite.base_url,\\n            endpoint = CompletionsEndpoints.oai_v1_chat_completions,\\n            type = \\\"rewrite\\\",\\n        })\\n        curl.spawn(RewriteFrontend.last_request, RewriteFrontend)\\n    end\\n\\n    if api.is_rag_enabled() and rag_client.is_rag_supported_in_current_file() then\\n        local this_request_ids, cancel -- declare in advance for closure\\n\\n        ---@param rag_matches LSPRankedMatch[]\\n        function on_rag_response(rag_matches)\\n            log:info(\\\"on_rag_response\\\")\\n            -- PRN I think this could be shared with all frontends... if they pass themself for access to ID/cancel refs\\n\\n            -- * make sure prior (canceled) rag request doesn't still respond\\n            if RewriteFrontend.rag_request_ids ~= this_request_ids then\\n                log:trace(\\\"possibly stale rag results, skipping: \\\" .. vim.inspect({\\n                    global_rag_request_ids = RewriteFrontend.rag_request_ids,\\n                    this_request_ids = this_request_ids,\\n                }))\\n                return\\n            end\\n\\n            if RewriteFrontend.rag_cancel == nil then\\n                log:error(\\\"rag appears canceled, skipping on_rag_response...\\\")\\n                return\\n            end\\n\\n            then_send_rewrite(rag_matches)\\n        end\\n\\n        -- TODO should abort logic also clear rag_cancel/rag_request_ids?\\n        this_request_ids, cancel = rag_client.context_query_rewrites(user_prompt, code_context, context.includes.top_k, on_rag_response)\\n        RewriteFrontend.rag_cancel = function()\\n            log:warn(\\\"canceling RAG\\\")\\n            RewriteFrontend.rag_cancel = nil\\n            cancel()\\n            RewriteFrontend.rag_request_ids = nil\\n        end\\n\\n        RewriteFrontend.rag_cancel = cancel\\n        RewriteFrontend.rag_request_ids = this_request_ids\\n    else\\n        RewriteFrontend.rag_cancel = nil\\n        RewriteFrontend.rag_request_ids = nil\\n        -- PRN add a promise fwk in here\\n        then_send_rewrite({})\\n    end\\nend\\n\\nRewriteFrontend.stop_streaming = false\\nlocal function simulate_streaming_rewrite_command(opts)\\n    -- use this for timing and to test streaming diff!\\n\\n    RewriteFrontend.abort_last_request()\\n    RewriteFrontend.last_request = CurlRequest:new({ body = {}, base_url = \\\"base\\\", endpoint = CompletionsEndpoints.oai_v1_chat_completions, })\\n    vim.cmd(\\\"normal! 0V60jV\\\") -- down 5 lines from current position, 2nd v ends selection ('< and '> marks now have start/end positions)\\n    vim.cmd(\\\"normal! 59k\\\") -- put cursor back before next steps (since I used 5j to move down for end of selection range\\n    RewriteFrontend.selection = Selection.get_visual_selection_for_current_window()\\n    RewriteFrontend.accumulated_chunks = \\\"\\\"\\n    RewriteFrontend.stop_streaming = false\\n    RewriteFrontend.displayer = Displayer:new(RewriteFrontend.accept_rewrite, RewriteFrontend.cleanup_after_cancel)\\n    RewriteFrontend.displayer:set_keymaps()\\n\\n    local optional_thinking_text = [[<think>\\nfoo the bar lorem ipsum toodle doodle banana bie foo the bar bar the foo and foo the bar and bbbbbb the foo the bar bar the\\nfoobar and foo the bar bar foo the bar lorem ipsum toodle doodle banana bie foo the bar bar the foo and foo the bar and bbbbbb\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565610071,
+        "duration_ms":9,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"Ymt3Q86fQyeVw178YdWtQg7ZAeK5r73v"
+      },{
+        "tool_calls":[{
+            "id":"0jre5kqSJOjN0yiYSCKVbmIMXdE9hMsG",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"rewrite.*base_url|base_url.*rewrite\\\" lua/ask-openai/config/ -n -r\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now let me look at the config to see what endpoints are configured for rewrite, especially the base_url.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":6236.5085996797,
+          "prompt_n":1433,
+          "predicted_per_second":201.00011136493,
+          "cache_n":13534,
+          "prompt_ms":229.776,
+          "prompt_per_token_ms":0.16034612700628,
+          "predicted_ms":368.159,
+          "predicted_per_token_ms":4.9751216216216,
+          "predicted_n":74
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"2\",\"type\":\"text\"},{\"name\":\"STDERR\",\"text\":\"rg: missing value for flag -r: missing argument for option '-r'\\n\",\"type\":\"text\"}],\"isError\":true}",
+        "start_time_ms":565610813,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"0jre5kqSJOjN0yiYSCKVbmIMXdE9hMsG"
+      },{
+        "tool_calls":[{
+            "id":"ZklZfmLBILo5SHSBhbK95hmdo5xwBeN8",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"rewrite.*base_url|base_url.*rewrite\\\" lua/ask-openai/config/ -n\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me fix the command.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":2240.6174145765,
+          "prompt_n":144,
+          "predicted_per_second":200.86831496152,
+          "cache_n":14963,
+          "prompt_ms":64.268,
+          "prompt_per_token_ms":0.44630555555556,
+          "predicted_ms":283.768,
+          "predicted_per_token_ms":4.9783859649123,
+          "predicted_n":57
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"1\",\"type\":\"text\"}],\"isError\":true}",
+        "start_time_ms":565611316,
+        "duration_ms":15,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"ZklZfmLBILo5SHSBhbK95hmdo5xwBeN8"
+      },{
+        "tool_calls":[{
+            "id":"eG8Cokm5UWXdxHDI8sbs1OGC3d1symme",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"get_endpoints\\\" lua/ask-openai/config/ -n -A 30 | head -100\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me look at the config module to understand how endpoints are configured.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3283.9816207415,
+          "prompt_n":238,
+          "predicted_per_second":200.51561157262,
+          "cache_n":14963,
+          "prompt_ms":72.473,
+          "prompt_per_token_ms":0.30450840336134,
+          "predicted_ms":349.1,
+          "predicted_per_token_ms":4.9871428571429,
+          "predicted_n":70
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"lua/ask-openai/config/init.lua:191:12:function M.get_endpoints()\\nlua/ask-openai/config/init.lua-192-    local gptoss_url = \\\"http://ask.lan:8013\\\"\\nlua/ask-openai/config/init.lua-193-    local qwen3_url = \\\"http://ask.lan:8012\\\"\\nlua/ask-openai/config/init.lua-194-    local qwen3base_url = \\\"http://ask.lan:8010\\\"\\nlua/ask-openai/config/init.lua-195-\\nlua/ask-openai/config/init.lua-196-    local gptoss_model = M.get_llama_server_model_name(gptoss_url)\\nlua/ask-openai/config/init.lua-197-    local qwen3_model = M.get_llama_server_model_name(qwen3_url)\\nlua/ask-openai/config/init.lua-198-    local qwen3base_model = M.get_llama_server_model_name(qwen3base_url)\\nlua/ask-openai/config/init.lua-199-\\nlua/ask-openai/config/init.lua-200-    local endpoints = {\\nlua/ask-openai/config/init.lua-201-        agents = {\\nlua/ask-openai/config/init.lua-202-            name = qwen3_model or \\\"OFFLINE\\\",\\nlua/ask-openai/config/init.lua-203-            base_url = qwen3_url,\\nlua/ask-openai/config/init.lua-204-        },\\nlua/ask-openai/config/init.lua-205-        rewrite = {\\nlua/ask-openai/config/init.lua-206-            name = gptoss_model or \\\"OFFLINE\\\",\\nlua/ask-openai/config/init.lua-207-            base_url = gptoss_url,\\nlua/ask-openai/config/init.lua-208-        },\\nlua/ask-openai/config/init.lua-209-        cmdline = {\\nlua/ask-openai/config/init.lua-210-            name = nil,\\nlua/ask-openai/config/init.lua-211-            base_url = M.get_cmdline_base_url(),\\nlua/ask-openai/config/init.lua-212-        },\\nlua/ask-openai/config/init.lua-213-        gptoss = {\\nlua/ask-openai/config/init.lua-214-            name = gptoss_model or \\\"OFFLINE\\\",\\nlua/ask-openai/config/init.lua-215-            base_url = gptoss_url,\\nlua/ask-openai/config/init.lua-216-        },\\nlua/ask-openai/config/init.lua-217-        summarizer = {\\nlua/ask-openai/config/init.lua-218-            name = gptoss_model or \\\"OFFLINE\\\",\\nlua/ask-openai/config/init.lua-219-            base_url = gptoss_url,\\nlua/ask-openai/config/init.lua-220-        },\\nlua/ask-openai/config/init.lua-221-        qwen3 = {\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565611895,
+        "duration_ms":15,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"eG8Cokm5UWXdxHDI8sbs1OGC3d1symme"
+      },{
+        "tool_calls":[{
+            "id":"DFDPS0rEOw47AOahgxG5jnEgRHycJtmo",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/config/init.lua | sed -n '185,240p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"I found it. The rewrite endpoint currently uses `gptoss_url` which is `http://ask.lan:8013`. The user wants to use the Qwen model on port 8012 (`qwen3_url`).\n\nSo I need to change the rewrite endpoint to use `qwen3_url` instead of `gptoss_url`. Let me also check if there's a corresponding model parameter function for qwen that should be used instead of `new_gptoss_chat_body_llama_server`.\n\nLooking at the code:\n- Line 192: `gptoss_url = \"http://ask.lan:8013\"`\n- Line 193: `qwen3_url = \"http://ask.lan:8012\"`\n- Lines 205-208: rewrite uses gptoss_url\n\nI need to:\n1. Change the rewrite endpoint to use qwen3_url (port 8012)\n2. Change from `new_gptoss_chat_body_llama_server` to `new_qwen3coder_llama_server_chat_body` in the frontend\n\nLet me see more context around line 191-230 to make sure I understand the full structure.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":5779.9685918688,
+          "prompt_n":1060,
+          "predicted_per_second":199.91403696411,
+          "cache_n":14963,
+          "prompt_ms":183.392,
+          "prompt_per_token_ms":0.17301132075472,
+          "predicted_ms":1600.688,
+          "predicted_per_token_ms":5.00215,
+          "predicted_n":320
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"\\n--- @class Endpoint\\n--- @field name string\\n--- @field base_url string\\n\\n--- @return table<string, Endpoint>\\nfunction M.get_endpoints()\\n    local gptoss_url = \\\"http://ask.lan:8013\\\"\\n    local qwen3_url = \\\"http://ask.lan:8012\\\"\\n    local qwen3base_url = \\\"http://ask.lan:8010\\\"\\n\\n    local gptoss_model = M.get_llama_server_model_name(gptoss_url)\\n    local qwen3_model = M.get_llama_server_model_name(qwen3_url)\\n    local qwen3base_model = M.get_llama_server_model_name(qwen3base_url)\\n\\n    local endpoints = {\\n        agents = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\n        rewrite = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\n        cmdline = {\\n            name = nil,\\n            base_url = M.get_cmdline_base_url(),\\n        },\\n        gptoss = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\n        summarizer = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\n        qwen3 = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\n        qwen3base = {\\n            name = qwen3base_model or \\\"OFFLINE\\\",\\n            base_url = qwen3base_url,\\n        },\\n    }\\n    return endpoints\\nend\\n\\nlocal function _get_provider()\\n    -- FYI prints below only show on first run b/c provider is cached by get_provider() so NBD to add that extra info which is useful to know config is correct w/o toggling verbose on and getting a wall of logs\\n    if cached_options.provider == \\\"copilot\\\" then\\n        print(\\\"AskOpenAI: Using Copilot\\\")\\n        return require(\\\"ask-openai.providers.copilot\\\")\\n    elseif cached_options.provider == \\\"keyless\\\" then\\n        print(\\\"AskOpenAI: Using Keyless\\\")\\n        return require(\\\"ask-openai.providers.keyless\\\")\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565613842,
+        "duration_ms":12,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"DFDPS0rEOw47AOahgxG5jnEgRHycJtmo"
+      },{
+        "tool_calls":[{
+            "id":"JsuAaOrZ5VPURFuuyQV4Xit0sG7R0JBb",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/config/init.lua | sed -n '200,210p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now I understand the structure. I need to:\n\n1. In `lua/ask-openai/config/init.lua`, change the rewrite endpoint from using `gptoss_url` to `qwen3_url` (port 8012)\n2. In `lua/ask-openai/rewrites/frontend.lua`, switch from `new_gptoss_chat_body_llama_server` to `new_qwen3coder_llama_server_chat_body`\n\nLet me make both changes.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":5405.373226734,
+          "prompt_n":908,
+          "predicted_per_second":199.63361360327,
+          "cache_n":16019,
+          "prompt_ms":167.981,
+          "prompt_per_token_ms":0.18500110132159,
+          "predicted_ms":766.404,
+          "predicted_per_token_ms":5.0091764705882,
+          "predicted_n":153
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"    local endpoints = {\\n        agents = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\n        rewrite = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\n        cmdline = {\\n            name = nil,\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565631750,
+        "duration_ms":57,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"JsuAaOrZ5VPURFuuyQV4Xit0sG7R0JBb"
+      },{
+        "tool_calls":[{
+            "id":"Zml1sEOtxvXvb96pqHCmerWmBGc0872N",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"sed -i '' 's/        rewrite = {/        rewrite = {\\\\n            name = qwen3_model or \\\"OFFLINE\\\",\\\\n            base_url = qwen3_url,/' lua/ask-openai/config/init.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now let me make the changes. I'll:\n\n1. Change rewrite endpoint in config to use qwen3_model and qwen3_url\n2. Change frontend to use new_qwen3coder_llama_server_chat_body instead of new_gptoss_chat_body_llama_server\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":2851.1998376541,
+          "prompt_n":281,
+          "predicted_per_second":198.59697081209,
+          "cache_n":16923,
+          "prompt_ms":98.555,
+          "prompt_per_token_ms":0.35072953736655,
+          "predicted_ms":684.804,
+          "predicted_per_token_ms":5.0353235294118,
+          "predicted_n":136
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"}]}",
+        "start_time_ms":565632738,
+        "duration_ms":11,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"Zml1sEOtxvXvb96pqHCmerWmBGc0872N"
+      },{
+        "tool_calls":[{
+            "id":"ZW1nyQhx5g1UccWqbpyWS11pQ1VtShiL",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/config/init.lua | sed -n '200,215p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"That sed command may not have worked as expected. Let me check the file and use a more precise approach.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":2656.0014824194,
+          "prompt_n":172,
+          "predicted_per_second":197.67533802483,
+          "cache_n":17200,
+          "prompt_ms":64.759,
+          "prompt_per_token_ms":0.37650581395349,
+          "predicted_ms":379.41,
+          "predicted_per_token_ms":5.0588,
+          "predicted_n":75
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"    local endpoints = {\\n        agents = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\n        rewrite = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\n        cmdline = {\\n            name = nil,\\n            base_url = M.get_cmdline_base_url(),\\n        },\\n        gptoss = {\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565633355,
+        "duration_ms":17,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"ZW1nyQhx5g1UccWqbpyWS11pQ1VtShiL"
+      },{
+        "tool_calls":[{
+            "id":"i6CwvigzkZuPo1izChjPLGR3nZ20gcpw",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"git checkout lua/ask-openai/config/init.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"That didn't work correctly - it added lines instead of replacing. Let me fix this properly by reading the file and rewriting it.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3924.845776096,
+          "prompt_n":418,
+          "predicted_per_second":197.58822613673,
+          "cache_n":17200,
+          "prompt_ms":106.501,
+          "prompt_per_token_ms":0.25478708133971,
+          "predicted_ms":334.028,
+          "predicted_per_token_ms":5.0610303030303,
+          "predicted_n":66
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDERR\",\"text\":\"Updated 1 path from the index\\nhook a24cf23d269e6fbd27517fcc3de320b360ecbdf1 \\na24cf23d269e6fbd27517fcc3de320b360ecbdf1 0\\nskipping post-checkout hook b/c no branch set: '0'\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565633970,
+        "duration_ms":104,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"i6CwvigzkZuPo1izChjPLGR3nZ20gcpw"
+      },{
+        "tool_calls":[{
+            "id":"8SvsFrgE0RIewW3Bc5zBMxruE5L5gQWw",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"python3 << 'EOF'\\nimport re\\n\\n# Fix config/init.lua - change rewrite endpoint to use qwen3\\nwith open(\\\"lua/ask-openai/config/init.lua\\\", \\\"r\\\") as f:\\n    content = f.read()\\n\\nold_rewrite = \\\"\\\"\\\"        rewrite = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\\"\\\"\\\"\\n\\nnew_rewrite = \\\"\\\"\\\"        rewrite = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\\"\\\"\\\"\\n\\ncontent = content.replace(old_rewrite, new_rewrite)\\n\\nwith open(\\\"lua/ask-openai/config/init.lua\\\", \\\"w\\\") as f:\\n    f.write(content)\\n\\nprint(\\\"config/init.lua updated\\\")\\nEOF\\n\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me use a Python script to do the replacement properly.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":2899.7974304187,
+          "prompt_n":209,
+          "predicted_per_second":198.06901397134,
+          "cache_n":17614,
+          "prompt_ms":72.074,
+          "prompt_per_token_ms":0.34485167464115,
+          "predicted_ms":1070.334,
+          "predicted_per_token_ms":5.0487452830189,
+          "predicted_n":212
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"config/init.lua updated\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565635377,
+        "duration_ms":29,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"8SvsFrgE0RIewW3Bc5zBMxruE5L5gQWw"
+      },{
+        "tool_calls":[{
+            "id":"LVwKTScMMYELfnzd7vREJVFqdSfsZDHG",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"python3 << 'EOF'\\nwith open(\\\"lua/ask-openai/rewrites/frontend.lua\\\", \\\"r\\\") as f:\\n    content = f.read()\\n\\n# Replace the model params function call\\nold_params = \\\"\\\"\\\"        local body = model_params.new_gptoss_chat_body_llama_server({\\n            -- local body = model_params.new_qwen3coder_llama_server_chat_body({\\\"\\\"\\\"\\n\\nnew_params = \\\"\\\"\\\"        local body = model_params.new_qwen3coder_llama_server_chat_body({\\\"\\\"\\\"\\n\\ncontent = content.replace(old_params, new_params)\\n\\n# Also need to add the messages and model back since the qwen function doesn't take context\\nold_body = \\\"\\\"\\\"        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\\"\\\"\\\"\\n\\nnew_body = \\\"\\\"\\\"        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\\"\\\"\\\"\\n\\n# Actually let me check the qwen function signature again - it doesn't take context param\\n# Let me look at what needs to change\\n\\nwith open(\\\"lua/ask-openai/rewrites/frontend.lua\\\", \\\"w\\\") as f:\\n    f.write(content)\\n\\nprint(\\\"frontend.lua updated\\\")\\nEOF\\n\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now let me update the rewrite frontend to use the qwen3coder model params function instead of gptoss.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4607.7969032461,
+          "prompt_n":469,
+          "predicted_per_second":199.63310672278,
+          "cache_n":17614,
+          "prompt_ms":101.784,
+          "prompt_per_token_ms":0.21702345415778,
+          "predicted_ms":1668.06,
+          "predicted_per_token_ms":5.0091891891892,
+          "predicted_n":333
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"frontend.lua updated\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565637339,
+        "duration_ms":30,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"LVwKTScMMYELfnzd7vREJVFqdSfsZDHG"
+      },{
+        "tool_calls":[{
+            "id":"kzFrNBslKG2KR34IdT49cd39z6XTOo3c",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '420,435p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Wait, I need to check the qwen3coder function signature - it doesn't take a `context` parameter like the gptoss one does. Let me verify and fix this.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4248.0376453734,
+          "prompt_n":427,
+          "predicted_per_second":198.49951442323,
+          "cache_n":18036,
+          "prompt_ms":100.517,
+          "prompt_per_token_ms":0.23540281030445,
+          "predicted_ms":468.515,
+          "predicted_per_token_ms":5.0377956989247,
+          "predicted_n":93
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"            -- avoid num_ctx (s/b set server side), use max_tokens to cap request:\\n            max_tokens = 8192, -- PRN set high if using /think only?\\n        }\\n\\n        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n            -- tools = tool_router.openai_tools(),\\n        }, context)\\n\\n        RewriteFrontend.last_request = CurlRequest:new({\\n            body = body,\\n            base_url = config.get_endpoints().rewrite.base_url,\\n            endpoint = CompletionsEndpoints.oai_v1_chat_completions,\\n            type = \\\"rewrite\\\",\\n        })\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565638109,
+        "duration_ms":8,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"kzFrNBslKG2KR34IdT49cd39z6XTOo3c"
+      },{
+        "tool_calls":[{
+            "id":"YPp7Uk4nZX08WBPvRPBmIHPp2NnbWFcY",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"python3 << 'EOF'\\nwith open(\\\"lua/ask-openai/rewrites/frontend.lua\\\", \\\"r\\\") as f:\\n    content = f.read()\\n\\n# Remove the , context parameter since qwen3coder function doesn't take it\\nold_call = \\\"\\\"\\\"        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n            -- tools = tool_router.openai_tools(),\\n        }, context)\\\"\\\"\\\"\\n\\nnew_call = \\\"\\\"\\\"        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n        })\\\"\\\"\\\"\\n\\ncontent = content.replace(old_call, new_call)\\n\\nwith open(\\\"lua/ask-openai/rewrites/frontend.lua\\\", \\\"w\\\") as f:\\n    f.write(content)\\n\\nprint(\\\"frontend.lua fixed - removed context param\\\")\\nEOF\\n\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"I see the issue - the qwen3coder function doesn't take a `context` parameter. Let me fix that. Also, looking at the qwen3coder function signature:\n\n```lua\nfunction M.new_qwen3coder_llama_server_chat_body(request_body) -- this is a duplicate\n```\n\nIt only takes `request_body`, not `context`. So I need to remove `, context` from the call.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3476.7404033832,
+          "prompt_n":342,
+          "predicted_per_second":198.79702634878,
+          "cache_n":18417,
+          "prompt_ms":98.368,
+          "prompt_per_token_ms":0.28762573099415,
+          "predicted_ms":1589.561,
+          "predicted_per_token_ms":5.0302563291139,
+          "predicted_n":316
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"frontend.lua fixed - removed context param\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565639979,
+        "duration_ms":30,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"YPp7Uk4nZX08WBPvRPBmIHPp2NnbWFcY"
+      },{
+        "tool_calls":[{
+            "id":"W8TrEktZG7Gs44W833TMq5KMaiMlLYnD",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/config/init.lua | sed -n '200,215p'\"}",
+              "name":"run_process"
+            }
+          },{
+            "id":"LyCEbtkTsfuqsr7YmRs155HXbSDoL3oT",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '420,435p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now let me verify both files look correct.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3872.6917817514,
+          "prompt_n":371,
+          "predicted_per_second":198.04766694637,
+          "cache_n":18755,
+          "prompt_ms":95.799,
+          "prompt_per_token_ms":0.25821832884097,
+          "predicted_ms":575.619,
+          "predicted_per_token_ms":5.0492894736842,
+          "predicted_n":114
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"    local endpoints = {\\n        agents = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\n        rewrite = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\n        cmdline = {\\n            name = nil,\\n            base_url = M.get_cmdline_base_url(),\\n        },\\n        gptoss = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565640849,
+        "duration_ms":9,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"W8TrEktZG7Gs44W833TMq5KMaiMlLYnD"
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"            -- avoid num_ctx (s/b set server side), use max_tokens to cap request:\\n            max_tokens = 8192, -- PRN set high if using /think only?\\n        }\\n\\n        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n        })\\n\\n        RewriteFrontend.last_request = CurlRequest:new({\\n            body = body,\\n            base_url = config.get_endpoints().rewrite.base_url,\\n            endpoint = CompletionsEndpoints.oai_v1_chat_completions,\\n            type = \\\"rewrite\\\",\\n        })\\n        curl.spawn(RewriteFrontend.last_request, RewriteFrontend)\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565640849,
+        "duration_ms":11,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"LyCEbtkTsfuqsr7YmRs155HXbSDoL3oT"
+      },{
+        "tool_calls":[{
+            "id":"LjCaDSm4HupRI4by72W7J9yCYzAVVBN7",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"luac -p lua/ask-openai/config/init.lua && echo \\\"config OK\\\" || echo \\\"config ERROR\\\"\"}",
+              "name":"run_process"
+            }
+          },{
+            "id":"SdS2IkBtyOBsS9nNO1EBc3OUOgrxxMWk",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"luac -p lua/ask-openai/rewrites/frontend.lua && echo \\\"frontend OK\\\" || echo \\\"frontend ERROR\\\"\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Both changes look good. Now let me check for syntax errors using luac.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4139.6730359941,
+          "prompt_n":531,
+          "predicted_per_second":197.21810237704,
+          "cache_n":19076,
+          "prompt_ms":128.271,
+          "prompt_per_token_ms":0.24156497175141,
+          "predicted_ms":623.675,
+          "predicted_per_token_ms":5.0705284552846,
+          "predicted_n":123
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"config OK\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565641787,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"LjCaDSm4HupRI4by72W7J9yCYzAVVBN7"
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"frontend OK\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565641787,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"SdS2IkBtyOBsS9nNO1EBc3OUOgrxxMWk"
+      },{
+        "tool_calls":[{
+            "id":"lazkdpQD7C5VtNqGXHg2ZClyECwmJkPC",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"git diff\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Both files pass syntax checking. Let me also check the diff to make sure everything looks good before committing.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":2667.6537410972,
+          "prompt_n":209,
+          "predicted_per_second":199.4490689868,
+          "cache_n":19603,
+          "prompt_ms":78.346,
+          "prompt_per_token_ms":0.37486124401914,
+          "predicted_ms":265.732,
+          "predicted_per_token_ms":5.0138113207547,
+          "predicted_n":53
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"diff --git a/lua/ask-openai/config/init.lua b/lua/ask-openai/config/init.lua\\nindex 50628a8b..beaae5ae 100644\\n--- a/lua/ask-openai/config/init.lua\\n+++ b/lua/ask-openai/config/init.lua\\n@@ -203,8 +203,8 @@ function M.get_endpoints()\\n             base_url = qwen3_url,\\n         },\\n         rewrite = {\\n-            name = gptoss_model or \\\"OFFLINE\\\",\\n-            base_url = gptoss_url,\\n+            name = qwen3_model or \\\"OFFLINE\\\",\\n+            base_url = qwen3_url,\\n         },\\n         cmdline = {\\n             name = nil,\\ndiff --git a/lua/ask-openai/rewrites/frontend.lua b/lua/ask-openai/rewrites/frontend.lua\\nindex ddead5d6..eb0750ff 100644\\n--- a/lua/ask-openai/rewrites/frontend.lua\\n+++ b/lua/ask-openai/rewrites/frontend.lua\\n@@ -421,12 +421,10 @@ local function ask_rewrite_command(opts)\\n             max_tokens = 8192, -- PRN set high if using /think only?\\n         }\\n \\n-        local body = model_params.new_gptoss_chat_body_llama_server({\\n-            -- local body = model_params.new_qwen3coder_llama_server_chat_body({\\n+        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n             messages = messages,\\n             model = \\\"\\\", -- irrelevant for llama-server\\n-            -- tools = tool_router.openai_tools(),\\n-        }, context)\\n+        })\\n \\n         RewriteFrontend.last_request = CurlRequest:new({\\n             body = body,\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565642314,
+        "duration_ms":19,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"lazkdpQD7C5VtNqGXHg2ZClyECwmJkPC"
+      },{
+        "tool_calls":[{
+            "id":"vpNhC3tdw7BvCbEzczJlIhOGHlwY7VYu",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"git commit --author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\" -m \\\"feat: use qwen model (port 8012) for AskRewrite\\n\\n- Change rewrite endpoint to use qwen3_url (http://ask.lan:8012) instead of gptoss_url (http://ask.lan:8013)\\n- Switch from new_gptoss_chat_body_llama_server to new_qwen3coder_llama_server_chat_body params\\\"\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"The diff looks clean and correct. Let me commit this.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4615.239116043,
+          "prompt_n":732,
+          "predicted_per_second":197.21920915097,
+          "cache_n":19603,
+          "prompt_ms":158.605,
+          "prompt_per_token_ms":0.21667349726776,
+          "predicted_ms":851.844,
+          "predicted_per_token_ms":5.0705,
+          "predicted_n":168
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"1\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"On branch master\\nYour branch is up to date with 'origin/master'.\\n\\nChanges not staged for commit:\\n  (use \\\"git add <file>...\\\" to update what will be committed)\\n  (use \\\"git restore <file>...\\\" to discard changes in working directory)\\n\\tmodified:   lua/ask-openai/config/init.lua\\n\\tmodified:   lua/ask-openai/rewrites/frontend.lua\\n\\nno changes added to commit (use \\\"git add\\\" and/or \\\"git commit -a\\\")\\n\",\"type\":\"text\"}],\"isError\":true}",
+        "start_time_ms":565643526,
+        "duration_ms":23,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"vpNhC3tdw7BvCbEzczJlIhOGHlwY7VYu"
+      },{
+        "tool_calls":[{
+            "id":"FbOeDhCtRQHGmFtiOgcAw3601JLH7JGC",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"git add lua/ask-openai/config/init.lua lua/ask-openai/rewrites/frontend.lua && git commit --author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\" -m \\\"feat: use qwen model (port 8012) for AskRewrite\\n\\n- Change rewrite endpoint to use qwen3_url (http://ask.lan:8012) instead of gptoss_url (http://ask.lan:8013)\\n- Switch from new_gptoss_chat_body_llama_server to new_qwen3coder_llama_server_chat_body params\\\"\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Need to stage the files first.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3484.5393187883,
+          "prompt_n":333,
+          "predicted_per_second":196.94478695712,
+          "cache_n":20331,
+          "prompt_ms":95.565,
+          "prompt_per_token_ms":0.28698198198198,
+          "predicted_ms":934.272,
+          "predicted_per_token_ms":5.0775652173913,
+          "predicted_n":184
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"[master 869bb206] feat: use qwen model (port 8012) for AskRewrite\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 2 files changed, 4 insertions(+), 6 deletions(-)\\n\",\"type\":\"text\"},{\"name\":\"STDERR\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565644766,
+        "duration_ms":1717,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"FbOeDhCtRQHGmFtiOgcAw3601JLH7JGC"
+      },{
+        "tool_calls":[],
+        "content":"Done! AskRewrite now uses the Qwen model on port 8012. Changes made:\n\n1. **`lua/ask-openai/config/init.lua`** — Changed the rewrite endpoint from `gptoss_url` (port 8013) to `qwen3_url` (port 8012)\n\n2. **`lua/ask-openai/rewrites/frontend.lua`** — Switched from `new_gptoss_chat_body_llama_server()` to `new_qwen3coder_llama_server_chat_body()` for request body parameters",
+        "reasoning_content":"Done! Let me summarize what was changed.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3547.7260910787,
+          "prompt_n":348,
+          "predicted_per_second":197.82802544009,
+          "cache_n":20660,
+          "prompt_ms":98.091,
+          "prompt_per_token_ms":0.28187068965517,
+          "predicted_ms":677.356,
+          "predicted_per_token_ms":5.0548955223881,
+          "predicted_n":134
+        }
+      },{
+        "content":"good deal can you look at what I did in AgentsFrontend w.r.t. switching the body for the two model types qwen and gptoss? and mirror that in RewritesFrontend ",
+        "role":"user"
+      },{
+        "tool_calls":[{
+            "id":"uhwR6NdmThYqOr9Jw38WipwLIbnAepKN",
+            "type":"function",
+            "function":{
+              "arguments":"{\"query\":\"AgentsFrontend gptoss qwen model body params switching\",\"instruct\":\"Find how AgentsFrontend switches between Qwen and GPT-SS models and builds different request bodies for each\",\"top_k\":10}",
+              "name":"semantic_grep"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"The user wants me to look at how AgentsFrontend handles switching between Qwen and GPT-OSS models, specifically how it builds request bodies for each, and then mirror that pattern in RewriteFrontend.\n\nLet me find the relevant code in AgentsFrontend first.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":8360.2773443542,
+          "prompt_n":16701,
+          "predicted_per_second":200.91714431652,
+          "cache_n":3405,
+          "prompt_ms":1997.661,
+          "prompt_per_token_ms":0.11961325669122,
+          "predicted_ms":706.759,
+          "predicted_per_token_ms":4.977176056338,
+          "predicted_n":142
+        }
+      },{
+        "content":"{\"matches\":[{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/init.lua\",\"id_int\":\"4351719043907258963\",\"rerank_rank\":0,\"text\":\"\\n    local endpoints = {\\n        agents = {\\n            name = qwen3_model or \\\"OFFLINE\\\",\\n            base_url = qwen3_url,\\n        },\\n        rewrite = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\n        cmdline = {\\n            name = nil,\\n            base_url = M.get_cmdline_base_url(),\\n        },\\n        gptoss = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n            base_url = gptoss_url,\\n        },\\n        summarizer = {\\n            name = gptoss_model or \\\"OFFLINE\\\",\\n\",\"embed_rank\":2,\"signature\":\"\",\"rerank_score\":0.89111328125,\"embed_score\":0.7232204675674438,\"end_line_base0\":217,\"start_line_base0\":198,\"id\":\"bc646969fe650a53\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/ask.notes.md\",\"end_column_base0\":0,\"start_column_base0\":0,\"rerank_rank\":1,\"id\":\"e844331e05232955\",\"signature\":\"\",\"embed_rank\":4,\"text\":\"  - i.e. using `ApiAgentTrace` that has a different `next_body()`...\\n\\nPreviously I used this when it was single turn Question/Answer:\\n\\nlocal qwen_legacy_body = {\\n    model = \\\"qwen2.5-coder:7b-instruct-q8_0\\\", -- btw -base- does terrible here :)\\n    prompt = system_prompt .. \\\"\\\\n\\\" .. user_message,\\n}\\n\\n\\n\",\"rerank_score\":0.873046875,\"embed_score\":0.7219860553741455,\"end_line_base0\":54,\"start_line_base0\":45,\"id_int\":\"7513186282389055829\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/MODEL.notes.md\",\"end_column_base0\":3,\"start_column_base0\":0,\"rerank_rank\":2,\"id\":\"81902dcf0abe43a3\",\"signature\":\"\",\"embed_rank\":1,\"text\":\"model = \\\"qwen3-coder:30b-a3b-q8_0\\\",\\nmodel = \\\"huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_M\\\",\\n\\nmodel = \\\"deepseek-r1:8b-0528-qwen3-q8_0\\\", -- /nothink doesn't work :(\\n\\nmodel = \\\"gemma3:12b-it-q8_0\\\",\\n-- local body = agentica.DeepCoder.build_chat_body(system_prompt, user_message)\\n```\\n\",\"rerank_score\":0.73388671875,\"embed_score\":0.7396568059921265,\"end_line_base0\":37,\"start_line_base0\":30,\"id_int\":\"112640357945983907\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/backends/fim_backend.lua\",\"id_int\":\"8641433124462879311\",\"rerank_rank\":3,\"text\":\"\\n\\nfunction FimBackend:body_for()\\n    local max_tokens = 200\\n    local body = {\\n        -- FYI keep model notes in MODELS.notes.md\\n        model = use_model,\\n\\n        raw = true, -- bypass templates (only /api/generate, not /v1/completions)\\n\\n        stream = true,\\n\\n        -- * MAX tokens (very important)\\n        max_tokens = max_tokens, -- works for: llama-server /completions, OpenAI's compat endpoints\\n        -- n_predict = max_tokens, -- llama-server specific (avoid for consistency)\\n        -- options.num_predict = max_tokens, -- ollama's /api/generate\\n\\n        options = {} -- empty so I can set stop_tokens below (IIRC for ollama only?)\\n    }\\n\\n\",\"embed_rank\":5,\"signature\":\"\",\"rerank_score\":0.225341796875,\"embed_score\":0.7015452980995178,\"end_line_base0\":97,\"start_line_base0\":78,\"id\":\"77ec89a475e7624f\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tests/manual_prompting/qwen2_5coder/edits/ring_buffer.py\",\"end_column_base0\":33,\"start_column_base0\":0,\"rerank_rank\":4,\"id\":\"f0c0292ce3d9f722\",\"signature\":\"\",\"embed_rank\":0,\"text\":\"    \\\"raw\\\": True,\\n    \\\"num_predict\\\": 200,\\n    \\\"stream\\\": False,\\n    \\\"model\\\": \\\"qwen2.5-coder:7b-base-q8_0\\\",\\n}\\n\\nshow_completion_for(request_body)\\n\",\"rerank_score\":0.07757568359375,\"embed_score\":0.7435254454612732,\"end_line_base0\":21,\"start_line_base0\":15,\"id_int\":\"8124539000554387234\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/tests/manual_prompting/gemma3/test-fim-instructions.py\",\"end_column_base0\":33,\"start_column_base0\":0,\"rerank_rank\":5,\"id\":\"b563bcc0191da726\",\"signature\":\"\",\"embed_rank\":3,\"text\":\"\\\"\\\"\\\"\\n\\nrequest_body = {\\n    \\\"prompt\\\": prompt,\\n    \\\"options\\\": {\\n        \\\"num_ctx\\\": 8192\\n    },\\n    \\\"raw\\\": True,\\n    \\\"num_predict\\\": 200,\\n    \\\"stream\\\": False,\\n    \\\"model\\\": \\\"gemma3:12b\\\",\\n}\\n\\nshow_completion_for(request_body)\\n\",\"rerank_score\":0.03436279296875,\"embed_score\":0.7222054004669189,\"end_line_base0\":28,\"start_line_base0\":15,\"id_int\":\"3847126039945652006\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/models/qwen2.5-coder/build.fish\",\"end_column_base0\":0,\"start_column_base0\":0,\"rerank_rank\":6,\"id\":\"7acf3cea8aaac51f\",\"signature\":\"\",\"embed_rank\":7,\"text\":\"#!/usr/bin/env fish\\n\\nexport OLLAMA_HOST='ollama:11434'\\n\\nollama create fim_qwen:7b-instruct-q8_0 \\\\\\n    -f 7b-instruct-q8_0.Modelfile\\n\\n\",\"rerank_score\":0.0325927734375,\"embed_score\":0.5883502960205078,\"end_line_base0\":6,\"start_line_base0\":0,\"id_int\":\"8849358770852775199\",\"type\":\"lines\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/typescript/decorators.ts\",\"id_int\":\"3772388025107243831\",\"rerank_rank\":7,\"text\":\";\\n\\n\",\"embed_rank\":13,\"signature\":\"\",\"rerank_score\":0.01097869873046875,\"embed_score\":0.4532504081726074,\"end_line_base0\":4,\"start_line_base0\":3,\"id\":\"b45a36ebff746337\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/tests/test_cases/treesitter/typescript/decorators.ts\",\"id_int\":\"4467965162813636756\",\"rerank_rank\":8,\"text\":\";\\n\\n\",\"embed_rank\":12,\"signature\":\"\",\"rerank_score\":0.010894775390625,\"embed_score\":0.4532504081726074,\"end_line_base0\":6,\"start_line_base0\":5,\"id\":\"3e0166a4ae53c094\",\"type\":\"uncovered\"},{\"file\":\"~/repos/github/g0t4/ask-openai.nvim/start-rag-server.fish\",\"end_column_base0\":36,\"start_column_base0\":0,\"rerank_rank\":9,\"id\":\"24846efba73d494f\",\"signature\":\"\",\"embed_rank\":6,\"text\":\"python3 lua/ask-openai/rag/server.py\\n\",\"rerank_score\":0.003374099731445312,\"embed_score\":0.5971260070800781,\"end_line_base0\":0,\"start_line_base0\":0,\"id_int\":\"2631350109412870479\",\"type\":\"lines\"}]}",
+        "start_time_ms":565762104,
+        "duration_ms":99,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"uhwR6NdmThYqOr9Jw38WipwLIbnAepKN"
+      },{
+        "tool_calls":[{
+            "id":"4BtFBAK90etU33GbLqcF5AxljBgLreOX",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"gptoss|qwen\\\" lua/ask-openai/agents/frontend.lua -n | head -40\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"The semantic grep didn't find exactly what I need. Let me look at the AgentsFrontend directly to see how it handles switching between Qwen and GPT-OSS models.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":6823.6392043369,
+          "prompt_n":2603,
+          "predicted_per_second":196.52729785764,
+          "cache_n":20056,
+          "prompt_ms":381.468,
+          "prompt_per_token_ms":0.14654936611602,
+          "predicted_ms":463.04,
+          "predicted_per_token_ms":5.0883516483516,
+          "predicted_n":91
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"108:107:            vim.notify(\\\"FYI you are in a nested directory of the repo and that tends to cause issues with gptoss making requests to change things\\\", vim.log.levels.WARN)\\n248:45:        if AgentsFrontend.endpoint.name == \\\"gptoss\\\" then\\n249:47:            body_overrides = model_params.new_gptoss_chat_body_llama_server(_body, context)\\n251:47:            body_overrides = model_params.new_qwen3coder_llama_server_chat_body(_body, context)\\n421:16:            -- gptoss120b - this works:\\n496:104:        -- assumes contiguous indexes, s/b almost always 0 index only, 1 too with dual tool call IIRC (gptoss doesn't do dual tool at once)\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565763237,
+        "duration_ms":13,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"4BtFBAK90etU33GbLqcF5AxljBgLreOX"
+      },{
+        "tool_calls":[{
+            "id":"ymA44lzBo6QWeDkah2fcWvzOvbOwFO6w",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/agents/frontend.lua | sed -n '230,280p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now let me see the full context around lines 248-251 in AgentsFrontend to understand how it switches between models.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3316.0684051815,
+          "prompt_n":331,
+          "predicted_per_second":194.74379459457,
+          "cache_n":22655,
+          "prompt_ms":99.817,
+          "prompt_per_token_ms":0.30156193353474,
+          "predicted_ms":426.201,
+          "predicted_per_token_ms":5.1349518072289,
+          "predicted_n":83
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"    end\\n\\n    local function then_add_seed_user_messages(rag_matches)\\n        local rag_message = rag_instructions.semantic_grep_user_message(rag_matches)\\n        if rag_message then\\n            table.insert(messages, rag_message)\\n        end\\n\\n        -- FYI user request works well regardless if it is first or last user message\\n        table.insert(messages, TxChatMessage:user(user_message))\\n\\n        local _body = {\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n            tools = tool_definitions,\\n        }\\n\\n        local body_overrides\\n        if AgentsFrontend.endpoint.name == \\\"gptoss\\\" then\\n            body_overrides = model_params.new_gptoss_chat_body_llama_server(_body, context)\\n        else\\n            body_overrides = model_params.new_qwen3coder_llama_server_chat_body(_body, context)\\n        end\\n\\n        local new_trace = AgentTrace:new(body_overrides, AgentsFrontend.endpoint.base_url)\\n        AgentsFrontend.trace = new_trace -- FYI `.trace` is intended for rare circumstances only, i.e. cancel action which has no context to pass a trace\\n        -- log:info(\\\"sending\\\", vim.inspect(AgentsFrontend.trace))\\n        AgentsFrontend.then_get_assistant_response(new_trace)\\n    end\\n\\n    -- log:error(\\\"context.includes\\\", vim.inspect(context.includes))\\n    if api.is_rag_enabled() and not context.includes.norag and rag_client.is_rag_supported_in_current_file(code_bufnr) then\\n        local this_request_ids, cancel -- declare in advance for closure\\n\\n        ---@param rag_matches LSPRankedMatch[]\\n        function on_rag_response(rag_matches)\\n            log:info(\\\"on_rag_response\\\")\\n            -- * make sure prior (canceled) rag request doesn't still respond\\n            if AgentsFrontend.rag_request_ids ~= this_request_ids then\\n                log:trace(\\\"possibly stale rag results, skipping: \\\" .. vim.inspect({\\n                    global_rag_request_ids = AgentsFrontend.rag_request_ids,\\n                    this_request_ids = this_request_ids,\\n                }))\\n                return\\n            end\\n\\n            if AgentsFrontend.rag_cancel == nil then\\n                log:error(\\\"rag appears canceled, skipping on_rag_response...\\\")\\n                return\\n            end\\n\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565763974,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"ymA44lzBo6QWeDkah2fcWvzOvbOwFO6w"
+      },{
+        "tool_calls":[{
+            "id":"4TUiG5LvrNWzV1cBw5OMgpEYdAOoXqGc",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/agents/models/params.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now I see the pattern. In AgentsFrontend:\n1. It checks `AgentsFrontend.endpoint.name == \"gptoss\"` to determine which model is being used\n2. If gptoss, it uses `model_params.new_gptoss_chat_body_llama_server(_body, context)`\n3. Otherwise (qwen), it uses `model_params.new_qwen3coder_llama_server_chat_body(_body, context)`\n\nNow I need to see:\n1. How AgentsFrontend sets up its endpoint\n2. How RewriteFrontend currently does things and how to mirror this pattern\n\nLet me also check if `new_qwen3coder_llama_server_chat_body` takes a context parameter now (since in my previous change I removed it).\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4692.9649798557,
+          "prompt_n":636,
+          "predicted_per_second":194.64387018525,
+          "cache_n":22982,
+          "prompt_ms":135.522,
+          "prompt_per_token_ms":0.21308490566038,
+          "predicted_ms":1022.38,
+          "predicted_per_token_ms":5.1375879396985,
+          "predicted_n":199
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"local log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal api = require(\\\"ask-openai.api\\\")\\nlocal local_share = require(\\\"ask-openai.config.local_share\\\")\\nlocal gptoss_tokenizer = require(\\\"ask-openai.backends.models.gptoss.tokenizer\\\")\\n\\nlocal M = {}\\n\\nfunction default_to_recommended(request_body, recommended)\\n    -- rightmost wins\\n    local merged = vim.tbl_deep_extend(\\\"force\\\", recommended, request_body or {})\\n    -- log:luaify_trace(\\\"merged request body: \\\", merged)\\n    return merged\\nend\\n\\nlocal function throw_if_no_messages(request_body)\\n    if request_body.messages == nil then\\n        error(\\\"messages are required for gpt-oss chat\\\")\\n    end\\nend\\n\\n---@param request_body table\\n---@param context CurrentContext\\n---@return table\\nfunction M.new_gptoss_chat_body_llama_server(request_body, context)\\n    throw_if_no_messages(request_body)\\n\\n    local level = context.includes:get_reasoning_level()\\n        or api.get_rewrite_reasoning_level()\\n\\n    local max_tokens = gptoss_tokenizer.get_gptoss_max_tokens_for_level(level)\\n\\n    local recommended = {\\n\\n        -- We recommend sampling with temperature=1.0 and top_p=1.0.\\n        --   https://github.com/openai/gpt-oss?tab=readme-ov-file#recommended-sampling-parameters\\n        temperature = 1.0,\\n        top_p = 1.0,\\n\\n        chat_template_kwargs = {\\n            reasoning_effort = level,\\n        },\\n        max_tokens = max_tokens,\\n\\n        -- verbose = true, -- * my build of llama-server will one-off add __verbose if verbose is set on body of request!\\n\\n    }\\n    return default_to_recommended(request_body, recommended)\\nend\\n\\nfunction M.new_qwen3coder_llama_server_chat_body(request_body) -- this is a duplicate\\n    throw_if_no_messages(request_body)\\n\\n    local recommended = {\\n        -- official recommended settings (for transformers):\\n        -- https://huggingface.co/Qwen/Qwen3-Coder-480B-A35B-Instruct/blob/main/generation_config.json\\n        --   \\\"repetition_penalty\\\": 1.05,\\n        --   \\\"temperature\\\": 0.7,\\n        --   \\\"top_p\\\": 0.8,\\n        --   \\\"top_k\\\": 20\\n        repeat_penalty = 1.05,\\n        temperature = 0.7,\\n        top_p = 0.8,\\n        top_k = 20,\\n        --  FYI I inlined these values into predictions handler, it's not using chat completions endpoint so not gonna conflate the two here\\n    }\\n    return default_to_recommended(request_body, recommended)\\nend\\n\\nfunction M.new_qwen25coder_ollama_body(request_body)\\n    -- get values from rewrite/ask/predictions\\n    -- PRN I should run some tests too, I never optimized using 2.5-Coder!\\n    --   keep in mind it had both base and instruct variants\\nend\\n\\nreturn M\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565765344,
+        "duration_ms":7,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"4TUiG5LvrNWzV1cBw5OMgpEYdAOoXqGc"
+      },{
+        "tool_calls":[{
+            "id":"dRhV7yYyPZUVblp6BP3bW48oLbpaUQfg",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '340,450p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"I see - `new_qwen3coder_llama_server_chat_body` doesn't take a context parameter, but the AgentsFrontend is calling it with context. Let me check what's actually in agents/frontend.lua more carefully...\n\nActually wait, looking at line 251:\n```lua\nbody_overrides = model_params.new_qwen3coder_llama_server_chat_body(_body, context)\n```\n\nBut the function signature is:\n```lua\nfunction M.new_qwen3coder_llama_server_chat_body(request_body) -- this is a duplicate\n```\n\nSo it only takes one argument. The second argument (context) would just be ignored in Lua. That's fine, but let me verify what AgentsFrontend actually does.\n\nNow let me look at RewriteFrontend to see how it currently sets up and how I should mirror the AgentsFrontend pattern.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":5075.8422138192,
+          "prompt_n":945,
+          "predicted_per_second":195.36003364166,
+          "cache_n":23614,
+          "prompt_ms":186.176,
+          "prompt_per_token_ms":0.19701164021164,
+          "predicted_ms":1208.026,
+          "predicted_per_token_ms":5.1187542372881,
+          "predicted_n":236
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"        .. \\\"\\\\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\\\"\\n\\n    local always_include = {\\n        yanks = true,\\n        project = true,\\n    }\\n    local context = CurrentContext:items(user_prompt, always_include)\\n\\n    -- make sure to remove slash commands like /yanks (hence cleaned_prompt)\\n    local user_prompt = context.cleaned_prompt\\n    local code_context = \\\"\\\"\\n    local code_caveat = \\\"\\\"\\n    local code = selection.original_text\\n    if code ~= nil and code ~= \\\"\\\" then\\n        local start_line = (selection._start_line_0indexed or 0) + 1\\n        local end_line = (selection._end_line_0indexed or 0) + 1\\n        local line_info = start_line == end_line and tostring(start_line) or (start_line .. \\\"-\\\" .. end_line)\\n        code_context = \\\"Here is the code I selected:\\\"\\n            .. \\\"\\\\n```\\\" .. file_name .. \\\":\\\" .. line_info\\n            .. \\\"\\\\n\\\" .. code .. \\\"\\\\n```\\\"\\n        code_caveat = \\\"\\\\n\\\\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!\\\"\\n        -- TODO add separate reasoning level for rewrites/agents vs predictions... that should help here and with tool calls too!\\n        -- * response indentation:\\n        -- - ALTERNATIVELY, if I could show more of the surrounding code, that would likely help too/instead\\n        -- - FYI mentioning \\\"carefully preserved indentation\\\" resulted in the model not generating markdown wrapers and explanations! (gptoss120b)\\n        --   - btw I strip out markdown blocks so really, I don't care anymore if those are present in the response!\\n        -- - FYI gptoss120b w/ medium reasoning + caveat is working well\\n        --   - cannot get low reasoning to work well\\n    else\\n        code_context = \\\"I am working on this file: \\\" .. file_name\\n    end\\n    user_message_with_code = user_prompt .. \\\"\\\\n\\\\n\\\" .. code_context .. code_caveat\\n\\n    ---@param rag_matches LSPRankedMatch[]\\n    local function then_send_rewrite(rag_matches)\\n        local messages = {\\n            TxChatMessage:system(system_prompt)\\n        }\\n\\n        if context.includes.current_file then\\n            local message = MessageBuilder:new()\\n                :plain_text(\\\"FYI, here is my current buffer in Neovim. Use this as context for my request.\\\")\\n                :md_current_buffer()\\n                :to_user_message()\\n\\n            table.insert(messages, message)\\n        end\\n        if context.includes.open_files then\\n            -- TODO! /files => open_files\\n            -- FYI buffers.get_text_in_all_buffers()\\n        end\\n        if context.includes.yanks and context.yanks then\\n            table.insert(messages, TxChatMessage:user_context(context.yanks.content))\\n        end\\n        if context.includes.commits and context.commits then\\n            for _, commit in pairs(context.commits) do\\n                table.insert(messages, TxChatMessage:user_context(commit.content))\\n            end\\n        end\\n        if context.includes.project and context.project then\\n            -- TODO does any of this belong in the system_message?\\n            vim.iter(context.project)\\n                :each(function(value)\\n                    table.insert(messages, TxChatMessage:user_context(value.content))\\n                end)\\n        end\\n        local rag_message = rag_instructions.semantic_grep_user_message(rag_matches)\\n        if rag_message then\\n            table.insert(messages, rag_message)\\n        end\\n\\n        table.insert(messages, TxChatMessage:user(user_message_with_code))\\n\\n        local qwen25_chat_body = {\\n            messages = messages,\\n            -- * current models only\\n            -- model = \\\"qwen3:8b\\\", -- btw as of Qwen3, no tag == \\\"-instruct\\\", and for base you'll use \\\"-base\\\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\\n            -- model = \\\"qwen3-coder:30b-a3b-q8_0\\\", # q4_K_M\\n            temperature = 0.2,\\n\\n            -- avoid num_ctx (s/b set server side), use max_tokens to cap request:\\n            max_tokens = 8192, -- PRN set high if using /think only?\\n        }\\n\\n        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n        })\\n\\n        RewriteFrontend.last_request = CurlRequest:new({\\n            body = body,\\n            base_url = config.get_endpoints().rewrite.base_url,\\n            endpoint = CompletionsEndpoints.oai_v1_chat_completions,\\n            type = \\\"rewrite\\\",\\n        })\\n        curl.spawn(RewriteFrontend.last_request, RewriteFrontend)\\n    end\\n\\n    if api.is_rag_enabled() and rag_client.is_rag_supported_in_current_file() then\\n        local this_request_ids, cancel -- declare in advance for closure\\n\\n        ---@param rag_matches LSPRankedMatch[]\\n        function on_rag_response(rag_matches)\\n            log:info(\\\"on_rag_response\\\")\\n            -- PRN I think this could be shared with all frontends... if they pass themself for access to ID/cancel refs\\n\\n            -- * make sure prior (canceled) rag request doesn't still respond\\n            if RewriteFrontend.rag_request_ids ~= this_request_ids then\\n                log:trace(\\\"possibly stale rag results, skipping: \\\" .. vim.inspect({\\n                    global_rag_request_ids = RewriteFrontend.rag_request_ids,\\n                    this_request_ids = this_request_ids,\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565766955,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"dRhV7yYyPZUVblp6BP3bW48oLbpaUQfg"
+      },{
+        "tool_calls":[{
+            "id":"r7SODk5ByFa0oXuzOVN9UGqlHRzLdsMp",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/agents/frontend.lua | sed -n '1,80p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now I see the current state of RewriteFrontend. It's currently hardcoded to use `new_qwen3coder_llama_server_chat_body`. I need to mirror the AgentsFrontend pattern:\n\n1. Store the endpoint in RewriteFrontend (like AgentsFrontend does)\n2. Check the endpoint name to decide which body builder to use\n3. Use the appropriate model params function\n\nLet me also check how AgentsFrontend sets up its endpoint at initialization.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":6051.3201473365,
+          "prompt_n":1564,
+          "predicted_per_second":195.59142291421,
+          "cache_n":24555,
+          "prompt_ms":258.456,
+          "prompt_per_token_ms":0.16525319693095,
+          "predicted_ms":746.454,
+          "predicted_per_token_ms":5.112698630137,
+          "predicted_n":146
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"local buffers = require(\\\"ask-openai.helpers.buffers\\\")\\nlocal log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal completion_logger = require(\\\"ask-openai.logs.completion_logger\\\")\\nlocal tool_router = require(\\\"ask-openai.tools.router\\\")\\nlocal curl = require(\\\"ask-openai.backends.curl\\\")\\nlocal agentica = require(\\\"ask-openai.backends.models.agentica\\\")\\nlocal AgentWindow = require(\\\"ask-openai.agents.viewer.window\\\")\\nlocal AgentTrace = require(\\\"ask-openai.agents.trace\\\")\\nlocal TxChatMessage = require(\\\"ask-openai.agents.messages.tx\\\")\\nlocal Selection = require(\\\"ask-openai.helpers.selection\\\")\\nlocal CurrentContext = require(\\\"ask-openai.frontends.context\\\")\\nlocal api = require(\\\"ask-openai.api\\\")\\nlocal rag_client = require(\\\"ask-openai.rag.client\\\")\\nlocal files = require(\\\"ask-openai.helpers.files\\\")\\nlocal model_params = require(\\\"ask-openai.agents.models.params\\\")\\nlocal LinesBuilder = require(\\\"ask-openai.agents.viewer.lines_builder\\\")\\nlocal MessageBuilder = require(\\\"ask-openai.rewrites.message_builder\\\")\\nlocal prompt_parser = require(\\\"ask-openai.frontends.context.prompt_parser\\\")\\nlocal HLGroups = require(\\\"ask-openai.hlgroups\\\")\\nlocal formatters = require(\\\"ask-openai.agents.viewer.formatters\\\")\\nlocal ToolCallOutput = require(\\\"ask-openai.agents.tools.tool_call_output\\\")\\nlocal CurlRequestForTrace = require(\\\"ask-openai.agents.curl_request_for_trace\\\")\\nlocal RxAccumulatedMessage = require(\\\"ask-openai.agents.messages.rx\\\")\\nlocal ToolCall = require(\\\"ask-openai.agents.tools.tool_call\\\")\\nlocal rag_instructions = require(\\\"ask-openai.frontends.prompts.rag_instructions\\\")\\nlocal inspect = require(\\\"devtools.inspect\\\")\\n\\nrequire(\\\"ask-openai.helpers.buffers\\\")\\n\\n---@class AgentsFrontend : StreamingFrontend\\nlocal AgentsFrontend = {}\\n\\nlocal config = require(\\\"ask-openai.config\\\")\\nAgentsFrontend.endpoint = config.get_endpoints().agents\\n\\nlocal first_turn_ns_id\\n\\nlocal cached_files = {}\\n\\nlocal function get_file(path)\\n    if cached_files[path] then\\n        return cached_files[path]\\n    end\\n    local lines = vim.fn.readfile(vim.fn.expand(path))\\n    local text = table.concat(lines, \\\"\\\\n\\\")\\n    cached_files[path] = text\\n    return text\\nend\\n\\n---@param opts {args:string}\\nlocal function ask_agent_command(opts)\\n    local user_prompt = opts.args\\n    local always_include = {\\n        yanks = true,\\n        project = true,\\n    }\\n    local context = CurrentContext:items(user_prompt, always_include)\\n    local cleaned_prompt = context.includes.rendered_prompt\\n\\n    -- * /selection (currently needs current window to be code window)\\n    local selection = nil\\n    if context.includes.include_selection then\\n        -- FYI include_selection basically captures if user had selection when they first invoked a keymap to submit this command\\n        --   b/c submitting command switches modes, also user might unselect text on accident (or want to repeat w/ prev selection)\\n        --   thus it is useful to capture intent with /selection early on\\n\\n        -- FYI my Selection helper only works on current window... so I can't put this off I need it way up high:\\n        -- NOT IMPLEMENTED (yet?) local selection = Selection._get_visual_selection_for_window_id(code_win_id)\\n        selection = Selection.get_visual_selection_for_current_window()\\n        if selection:is_empty() then\\n            error(\\\"No /selection found (no current, nor prior, selection).\\\")\\n            return\\n        end\\n        -- TODO once I get Selection working w/ non-current windows, move this code down and cleanup/simplify the spot that uses selection below\\n    end\\n\\n    -- FYI! do not move opening window higher, unless above code supports code_win_id/code_bufnr:\\n    AgentsFrontend.ensure_chat_window_is_open()\\n    --\\n    -- * chat window should always be open, nonetheless check:\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565768184,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"r7SODk5ByFa0oXuzOVN9UGqlHRzLdsMp"
+      },{
+        "tool_calls":[{
+            "id":"GNjOyPlN4deZJq2X83ascu4QEYcIjx9D",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '1,35p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now I see the pattern clearly. In AgentsFrontend:\n\n```lua\nlocal config = require(\"ask-openai.config\")\nAgentsFrontend.endpoint = config.get_endpoints().agents\n```\n\nAnd then later:\n```lua\nif AgentsFrontend.endpoint.name == \"gptoss\" then\n    body_overrides = model_params.new_gptoss_chat_body_llama_server(_body, context)\nelse\n    body_overrides = model_params.new_qwen3coder_llama_server_chat_body(_body, context)\nend\n```\n\nNow I need to mirror this in RewriteFrontend. Let me also check what RewriteFrontend currently has at the top and how it gets its endpoint.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":5800.7273341462,
+          "prompt_n":1099,
+          "predicted_per_second":195.35898452995,
+          "cache_n":26115,
+          "prompt_ms":189.459,
+          "prompt_per_token_ms":0.17239217470428,
+          "predicted_ms":1008.4,
+          "predicted_per_token_ms":5.1187817258883,
+          "predicted_n":197
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"local buffers = require(\\\"ask-openai.helpers.buffers\\\")\\nlocal config = require(\\\"ask-openai.config\\\")\\nlocal curl = require(\\\"ask-openai.backends.curl\\\")\\nlocal log = require(\\\"ask-openai.logs.logger\\\").predictions()\\nlocal agentica = require(\\\"ask-openai.backends.models.agentica\\\")\\nlocal text_helpers = require(\\\"ask-openai.helpers.text\\\")\\nlocal thinking = require(\\\"ask-openai.rewrites.thinking\\\")\\nlocal Selection = require(\\\"ask-openai.helpers.selection\\\")\\nlocal Displayer = require(\\\"ask-openai.rewrites.displayer\\\")\\nlocal CurrentContext = require(\\\"ask-openai.frontends.context\\\")\\nlocal TxChatMessage = require(\\\"ask-openai.agents.messages.tx\\\")\\nlocal files = require(\\\"ask-openai.helpers.files\\\")\\nlocal api = require(\\\"ask-openai.api\\\")\\nlocal rag_client = require(\\\"ask-openai.rag.client\\\")\\nlocal CurlRequest = require(\\\"ask-openai.backends.curl_request\\\")\\nlocal human = require(\\\"devtools.humanize\\\")\\nlocal tool_router = require(\\\"ask-openai.tools.router\\\")\\nlocal model_params = require(\\\"ask-openai.agents.models.params\\\")\\nlocal MessageBuilder = require(\\\"ask-openai.rewrites.message_builder\\\")\\nlocal HLGroups = require(\\\"ask-openai.hlgroups\\\")\\nlocal harmony = require(\\\"ask-openai.backends.models.gptoss.tokenizer\\\").harmony\\nlocal rag_instructions = require(\\\"ask-openai.frontends.prompts.rag_instructions\\\")\\nlocal prompt_parser = require(\\\"ask-openai.frontends.context.prompt_parser\\\")\\n\\n---@class RewriteFrontend : StreamingFrontend\\nlocal RewriteFrontend = {}\\n\\n-- Initialize selection position variables at module level\\n---@type Selection|nil\\nRewriteFrontend.selection = nil\\nRewriteFrontend.accumulated_chunks = \\\"\\\"\\n\\nfunction RewriteFrontend.strip_md_from_completion(lines)\\n    local isFirstLineStartOfCodeBlock = lines[1]:match(\\\"^```(%S*)$\\\")\\n    local isLastLineEndOfCodeBlock = lines[#lines]:match(\\\"^```\\\")\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565769621,
+        "duration_ms":9,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"GNjOyPlN4deZJq2X83ascu4QEYcIjx9D"
+      },{
+        "tool_calls":[{
+            "id":"nfUh8cGjUAtNqfPVrsQvZ5Np4JDgp9SO",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '340,440p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now I have a clear picture. I need to:\n\n1. Add `RewriteFrontend.endpoint = config.get_endpoints().rewrite` after the class definition (like AgentsFrontend does)\n2. Mirror the conditional body building pattern from AgentsFrontend in the `then_send_rewrite` function\n3. Also remove the dead `qwen25_chat_body` variable that's not being used\n\nLet me also check if there's a `context` variable available in the scope where we build the body (for the gptoss function which needs context).\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4848.8364864585,
+          "prompt_n":702,
+          "predicted_per_second":193.59364466228,
+          "cache_n":27210,
+          "prompt_ms":144.777,
+          "prompt_per_token_ms":0.20623504273504,
+          "predicted_ms":878.128,
+          "predicted_per_token_ms":5.1654588235294,
+          "predicted_n":170
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"        .. \\\"\\\\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\\\"\\n\\n    local always_include = {\\n        yanks = true,\\n        project = true,\\n    }\\n    local context = CurrentContext:items(user_prompt, always_include)\\n\\n    -- make sure to remove slash commands like /yanks (hence cleaned_prompt)\\n    local user_prompt = context.cleaned_prompt\\n    local code_context = \\\"\\\"\\n    local code_caveat = \\\"\\\"\\n    local code = selection.original_text\\n    if code ~= nil and code ~= \\\"\\\" then\\n        local start_line = (selection._start_line_0indexed or 0) + 1\\n        local end_line = (selection._end_line_0indexed or 0) + 1\\n        local line_info = start_line == end_line and tostring(start_line) or (start_line .. \\\"-\\\" .. end_line)\\n        code_context = \\\"Here is the code I selected:\\\"\\n            .. \\\"\\\\n```\\\" .. file_name .. \\\":\\\" .. line_info\\n            .. \\\"\\\\n\\\" .. code .. \\\"\\\\n```\\\"\\n        code_caveat = \\\"\\\\n\\\\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!\\\"\\n        -- TODO add separate reasoning level for rewrites/agents vs predictions... that should help here and with tool calls too!\\n        -- * response indentation:\\n        -- - ALTERNATIVELY, if I could show more of the surrounding code, that would likely help too/instead\\n        -- - FYI mentioning \\\"carefully preserved indentation\\\" resulted in the model not generating markdown wrapers and explanations! (gptoss120b)\\n        --   - btw I strip out markdown blocks so really, I don't care anymore if those are present in the response!\\n        -- - FYI gptoss120b w/ medium reasoning + caveat is working well\\n        --   - cannot get low reasoning to work well\\n    else\\n        code_context = \\\"I am working on this file: \\\" .. file_name\\n    end\\n    user_message_with_code = user_prompt .. \\\"\\\\n\\\\n\\\" .. code_context .. code_caveat\\n\\n    ---@param rag_matches LSPRankedMatch[]\\n    local function then_send_rewrite(rag_matches)\\n        local messages = {\\n            TxChatMessage:system(system_prompt)\\n        }\\n\\n        if context.includes.current_file then\\n            local message = MessageBuilder:new()\\n                :plain_text(\\\"FYI, here is my current buffer in Neovim. Use this as context for my request.\\\")\\n                :md_current_buffer()\\n                :to_user_message()\\n\\n            table.insert(messages, message)\\n        end\\n        if context.includes.open_files then\\n            -- TODO! /files => open_files\\n            -- FYI buffers.get_text_in_all_buffers()\\n        end\\n        if context.includes.yanks and context.yanks then\\n            table.insert(messages, TxChatMessage:user_context(context.yanks.content))\\n        end\\n        if context.includes.commits and context.commits then\\n            for _, commit in pairs(context.commits) do\\n                table.insert(messages, TxChatMessage:user_context(commit.content))\\n            end\\n        end\\n        if context.includes.project and context.project then\\n            -- TODO does any of this belong in the system_message?\\n            vim.iter(context.project)\\n                :each(function(value)\\n                    table.insert(messages, TxChatMessage:user_context(value.content))\\n                end)\\n        end\\n        local rag_message = rag_instructions.semantic_grep_user_message(rag_matches)\\n        if rag_message then\\n            table.insert(messages, rag_message)\\n        end\\n\\n        table.insert(messages, TxChatMessage:user(user_message_with_code))\\n\\n        local qwen25_chat_body = {\\n            messages = messages,\\n            -- * current models only\\n            -- model = \\\"qwen3:8b\\\", -- btw as of Qwen3, no tag == \\\"-instruct\\\", and for base you'll use \\\"-base\\\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\\n            -- model = \\\"qwen3-coder:30b-a3b-q8_0\\\", # q4_K_M\\n            temperature = 0.2,\\n\\n            -- avoid num_ctx (s/b set server side), use max_tokens to cap request:\\n            max_tokens = 8192, -- PRN set high if using /think only?\\n        }\\n\\n        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n        })\\n\\n        RewriteFrontend.last_request = CurlRequest:new({\\n            body = body,\\n            base_url = config.get_endpoints().rewrite.base_url,\\n            endpoint = CompletionsEndpoints.oai_v1_chat_completions,\\n            type = \\\"rewrite\\\",\\n        })\\n        curl.spawn(RewriteFrontend.last_request, RewriteFrontend)\\n    end\\n\\n    if api.is_rag_enabled() and rag_client.is_rag_supported_in_current_file() then\\n        local this_request_ids, cancel -- declare in advance for closure\\n\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565770883,
+        "duration_ms":9,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"nfUh8cGjUAtNqfPVrsQvZ5Np4JDgp9SO"
+      },{
+        "tool_calls":[{
+            "id":"1Ths6q1cDgrwRvD4QvBL4230X0smFTUP",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"python3 << 'EOF'\\nwith open(\\\"lua/ask-openai/rewrites/frontend.lua\\\", \\\"r\\\") as f:\\n    content = f.read()\\n\\n# 1. Add endpoint assignment after class definition (after accumulated_chunks line)\\nold_init = \\\"\\\"\\\"RewriteFrontend.selection = nil\\nRewriteFrontend.accumulated_chunks = \\\\\\\"\\\\\\\"\\n\\nfunction RewriteFrontend.strip_md_from_completion\\\"\\\"\\\"\\n\\nnew_init = \\\"\\\"\\\"RewriteFrontend.selection = nil\\nRewriteFrontend.accumulated_chunks = \\\"\\\"\\nRewriteFrontend.endpoint = config.get_endpoints().rewrite\\n\\nfunction RewriteFrontend.strip_md_from_completion\\\"\\\"\\\"\\n\\ncontent = content.replace(old_init, new_init)\\n\\n# 2. Replace the body building section to mirror AgentsFrontend pattern\\nold_body_build = \\\"\\\"\\\"        local qwen25_chat_body = {\\n            messages = messages,\\n            -- * current models only\\n            -- model = \\\"qwen3:8b\\\", -- btw as of Qwen3, no tag == \\\"-instruct\\\", and for base you'll use \\\"-base\\\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\\n            -- model = \\\"qwen3-coder:30b-a3b-q8_0\\\", # q4_K_M\\n            temperature = 0.2,\\n\\n            -- avoid num_ctx (s/b set server side), use max_tokens to cap request:\\n            max_tokens = 8192, -- PRN set high if using /think only?\\n        }\\n\\n        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n        })\\\"\\\"\\\"\\n\\nnew_body_build = \\\"\\\"\\\"        local request_body = {\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n        }\\n\\n        local body\\n        if RewriteFrontend.endpoint.name == \\\"gptoss\\\" then\\n            body = model_params.new_gptoss_chat_body_llama_server(request_body, context)\\n        else\\n            body = model_params.new_qwen3coder_llama_server_chat_body(request_body)\\n        end\\\"\\\"\\\"\\n\\ncontent = content.replace(old_body_build, new_body_build)\\n\\nwith open(\\\"lua/ask-openai/rewrites/frontend.lua\\\", \\\"w\\\") as f:\\n    f.write(content)\\n\\nprint(\\\"RewriteFrontend updated to mirror AgentsFrontend pattern\\\")\\nEOF\\n\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"I see there's a dead variable `qwen25_chat_body` that's not being used. The actual body is built with `model_params.new_qwen3coder_llama_server_chat_body({ messages = messages, model = \"\" })`.\n\nNow I'll mirror the AgentsFrontend pattern:\n\n1. Add `RewriteFrontend.endpoint = config.get_endpoints().rewrite` after class definition\n2. Replace the hardcoded qwen body building with a conditional check like AgentsFrontend\n3. Clean up the dead `qwen25_chat_body` variable\n\nLet me write the changes.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":5667.4510262851,
+          "prompt_n":1356,
+          "predicted_per_second":195.14265753643,
+          "cache_n":27908,
+          "prompt_ms":239.261,
+          "prompt_per_token_ms":0.17644616519174,
+          "predicted_ms":3392.39,
+          "predicted_per_token_ms":5.1244561933535,
+          "predicted_n":662
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"RewriteFrontend updated to mirror AgentsFrontend pattern\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565774824,
+        "duration_ms":45,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"1Ths6q1cDgrwRvD4QvBL4230X0smFTUP"
+      },{
+        "tool_calls":[{
+            "id":"T4LMzmwrKpdwNyoG9ao3XdwM1HAaSjYq",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"luac -p lua/ask-openai/rewrites/frontend.lua && echo \\\"OK\\\" || echo \\\"ERROR\\\"\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Now let me verify the changes and check syntax.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4709.586392496,
+          "prompt_n":721,
+          "predicted_per_second":193.12184479642,
+          "cache_n":29260,
+          "prompt_ms":153.092,
+          "prompt_per_token_ms":0.21233287101248,
+          "predicted_ms":331.397,
+          "predicted_per_token_ms":5.178078125,
+          "predicted_n":64
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"OK\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565775585,
+        "duration_ms":11,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"T4LMzmwrKpdwNyoG9ao3XdwM1HAaSjYq"
+      },{
+        "tool_calls":[{
+            "id":"tstYkFt3gPXoyz4P8O7ftL1kDhsqe6n7",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '28,36p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Let me verify the changes look correct.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":2223.0708382205,
+          "prompt_n":163,
+          "predicted_per_second":193.39477580473,
+          "cache_n":29927,
+          "prompt_ms":73.322,
+          "prompt_per_token_ms":0.4498282208589,
+          "predicted_ms":315.417,
+          "predicted_per_token_ms":5.1707704918033,
+          "predicted_n":61
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"-- Initialize selection position variables at module level\\n---@type Selection|nil\\nRewriteFrontend.selection = nil\\nRewriteFrontend.accumulated_chunks = \\\"\\\"\\nRewriteFrontend.endpoint = config.get_endpoints().rewrite\\n\\nfunction RewriteFrontend.strip_md_from_completion(lines)\\n    local isFirstLineStartOfCodeBlock = lines[1]:match(\\\"^```(%S*)$\\\")\\n    local isLastLineEndOfCodeBlock = lines[#lines]:match(\\\"^```\\\")\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565776226,
+        "duration_ms":10,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"tstYkFt3gPXoyz4P8O7ftL1kDhsqe6n7"
+      },{
+        "tool_calls":[{
+            "id":"PdEt1NDxBjsNeqpWmxUrpGR6VJmOfvCd",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"cat lua/ask-openai/rewrites/frontend.lua | sed -n '410,435p'\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"Good, the endpoint assignment is in place. Let me check the body building section.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3496.6346063708,
+          "prompt_n":373,
+          "predicted_per_second":192.07683073229,
+          "cache_n":29927,
+          "prompt_ms":106.674,
+          "prompt_per_token_ms":0.28598927613941,
+          "predicted_ms":374.85,
+          "predicted_per_token_ms":5.20625,
+          "predicted_n":72
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"        end\\n\\n        table.insert(messages, TxChatMessage:user(user_message_with_code))\\n\\n        local request_body = {\\n            messages = messages,\\n            model = \\\"\\\", -- irrelevant for llama-server\\n        }\\n\\n        local body\\n        if RewriteFrontend.endpoint.name == \\\"gptoss\\\" then\\n            body = model_params.new_gptoss_chat_body_llama_server(request_body, context)\\n        else\\n            body = model_params.new_qwen3coder_llama_server_chat_body(request_body)\\n        end\\n\\n        RewriteFrontend.last_request = CurlRequest:new({\\n            body = body,\\n            base_url = config.get_endpoints().rewrite.base_url,\\n            endpoint = CompletionsEndpoints.oai_v1_chat_completions,\\n            type = \\\"rewrite\\\",\\n        })\\n        curl.spawn(RewriteFrontend.last_request, RewriteFrontend)\\n    end\\n\\n    if api.is_rag_enabled() and rag_client.is_rag_supported_in_current_file() then\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565776963,
+        "duration_ms":11,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"PdEt1NDxBjsNeqpWmxUrpGR6VJmOfvCd"
+      },{
+        "tool_calls":[{
+            "id":"o9uEpqLX2K5fB9qhtQcfO325atrHS12Q",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"git diff lua/ask-openai/rewrites/frontend.lua\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"The changes look good. Now let me check the git diff to see all changes together.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":3281.5554966055,
+          "prompt_n":334,
+          "predicted_per_second":191.93121185367,
+          "cache_n":30296,
+          "prompt_ms":101.781,
+          "prompt_per_token_ms":0.30473353293413,
+          "predicted_ms":312.612,
+          "predicted_per_token_ms":5.2102,
+          "predicted_n":60
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"diff --git a/lua/ask-openai/rewrites/frontend.lua b/lua/ask-openai/rewrites/frontend.lua\\nindex eb0750ff..487d9017 100644\\n--- a/lua/ask-openai/rewrites/frontend.lua\\n+++ b/lua/ask-openai/rewrites/frontend.lua\\n@@ -29,6 +29,7 @@ local RewriteFrontend = {}\\n ---@type Selection|nil\\n RewriteFrontend.selection = nil\\n RewriteFrontend.accumulated_chunks = \\\"\\\"\\n+RewriteFrontend.endpoint = config.get_endpoints().rewrite\\n \\n function RewriteFrontend.strip_md_from_completion(lines)\\n     local isFirstLineStartOfCodeBlock = lines[1]:match(\\\"^```(%S*)$\\\")\\n@@ -410,21 +411,17 @@ local function ask_rewrite_command(opts)\\n \\n         table.insert(messages, TxChatMessage:user(user_message_with_code))\\n \\n-        local qwen25_chat_body = {\\n-            messages = messages,\\n-            -- * current models only\\n-            -- model = \\\"qwen3:8b\\\", -- btw as of Qwen3, no tag == \\\"-instruct\\\", and for base you'll use \\\"-base\\\" # VERY HAPPY WITH THIS MODEL FOR CODING TOO!\\n-            -- model = \\\"qwen3-coder:30b-a3b-q8_0\\\", # q4_K_M\\n-            temperature = 0.2,\\n-\\n-            -- avoid num_ctx (s/b set server side), use max_tokens to cap request:\\n-            max_tokens = 8192, -- PRN set high if using /think only?\\n-        }\\n-\\n-        local body = model_params.new_qwen3coder_llama_server_chat_body({\\n+        local request_body = {\\n             messages = messages,\\n             model = \\\"\\\", -- irrelevant for llama-server\\n-        })\\n+        }\\n+\\n+        local body\\n+        if RewriteFrontend.endpoint.name == \\\"gptoss\\\" then\\n+            body = model_params.new_gptoss_chat_body_llama_server(request_body, context)\\n+        else\\n+            body = model_params.new_qwen3coder_llama_server_chat_body(request_body)\\n+        end\\n \\n         RewriteFrontend.last_request = CurlRequest:new({\\n             body = body,\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565777634,
+        "duration_ms":14,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"o9uEpqLX2K5fB9qhtQcfO325atrHS12Q"
+      },{
+        "tool_calls":[{
+            "id":"qIds1YKhRx0ifZK1lAiiVRHyq9Je88oO",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"rg \\\"get_llama_server_model_name\\\" lua/ask-openai/config/init.lua -n -A 15 | head -30\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"The changes look good and mirror the AgentsFrontend pattern. Let me also check if there are any other places in RewriteFrontend that might need updating, like the simulate_streaming_rewrite_command function or other places that reference the endpoint.\n\nActually, let me also check if we should update the config back to gptoss for rewrite since we're now supporting both models dynamically. The previous commit changed it to qwen3_url, but now with dynamic switching, it should probably go back to gptoss (or stay as is - the user can configure which model they want on that endpoint).\n\nActually wait, looking at the AgentsFrontend pattern more carefully:\n- It sets `AgentsFrontend.endpoint = config.get_endpoints().agents` which points to qwen3\n- Then it checks `if AgentsFrontend.endpoint.name == \"gptoss\"` - but agents always uses qwen3 endpoint...\n\nSo the check in AgentsFrontend is actually checking what model is loaded on that endpoint. If the llama-server at that URL has gptoss loaded, it uses gptoss params. If it has qwen loaded, it uses qwen params.\n\nSo for RewriteFrontend:\n- We set `RewriteFrontend.endpoint = config.get_endpoints().rewrite` which currently points to qwen3_url (from our previous commit)\n- The endpoint.name will be whatever model is loaded on that server\n- So the dynamic switching should work correctly\n\nLet me verify this by checking what `get_llama_server_model_name` does.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4527.690736894,
+          "prompt_n":643,
+          "predicted_per_second":191.60924759227,
+          "cache_n":30626,
+          "prompt_ms":142.015,
+          "prompt_per_token_ms":0.22086314152411,
+          "predicted_ms":1962.327,
+          "predicted_per_token_ms":5.218954787234,
+          "predicted_n":376
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"82:12:function M.get_llama_server_model_name(base_url)\\n83-    -- 1. Check cache first\\n84-    local cached = _model_cache[base_url]\\n85-    if cached then\\n86-        local cache_timeout = cached.name == nil and 1 or 10\\n87-        if os.time() - cached.ts < cache_timeout then\\n88-            return cached.name\\n89-        end\\n90-    end\\n91-\\n92-    -- 2. Fetch already in progress — caller will retry later\\n93-    if _fetch_in_progress[base_url] then\\n94-        return nil\\n95-    end\\n96-\\n97-    -- 3. Start a new background fetch\\n--\\n196:28:    local gptoss_model = M.get_llama_server_model_name(gptoss_url)\\n197:27:    local qwen3_model = M.get_llama_server_model_name(qwen3_url)\\n198:31:    local qwen3base_model = M.get_llama_server_model_name(qwen3base_url)\\n199-\\n200-    local endpoints = {\\n201-        agents = {\\n202-            name = qwen3_model or \\\"OFFLINE\\\",\\n203-            base_url = qwen3_url,\\n204-        },\\n205-        rewrite = {\\n206-            name = qwen3_model or \\\"OFFLINE\\\",\\n207-            base_url = qwen3_url,\\n208-        },\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565779996,
+        "duration_ms":13,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"qIds1YKhRx0ifZK1lAiiVRHyq9Je88oO"
+      },{
+        "tool_calls":[{
+            "id":"AqGnHOsl7tJcodVo0JXOCRjPhdS91aOB",
+            "type":"function",
+            "function":{
+              "arguments":"{\"command_line\":\"git add lua/ask-openai/rewrites/frontend.lua && git commit --author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\" -m \\\"refactor: mirror AgentsFrontend model switching pattern in RewriteFrontend\\n\\n- Add RewriteFrontend.endpoint to store the rewrite endpoint config\\n- Mirror AgentsFrontend's conditional body building based on endpoint.name\\n- Remove dead qwen25_chat_body variable\\n- Supports both gptoss and qwen3coder models dynamically based on what's loaded\\\"\"}",
+              "name":"run_process"
+            }
+          }],
+        "content":"",
+        "reasoning_content":"I see. So `get_llama_server_model_name` fetches the model name from the llama-server. The endpoint.name will be whatever model is loaded on that server (e.g., \"gptoss120b\", \"qwen3-coder:30b-a3b\", etc.).\n\nSo the pattern works like this:\n1. RewriteFrontend.endpoint points to the rewrite URL (currently qwen3_url = port 8012)\n2. RewriteFrontend.endpoint.name will be whatever model is loaded on that server\n3. If someone loads gptoss on port 8012, the name will be \"gptoss...\" and it'll use gptoss params\n4. If someone loads qwen on port 8012, the name won't match \"gptoss\" and it'll use qwen params\n\nThis is correct! The dynamic switching is based on what model is actually loaded on the server, not hardcoded to a specific model.\n\nLet me commit this change.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_second":4681.1688808125,
+          "prompt_n":796,
+          "predicted_per_second":193.77446010832,
+          "cache_n":31265,
+          "prompt_ms":170.043,
+          "prompt_per_token_ms":0.21362185929648,
+          "predicted_ms":1914.597,
+          "predicted_per_token_ms":5.1606388140162,
+          "predicted_n":371
+        }
+      },{
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"text\":\"0\",\"type\":\"text\"},{\"name\":\"STDOUT\",\"text\":\"[master af6ef48b] refactor: mirror AgentsFrontend model switching pattern in RewriteFrontend\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 1 file changed, 10 insertions(+), 13 deletions(-)\\n\",\"type\":\"text\"},{\"name\":\"STDERR\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\",\"type\":\"text\"}]}",
+        "start_time_ms":565782356,
+        "duration_ms":1633,
+        "role":"tool",
+        "progress_notifications":[],
+        "tool_call_id":"AqGnHOsl7tJcodVo0JXOCRjPhdS91aOB"
+      },{
+        "reasoning_content":"Done! I've mirrored the AgentsFrontend pattern in RewriteFrontend. Here's what was changed:\n\n1. Added `RewriteFrontend.endpoint = config.get_endpoints().rewrite` to store the endpoint config (like AgentsFrontend does with `AgentsFrontend.endpoint`)\n\n2. Replaced the hardcoded Qwen body building with a conditional check that mirrors AgentsFrontend:\n   - If `RewriteFrontend.endpoint.name == \"gptoss\"` → use `new_gptoss_chat_body_llama_server()`\n   - Otherwise → use `new_qwen3coder_llama_server_chat_body()`\n\n3. Cleaned up the dead `qwen25_chat_body` variable that wasn't being used\n\nThis allows RewriteFrontend to dynamically switch between gptoss and qwen model parameters based on what's actually loaded on the llama-server, just like AgentsFrontend does.\n",
+        "role":"assistant",
+        "content":"Done! I've mirrored the AgentsFrontend pattern in RewriteFrontend:\n\n**Changes made:**\n\n1. **Added endpoint storage** (line 32):\n   ```lua\n   RewriteFrontend.endpoint = config.get_endpoints().rewrite\n   ```\n\n2. **Mirrored the conditional body building** (lines 414-424):\n   ```lua\n   local request_body = {\n       messages = messages,\n       model = \"\", -- irrelevant for llama-server\n   }\n\n   local body\n   if RewriteFrontend.endpoint.name == \"gptoss\" then\n       body = model_params.new_gptoss_chat_body_llama_server(request_body, context)\n   else\n       body = model_params.new_qwen3coder_llama_server_chat_body(request_body)\n   end\n   ```\n\n3. **Cleaned up dead code** — removed the unused `qwen25_chat_body` variable\n\nNow RewriteFrontend dynamically switches between gptoss and qwen3coder params based on what model is actually loaded on the llama-server, matching the AgentsFrontend pattern exactly.",
+        "finish_reason":"stop"
+      }],
+    "stream":true,
+    "top_k":20,
+    "repeat_penalty":1.05,
+    "top_p":0.8,
+    "temperature":0.7,
+    "model":""
+  },
+  "last_sse":{
+    "timings":{
+      "prompt_per_second":4055.8637841974,
+      "prompt_n":530,
+      "predicted_per_second":191.775168441,
+      "cache_n":32057,
+      "prompt_ms":130.675,
+      "prompt_per_token_ms":0.24655660377358,
+      "predicted_ms":2195.279,
+      "predicted_per_token_ms":5.2144394299287,
+      "predicted_n":421
+    },
+    "id":"chatcmpl-kLqDexFUghayfcCZjO80hMKKBaE1s8B8",
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "created":1780635533,
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0"
+  }
+}
