@@ -1,0 +1,358 @@
+{
+  "last_sse":{
+    "timings":{
+      "predicted_ms":169.064,
+      "predicted_per_token_ms":4.8304,
+      "predicted_n":35,
+      "prompt_per_second":2355.0641525592,
+      "cache_n":9176,
+      "prompt_n":154,
+      "predicted_per_second":207.02219277907,
+      "prompt_ms":65.391,
+      "prompt_per_token_ms":0.42461688311688
+    },
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "object":"chat.completion.chunk",
+    "created":1780661461,
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "id":"chatcmpl-rgb9iAXFUqRaNmmcu8ClvrcERUp5WSXa"
+  },
+  "request_body":{
+    "top_p":0.8,
+    "messages":[{
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n",
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal config = require(\"ask-openai.config\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal text_helpers = require(\"ask-openai.helpers.text\")\nlocal thinking = require(\"ask-openai.rewrites.thinking\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal Displayer = require(\"ask-openai.rewrites.displayer\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal human = require(\"devtools.humanize\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/frontend.lua:0-19\nlocal uv = vim.uv\nlocal Prediction = require(\"ask-openai.predictions.prediction\")\nlocal ansi = require(\"ask-openai.predictions.ansi\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal api = require(\"ask-openai.api\")\nlocal FIMPerformance = require(\"ask-openai.predictions.fim_performance\")\nrequire(\"devtools.performance\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nrequire(\"ask-openai.predictions.prefix_suffix\")\nlocal ps = require(\"ask-openai.predictions.prefix_suffix\")\nlocal lualine = require('ask-openai.status.lualine')\nlocal stats = require(\"ask-openai.predictions.stats\")\nlocal Curl = require(\"ask-openai.backends.curl\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal FimBackend = require(\"ask-openai.predictions.backends.fim_backend\")\nlocal llama_server_client = require(\"ask-openai.backends.llama_cpp.llama_server_client\")\n\n---@class PredictionsFrontend : StreamingFrontend\n---@field current_prediction Prediction|nil\nlocal PredictionsFrontend = {}\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/frontend.lua:15-32\nlocal human = require(\"devtools.humanize\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal harmony = require(\"ask-openai.backends.models.gptoss.tokenizer\").harmony\nlocal rag_instructions = require(\"ask-openai.frontends.prompts.rag_instructions\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\n\n---@class RewriteFrontend : StreamingFrontend\nlocal RewriteFrontend = {}\n\n-- Initialize selection position variables at module level\n---@type Selection|nil\nRewriteFrontend.selection = nil\nRewriteFrontend.accumulated_chunks = \"\"\nRewriteFrontend.endpoint = config.get_endpoints().rewrite\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rewrites/thinking/init.lua:0-6\nlocal log = require('ask-openai.logs.logger').predictions()\nlocal harmony = require('ask-openai.backends.models.gptoss.tokenizer').harmony\n\nlocal M = {\n    dots = require(\"ask-openai.frontends.thinking.dots\"),\n}\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/tests/sse.lua:12-305\n                                                         function()\n    ---@class FakeFrontend : StreamingFrontend\n    local FakeFrontend = {}\n    ---@return FakeFrontend\n    function FakeFrontend:new()\n        -- create a table and attach methods\n        local f = setmetatable({}, { __index = self })\n\n        f.on_parsed_data_sse_calls = {}\n        f.process_finish_reason_calls = {}\n\n        -- if I make actual frontends into a class.. then I can break these out:\n        --   but for now I need the closure to get to \"self\" which is \"f\" here\n        --   b/c I am not calling with \":\" and likely wont ever\n\n        ---@type OnParsedSSE\n        function f.on_parsed_data_sse(sse_parsed)\n            table.insert(f.on_parsed_data_sse_calls, sse_parsed)\n        end\n\n        ---@type OnParsedSSE\n        function f.on_sse_llama_server_timings(sse_parsed)\n        end\n\n        ---@type ExplainError\n        function f.explain_error(text)\n        end\n\n        return f\n    end\n\n    describe(\"streaming tool_calls parses all SSEs\", function()\n        it(\"on_delta, thru on_chunk, reconstitutes messages (integration test) \", function()\n            -- TODO add more advanced examples (multiple tool calls, multiple message [non tool call style])\n            --   IOTW index != 0 and role parsing (perhaps even group by role?)\n            --\n            local events = [[\ndata: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}]}\ndata: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"chatcmpl-tool-ca99dda515524c6abe47d1ea22813507\",\"type\":\"function\",\"index\":0,\"function\":{\"name\":\"run_command\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\ndata: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"command\\\": \\\"\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\ndata: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"ls\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\ndata: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\"}\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\ndata: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\"},\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"stop_reason\":null}]}\ndata: [DONE]\n            ]]\n            local frontend = FakeFrontend:new()\n            local request = {}\n        end)\n\n        local function call_on_delta(choices)\n            local frontend = FakeFrontend:new()\n            local request = {\n                accumulated_model_response_messages = {}\n            }\n\n            local deltas = text.split_lines_skip_empties(choices)\n            for _, delta_json in pairs(deltas) do\n                local delta_table = vim.json.decode(delta_json)\n                local sse_parsed = {} -- fake the full SSE since AFAICT it is not always available in consumer tests\n                agents_frontend.on_streaming_delta_update_message_history(delta_table, request, sse_parsed)\n            end\n            return request, frontend\n        end\n\n\n        it(\"on_delta for agents (no tool calls) - ollama btw (shouldn't matter)\", function()\n            -- body: {\"messages\":[{\"role\":\"system\",\"content\":\"You are a neovim AI plugin. Your name is Neo Vim.  Please respond with markdown formatted text\"},{\"role\":\"user\",\"content\":\"what is your name?\"}],\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"stream\":true}\n            -- data: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"My\"},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" name\"},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" is\"},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" Neo\"},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" Vim\"},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\".\"},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-192\",\"object\":\"chat.completion.chunk\",\"created\":1744646668,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\"}]}\n            -- data: [DONE]\n            local choices = [[\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"My\"},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" name\"},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" is\"},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" Neo\"},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\" Vim\"},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\".\"},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\"}\n            ]]\n\n            local request = call_on_delta(choices)\n\n            should.be_equal(1, #request.accumulated_model_response_messages)\n            local rx_message = request.accumulated_model_response_messages[1]\n            should.be_equal(0, rx_message.index)\n            should.be_equal(\"assistant\", rx_message.role)\n            should.be_equal(\"My name is Neo Vim.\", rx_message.content)\n\n            -- TODO is finish_reason per message OR the entire request!?\n            --   TODO get a multi message response to review\n            should.be_equal(\"stop\", rx_message.finish_reason)\n        end)\n\n\n        it(\"on_delta with two tool use requests in one message - ollama (each tool is one delta only, currently)\", function()\n            -- TODO can use full SSEs for parse_SSE testing/refactoring\n            -- body: {\"messages\":[{\"role\":\"system\",\"content\":\"You are a neovim AI plugin. Your name is Neo Vim.  Please respond with markdown formatted text\"},{\"role\":\"user\",\"content\":\"please list files\"}],\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"stream\":true,\"tools\":[{\"function\":{\"name\":\"run_command\",\"parameters\":{\"properties\":{\"cwd\":{\"description\":\"Current working directory, leave empty in most cases\",\"type\":\"string\"},\"command\":{\"description\":\"Command with args\",\"type\":\"string\"}},\"required\":[\"command\"],\"type\":\"object\"}},\"type\":\"function\"},{\"function\":{\"name\":\"run_script\",\"parameters\":{\"properties\":{\"interpreter\":{\"description\":\"Command with arguments. Script will be piped to stdin. Examples: bash, fish, zsh, python, or: bash --norc\",\"type\":\"string\"},\"script\":{\"description\":\"Script to run\",\"type\":\"string\"},\"cwd\":{\"description\":\"Current working directory\",\"type\":\"string\"}},\"required\":[\"script\"],\"type\":\"object\"}},\"type\":\"function\"}]}\n            -- data: {\"id\":\"chatcmpl-225\",\"object\":\"chat.completion.chunk\",\"created\":1744655392,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_809l7n8f\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\"}\"}}]},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-225\",\"object\":\"chat.completion.chunk\",\"created\":1744655393,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_oqp1e2a1\",\"index\":1,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\"}}]},\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-225\",\"object\":\"chat.completion.chunk\",\"created\":1744655393,\"model\":\"qwen2.5-coder:7b-instruct-q8_0\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"tool_calls\"}]}\n            -- data: [DONE]\n            local choices = [[\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_809l7n8f\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\"}\"}}]},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_oqp1e2a1\",\"index\":1,\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\"}}]},\"finish_reason\":null}\n                    {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"tool_calls\"}\n            ]]\n\n            local request, frontend = call_on_delta(choices)\n            -- print(\"request\", vim.inspect(request))\n            should.be_equal(1, #request.accumulated_model_response_messages)\n            local rx_message = request.accumulated_model_response_messages[1]\n            should.be_equal(0, rx_message.index)\n            should.be_equal(\"assistant\", rx_message.role)\n            should.be_equal(\"tool_calls\", rx_message.finish_reason)\n\n            should.be_equal(2, #rx_message.tool_calls)\n            -- * tool1:\n            -- {\"id\":\"call_809l7n8f\",\"index\":0,\"type\":\"function\", \"function\":{\n            --    \"name\":\"run_command\",\n            --    \"arguments\":\"{\\\"command\\\":\\\"ls -la\\\"}\"}}]},\"finish_reason\":null}\n            first_call = rx_message.tool_calls[1]\n            should.be_equal(\"call_809l7n8f\", first_call.id)\n            should.be_equal(0, first_call.index)\n            should.be_equal(\"function\", first_call.type)\n            func = first_call[\"function\"]\n            should.be_equal(\"run_command\", func.name)\n            should.be_equal(\"{\\\"command\\\":\\\"ls -la\\\"}\", func.arguments)\n            -- * tool2:\n            -- {\"id\":\"call_oqp1e2a1\",\"index\":1,\"type\":\"function\", \"function\":{\n            --    \"name\":\"run_command\",\n            --    \"arguments\":\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\"}}]},\"finish_reason\":null}\n            second_call = rx_message.tool_calls[2]\n            should.be_equal(\"call_oqp1e2a1\", second_call.id)\n            should.be_equal(1, second_call.index)\n            should.be_equal(\"function\", second_call.type)\n            func = second_call[\"function\"]\n            should.be_equal(\"run_command\", func.name)\n            should.be_equal(\"{\\\"command\\\":\\\"ls -la\\\",\\\"cwd\\\":\\\"/path/to/directory\\\"}\", func.arguments)\n        end)\n        -- TODO add a test that validates lookup on index/role per message... need a multi message scenario (if that's ever a thing... and not multi choice... literally need two messages at same time, streaming)\n\n        it(\"streaming tool_calls (multiple SSE/deltas per tool_call) - vllm capture\", function()\n            -- local sses  = [[\n            -- data: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"chatcmpl-tool-ca99dda515524c6abe47d1ea22813507\",\"type\":\"function\",\"index\":0,\"function\":{\"name\":\"run_command\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"command\\\": \\\"\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"ls\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\"}\"}}]},\"logprobs\":null,\"finish_reason\":null}]}\n            -- data: {\"id\":\"chatcmpl-d0c68c86be0641129cffa5053c0c217e\",\"object\":\"chat.completion.chunk\",\"created\":1744513664,\"model\":\"\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\"},\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"stop_reason\":null}]}\n            -- data: [DONE]\n            -- ]]\n            local choices = [[\n                {\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}\n                {\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"chatcmpl-tool-ca99dda515524c6abe47d1ea22813507\",\"type\":\"function\",\"index\":0,\"function\":{\"name\":\"run_command\"}}]},\"logprobs\":null,\"finish_reason\":null}\n                {\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"command\\\": \\\"\"}}]},\"logprobs\":null,\"finish_reason\":null}\n                {\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"ls\"}}]},\"logprobs\":null,\"finish_reason\":null}\n                {\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\"}\"}}]},\"logprobs\":null,\"finish_reason\":null}\n                {\"index\":0,\"delta\":{\"content\":\"\"},\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"stop_reason\":null}\n            ]]\n            local request, frontend = call_on_delta(choices)\n            should.be_equal(1, #request.accumulated_model_response_messages)\n            local rx_message = request.accumulated_model_response_messages[1]\n            should.be_equal(\"assistant\", rx_message.role)\n            -- FYI VLLM IS NOT DUPLICATING ATTRS like role across all deltas, just on first one it seems\n            should.be_equal(0, rx_message.index)\n            should.be_equal(\"\", rx_message.content)\n            -- FYI I do not care about logprobs\n            should.be_equal(\"tool_calls\", rx_message.finish_reason)\n            -- FYI stop_reason for now\n\n            -- * tool delta 1:\n            -- [{\"id\":\"chatcmpl-tool-ca99dda515524c6abe47d1ea22813507\",\"type\":\"function\",\"index\":0,\"function\":{\"name\":\"run_command\"}}\n            should.be_equal(1, #rx_message.tool_calls)\n            call = rx_message.tool_calls[1]\n            should.be_equal(\"chatcmpl-tool-ca99dda515524c6abe47d1ea22813507\", call.id)\n            should.be_equal(0, call.index)\n            should.be_equal(\"function\", call.type)\n            -- -- * function.name\n            func = call[\"function\"]\n            should.be_equal(\"run_command\", func.name)\n            --\n            -- * tool delta 2-4:\n            -- [{\"index\":0,\"function\":{\"arguments\":\"{\\\"command\\\": \\\"\"}}\n            -- [{\"index\":0,\"function\":{\"arguments\":\"ls\"}}\n            -- [{\"index\":0,\"function\":{\"arguments\":\"\\\"}\"}}\n            --\n            -- concatenate args:\n            should.be_equal(\"{\\\"command\\\": \\\"ls\\\"}\", func.arguments)\n        end)\n\n        -- TODO add vllm dual tool use test so I can validate that index is whats different\n\n        it(\"llama-server tool calls - --jinja + qwen3coder30b (non- reasoning)\", function()\n            -- FYI see llama-server-tool-call.md for full response capture\n            local choices = [[\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":null}}\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"CALL_ID\",\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"arguments\":\"\"}}]}}\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"\"}}]}}\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"command\"}}]}}\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\":\"}}]}}\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\"\"}}]}}\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"pwd\"}}]}}\n                {\"finish_reason\":null,\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\"}\"}}]}}\n                {\"finish_reason\":\"tool_calls\",\"index\":0,\"delta\":{}}\n            ]]\n\n            local request, frontend = call_on_delta(choices)\n            should.be_equal(1, #request.accumulated_model_response_messages)\n\n            local rx_message = request.accumulated_model_response_messages[1]\n            should.be_equal(0, rx_message.index) -- must send this back to OpenAI, so yes I need this\n            should.be_equal(\"\", rx_message.content)\n            should.be_equal(\"assistant\", rx_message.role)\n            should.be_equal(\"tool_calls\", rx_message.finish_reason)\n\n            -- * validate accumulated tool call\n            should.be_equal(1, #rx_message.tool_calls)\n            call = rx_message.tool_calls[1]\n            should.be_equal(\"CALL_ID\", call.id)\n            should.be_equal(0, call.index)\n            should.be_equal(\"function\", call.type)\n            func = call[\"function\"]\n            should.be_equal(\"run_command\", func.name)\n            should.be_equal('{\"command\":\"pwd\"}', func.arguments)\n        end)\n\n        it(\"llama-server tool calls - TODO gptoss models + harmony?\", function()\n        end)\n\n        it(\"llama-server qwen3coder30b leaking <tool_call>\\n<function name=... - from mixed content + tool_call in one response\", function()\n            -- FYI this is just temporary until the llama-server backend can detect and not leak the start of a tool_call\n            -- part of issue IIUC is that hermes tool call format is triggered (in part b/c of how they prompt the model)\n            --  and when streaming results, after content starts, it doesn't hold back content deltas, even if they start matching the hermes tool call regex\n            --  mixed content AFAICT always ends with the tool call in my testing\n            -- join content together\n            --  cat lua/ask-openai/tools/tests/captures/weather-mixed-content-toolcall-sses.json | jq \".choices[0].delta.content\" -r | grep -v null | string join \"\"\n\n            -- FYI see llama-server-tool-call.md for full response capture\n            local sses_json = vim.fn.readfile(\"lua/ask-openai/tools/tests/captures/weather-mixed-content-toolcall-sses.json\")\n            -- vim.print(ss_events)\n            local frontend = FakeFrontend:new()\n            local request = { accumulated_model_response_messages = {} }\n\n            local sses = vim.iter(sses_json)\n                :map(function(line)\n                    return vim.json.decode(line, {})\n                end)\n                :each(function(sse_parsed)\n                    local choices = sse_parsed.choices\n                    -- vim.print(sse[1])\n                    agents_frontend.on_streaming_delta_update_message_history(choices[1], request, sse_parsed)\n                end)\n\n            should.be_equal(1, #request.accumulated_model_response_messages)\n\n            local rx_message = request.accumulated_model_response_messages[1]\n            should.be_equal(0, rx_message.index)\n\n            local content_only = \"Hi there! Let me check the current weather for Washington DC for you.\"\n            local tool_call_only = \"\\n<tool_call>\\n<function=get_current_weather\"\n            local mixed = content_only .. tool_call_only\n            should.be_equal(mixed, rx_message._verbatim_content)\n            should.be_equal(content_only, rx_message.content)\n\n            should.be_equal(\"assistant\", rx_message.role)\n            should.be_equal(\"tool_calls\", rx_message.finish_reason)\n            --\n            -- -- * validate accumulated tool call\n            should.be_equal(1, #rx_message.tool_calls)\n            call = rx_message.tool_calls[1]\n            should.be_equal(\"CALL_ID\", call.id)\n            should.be_equal(0, call.index)\n            should.be_equal(\"function\", call.type)\n            func = call[\"function\"]\n            should.be_equal(\"get_current_weather\", func.name)\n            -- cat lua/ask-openai/tools/tests/captures/weather-mixed-content-toolcall-sses.json | jq \".choices[0].delta.tool_calls[0].function.arguments\" -r | grep -v null | string join \"\"\n            should.be_equal('{\"location\":\"Washington DC\"}', func.arguments)\n        end)\n\n        -- TODO! other variations I've encounterd and that I need to test for\n        -- TODO!  <function name=...  alone\n        -- TODO!  <tool_call>  w/o <function after\n        -- TODO dual tool calls back to back\n\n        it(\"large SSE spans multiple lines\", function()\n\n        end)\n    end)\nend\n",
+        "role":"user"
+      },{
+        "content":"run sleep 2 in series, one at a time... 5 times total",
+        "role":"user"
+      },{
+        "timings":{
+          "predicted_ms":336.872,
+          "predicted_per_token_ms":4.954,
+          "predicted_n":68,
+          "prompt_per_second":8653.2773451516,
+          "cache_n":0,
+          "prompt_n":8923,
+          "predicted_per_second":201.85708518369,
+          "prompt_ms":1031.17,
+          "prompt_per_token_ms":0.11556315140648
+        },
+        "content":"",
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"command_line\":\"sleep 2\"}"
+            },
+            "id":"oKyKTi5Xzgn2D22zu3BITPTtC5FxwkQo"
+          }],
+        "reasoning_content":"The user wants me to run `sleep 2` five times, sequentially (one at a time). I'll use the `run_process` tool to execute this command.\n",
+        "role":"assistant"
+      },{
+        "tool_call_id":"oKyKTi5Xzgn2D22zu3BITPTtC5FxwkQo",
+        "content":"{\"content\":[{\"text\":\"0\",\"name\":\"EXIT_CODE\",\"type\":\"text\"}]}",
+        "start_time_ms":591702450,
+        "duration_ms":2013,
+        "progress_notifications":[],
+        "role":"tool"
+      },{
+        "timings":{
+          "predicted_ms":237.566,
+          "predicted_per_token_ms":4.8482857142857,
+          "predicted_n":49,
+          "prompt_per_second":2215.501477001,
+          "cache_n":8897,
+          "prompt_n":126,
+          "predicted_per_second":206.25847133007,
+          "prompt_ms":56.872,
+          "prompt_per_token_ms":0.45136507936508
+        },
+        "content":"",
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"command_line\":\"sleep 2\"}"
+            },
+            "id":"27X1XYBi943recQeI2NP0XiuLlX7e7YI"
+          }],
+        "reasoning_content":"The first sleep 2 completed. Let me run it 4 more times.\n",
+        "role":"assistant"
+      },{
+        "tool_call_id":"27X1XYBi943recQeI2NP0XiuLlX7e7YI",
+        "content":"{\"content\":[{\"text\":\"0\",\"name\":\"EXIT_CODE\",\"type\":\"text\"}]}",
+        "start_time_ms":591704849,
+        "duration_ms":2013,
+        "progress_notifications":[],
+        "role":"tool"
+      },{
+        "timings":{
+          "predicted_ms":213.224,
+          "predicted_per_token_ms":4.846,
+          "predicted_n":44,
+          "prompt_per_second":3223.4957020057,
+          "cache_n":8897,
+          "prompt_n":207,
+          "predicted_per_second":206.35575732563,
+          "prompt_ms":64.216,
+          "prompt_per_token_ms":0.31022222222222
+        },
+        "content":"",
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"command_line\":\"sleep 2\"}"
+            },
+            "id":"uDGKzY2oH53gmLKwjQWXCzOmbCb4lQpm"
+          }],
+        "reasoning_content":"Second sleep completed. Let me run the third one.\n",
+        "role":"assistant"
+      },{
+        "tool_call_id":"uDGKzY2oH53gmLKwjQWXCzOmbCb4lQpm",
+        "content":"{\"content\":[{\"text\":\"0\",\"name\":\"EXIT_CODE\",\"type\":\"text\"}]}",
+        "start_time_ms":591707232,
+        "duration_ms":2009,
+        "progress_notifications":[],
+        "role":"tool"
+      },{
+        "timings":{
+          "predicted_ms":205.85,
+          "predicted_per_token_ms":4.9011904761905,
+          "predicted_n":42,
+          "prompt_per_second":3485.9085534095,
+          "cache_n":8897,
+          "prompt_n":283,
+          "predicted_per_second":204.0320621812,
+          "prompt_ms":81.184,
+          "prompt_per_token_ms":0.28686925795053
+        },
+        "content":"",
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"command_line\":\"sleep 2\"}"
+            },
+            "id":"6Bwl3RdAKhcvkEI6R8KuVLjBYLme2yDB"
+          }],
+        "reasoning_content":"Third sleep completed. Running the fourth one.\n",
+        "role":"assistant"
+      },{
+        "tool_call_id":"6Bwl3RdAKhcvkEI6R8KuVLjBYLme2yDB",
+        "content":"{\"content\":[{\"text\":\"0\",\"name\":\"EXIT_CODE\",\"type\":\"text\"}]}",
+        "start_time_ms":591709629,
+        "duration_ms":2014,
+        "progress_notifications":[],
+        "role":"tool"
+      },{
+        "timings":{
+          "predicted_ms":213.303,
+          "predicted_per_token_ms":4.8477954545455,
+          "predicted_n":44,
+          "prompt_per_second":1504.0783663395,
+          "cache_n":9176,
+          "prompt_n":78,
+          "predicted_per_second":206.27933034228,
+          "prompt_ms":51.859,
+          "prompt_per_token_ms":0.66485897435897
+        },
+        "content":"",
+        "tool_calls":[{
+            "type":"function",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"command_line\":\"sleep 2\"}"
+            },
+            "id":"UagGez6DZOLK2apfC2gxtG186GRYkvxB"
+          }],
+        "reasoning_content":"Fourth sleep completed. Running the fifth and final one.\n",
+        "role":"assistant"
+      },{
+        "tool_call_id":"UagGez6DZOLK2apfC2gxtG186GRYkvxB",
+        "content":"{\"content\":[{\"text\":\"0\",\"name\":\"EXIT_CODE\",\"type\":\"text\"}]}",
+        "start_time_ms":591712011,
+        "duration_ms":2013,
+        "progress_notifications":[],
+        "role":"tool"
+      },{
+        "content":"Done! Ran `sleep 2` five times, sequentially (total ~10 seconds).",
+        "finish_reason":"stop",
+        "reasoning_content":"All five `sleep 2` commands have completed successfully.\n",
+        "role":"assistant"
+      }],
+    "temperature":0.7,
+    "tools":[{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "required":["to"],
+            "type":"object",
+            "properties":{
+              "to":{
+                "type":"integer",
+                "description":"the integer to count to"
+              }
+            }
+          },
+          "description":"Count to, for testing progress and cancellation",
+          "name":"count"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "required":["description"],
+            "type":"object",
+            "properties":{
+              "agent_type":{
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder",
+                "type":"string"
+              },
+              "description":{
+                "description":"describe the task for the agent to perform",
+                "type":"string"
+              },
+              "recursion_limit":{
+                "description":"LangChain's max messages for the subagent before stopping. Each subagent tool call produces 2 messages (input + output). Leave unset unless the task needs more or fewer than the default (50).",
+                "type":"integer"
+              }
+            }
+          },
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings.",
+          "name":"delegate"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "argv":{
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "items":{
+                  "type":"string"
+                },
+                "minItems":1,
+                "type":"array"
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              }
+            }
+          },
+          "description":"Run a process on this darwin machine",
+          "name":"run_process"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "parameters":{
+            "required":["url"],
+            "type":"object",
+            "properties":{
+              "start_index":{
+                "default":0,
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required",
+                "type":"integer"
+              },
+              "max_chars":{
+                "default":50000,
+                "description":"Maximum number of characters to return",
+                "type":"integer"
+              },
+              "raw":{
+                "default":false,
+                "description":"Do not convert HTML to markdown",
+                "type":"boolean"
+              },
+              "url":{
+                "type":"string"
+              }
+            }
+          },
+          "description":"Fetch a URL and extract HTML contents as markdown",
+          "name":"fetch"
+        }
+      },{
+        "function":{
+          "parameters":{
+            "required":["query"],
+            "type":"object",
+            "properties":{
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              },
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              }
+            }
+          },
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "required":["lua"],
+            "type":"object",
+            "properties":{
+              "lua":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            }
+          },
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "name":"run_in_neovim"
+        },
+        "type":"function"
+      }],
+    "top_k":20,
+    "repeat_penalty":1.05,
+    "model":"",
+    "stream":true
+  }
+}
