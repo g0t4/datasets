@@ -1,0 +1,52 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-ONeEG92we1mfgTQqKm55YdGCpmNOTOwh",
+    "created":1780771790,
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "timings":{
+      "predicted_n":72,
+      "cache_n":1185,
+      "prompt_n":134,
+      "prompt_ms":44.258,
+      "prompt_per_token_ms":0.33028358208955,
+      "predicted_ms":263.611,
+      "predicted_per_token_ms":3.6612638888889,
+      "prompt_per_second":3027.7012065615,
+      "predicted_per_second":273.12972523908
+    },
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }]
+  },
+  "request_body":{
+    "model":"gpt-oss:120b",
+    "top_p":1,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: tree-sitter-qwen-chatml\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Recent yanks (copy to clipboard):\n```grammar.js\n    im_start: $ => token(constants.IM_START),\n    im_end: $ => token(constants.IM_END),\n```\n\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```grammar.js\n/**\n * @file Parser for raw prompts and completions when working with Qwen models.\n * @author Wes Higbee \n * @license MIT\n */\n\n/// <reference types=\"tree-sitter-cli/dsl\" />\n// @ts-check\n\nimport * as constants from \"./constants.js\";\n// constants.IM_START\n\nexport default grammar({\n  name: \"qwen_chatml\",\n\n  inline: $ => [\n    $.role,\n    $.message_content,\n  ],\n\n  rules: {\n    source_file: $ => repeat($.message),\n    // TODO when doing FIM you'll wanna switch to a sequence of choices for the top-level of source_file\n    // source_file: $ => seq(\n    //   repeat($.message),\n    //   fim_message => (fim_prefix, fim_suffix, fim_middle),\n    // ),\n\n    message: $ => seq($.im_start, $.role, '\\n', $.message_content, $.im_end),\n\n    role: $ => field(\"role\", $.role_name), // greedy, take until end of line\n    role_name: $ => repeat1(/[^\\n]+/),\n\n    // message_content: $ => repeat($.any), // TODO constrain this at all?\n    message_content: $ => prec(-9, field(\"contents\", $.text)),\n\n    text: $ => repeat1(choice(\n      /[^<]+/, // be greedy with any other char (not <)\n      /</ // force decision on single < which means it is allowed too just only one char at a time\n    )),\n    fim_prefix: $ => token(constants.FIM_PREFIX),\n    <|fim_middle|>\n    fim_suffix: $ => token(constants.FIM_SUFFIX),\n\n    im_start: $ => token(constants.IM_START),\n    im_end: $ => token(constants.IM_END),\n    // final_token: $ => choice($.im_end, $.return_token, $.call_token) // TODO more than one stop/end token I care about for my parser?\n\n    think_open: $ => token(constants.THINK_OPEN),\n    think_close: $ => token(constants.THINK_CLOSE),\n  }\n});\n```\n\n## Reminders about the cursor line:\nText before cursor: `    `\nText before cursor is all whitespace (do not ignore this)",
+        "role":"user"
+      },{
+        "reasoning_content":"We need to insert code for fim_middle rule. Likely similar to prefix and suffix. Should be token(constants.FIM_MIDDLE). Probably token. So:\n\nfim_middle: $ => token(constants.FIM_MIDDLE),\n\nAdd with proper indentation.",
+        "role":"assistant",
+        "content":"    fim_middle: $ => token(constants.FIM_MIDDLE),",
+        "finish_reason":"stop"
+      }],
+    "temperature":1,
+    "options":[],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "max_tokens":4096,
+    "raw":false,
+    "stream":true
+  }
+}
