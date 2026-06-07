@@ -1,0 +1,52 @@
+{
+  "request_body":{
+    "stream":true,
+    "top_p":1,
+    "raw":false,
+    "model":"gpt-oss:120b",
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "options":[],
+    "max_tokens":4096,
+    "temperature":1,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: tree-sitter-qwen-chatml\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Recent yanks (copy to clipboard):\n```queries/qwen_chatml/highlights.scm\n@qwen_user_message\n```\n\n```queries/qwen_chatml/highlights.scm\nqwen_user_message\n```\n\n```queries/qwen_chatml/highlights.scm\n@qwen_user_message\n```\n\n```queries/qwen_chatml/highlights.scm\n  (message (user_role)) @qwen_user_message\n```\n\n```queries/qwen_chatml/highlights.scm\n  (message\n    (user_role)) @qwen_user_message\n  (message\n    (assistant_role)) @qwen_assistant_message\n  (message\n    (system_role)) @qwen_system_message\n```\n\n```queries/qwen_chatml/highlights.scm\n  (message\n    (system_role)) @qwen_system_message\n```\n\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```queries/qwen_chatml/highlights.scm\n[\n  (message\n    (user_role)) @qwen_user_message\n  (message\n    (assistant_role)) @qwen_assistant_message\n  (message\n    (system_role)) @qwen_system_message\n  (message\n    (developer_role)) <|fim_middle|>\n]\n\n[\n  (fim_prefix_token) @qwen_fim_prefix_token\n  prefix: (text) @qwen_fim_prefix_contents\n]\n\n[\n  (fim_suffix_token) @qwen_fim_suffix_token\n  suffix: (text) @qwen_fim_suffix_contents\n]\n\n[\n  (fim_middle_token) @qwen_fim_middle_token\n  middle: (text) @qwen_fim_middle_contents\n]\n\n[\n  (repo_name_token) @qwen_repo_name_token\n  repo_name: (until_end_of_line) @qwen_repo_name\n]\n\n[\n  ; (repo_file) @qwen_repo_file\n  (file_sep_token) @qwen_file_sep_token\n  path: (until_end_of_line) @qwen_file_path\n  (repo_file\n    contents: (text)) @qwen_file_contents\n]\n```\n\n## Reminders about the cursor line:\nText before cursor: `    (developer_role)) `",
+        "role":"user"
+      },{
+        "content":"@qwen_developer_message",
+        "finish_reason":"stop",
+        "reasoning_content":"We need to complete the line after (developer_role)) with appropriate capture. Likely similar to others: @qwen_developer_message. So line: `@qwen_developer_message`. Probably need parentheses? Others: `(assistant_role)) @qwen_assistant_message`. So add `@qwen_developer_message`.",
+        "role":"assistant"
+      }]
+  },
+  "last_sse":{
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "prompt_ms":50.161,
+      "prompt_per_token_ms":0.23660849056604,
+      "predicted_ms":305.4,
+      "cache_n":1064,
+      "predicted_per_second":268.50032743942,
+      "predicted_n":82,
+      "prompt_per_second":4226.3910209127,
+      "prompt_n":212,
+      "predicted_per_token_ms":3.7243902439024
+    },
+    "id":"chatcmpl-Ww2NFiUd8uOVXLGcsbv0Ppdvt10RNQ5P",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "created":1780841759,
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
