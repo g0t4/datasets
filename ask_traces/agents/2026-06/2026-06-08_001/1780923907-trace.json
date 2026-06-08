@@ -1,0 +1,378 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-J2r43vCSkD5E58lT3BTiOGmYHfijfKEC",
+    "timings":{
+      "prompt_per_token_ms":0.28053658536585,
+      "predicted_ms":195.382,
+      "predicted_per_token_ms":4.0704583333333,
+      "predicted_per_second":245.67257986918,
+      "predicted_n":48,
+      "prompt_per_second":3564.5974613111,
+      "cache_n":2956,
+      "prompt_n":82,
+      "prompt_ms":23.004
+    },
+    "model":"google/gemma-4-26B-A4B-it-qat-q4_0-gguf",
+    "__verbose":{
+      "timings":{
+        "prompt_per_token_ms":0.28053658536585,
+        "predicted_ms":195.382,
+        "predicted_per_token_ms":4.0704583333333,
+        "predicted_per_second":245.67257986918,
+        "predicted_n":48,
+        "prompt_per_second":3564.5974613111,
+        "cache_n":2956,
+        "prompt_n":82,
+        "prompt_ms":23.004
+      },
+      "truncated":false,
+      "model":"google/gemma-4-26B-A4B-it-qat-q4_0-gguf",
+      "stopping_word":"",
+      "id_slot":1,
+      "tokens_predicted":48,
+      "tokens_evaluated":3038,
+      "index":0,
+      "stop_type":"eos",
+      "tokens_cached":3085,
+      "has_new_line":true,
+      "prompt":"<bos><|turn>system\n<|think|>\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find. -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`<|tool>declaration:run_process{description:<|\"|>Run a process on this darwin machine<|\"|>,parameters:{properties:{argv:{description:<|\"|>Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.<|\"|>,items:{type:<|\"|>STRING<|\"|>},type:<|\"|>ARRAY<|\"|>},command_line:{description:<|\"|>Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.<|\"|>,type:<|\"|>STRING<|\"|>},cwd:{description:<|\"|>Optional to set working directory<|\"|>,type:<|\"|>STRING<|\"|>},stdin_text:{description:<|\"|>Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.<|\"|>,type:<|\"|>STRING<|\"|>},timeout_ms:{description:<|\"|>Optional timeout in milliseconds, defaults to 30,000ms<|\"|>,type:<|\"|>NUMBER<|\"|>}},type:<|\"|>OBJECT<|\"|>}}<tool|><|tool>declaration:fetch{description:<|\"|>Fetch a URL and extract HTML contents as markdown<|\"|>,parameters:{properties:{max_chars:{description:<|\"|>Maximum number of characters to return<|\"|>,type:<|\"|>INTEGER<|\"|>},raw:{description:<|\"|>Do not convert HTML to markdown<|\"|>,type:<|\"|>BOOLEAN<|\"|>},start_index:{description:<|\"|>Start at this character offset, useful if a previous fetch was truncated and more context is required<|\"|>,type:<|\"|>INTEGER<|\"|>},url:{type:<|\"|>STRING<|\"|>}},required:[<|\"|>url<|\"|>],type:<|\"|>OBJECT<|\"|>}}<tool|><|tool>declaration:count{description:<|\"|>Count to, for testing progress and cancellation<|\"|>,parameters:{properties:{to:{description:<|\"|>the integer to count to<|\"|>,type:<|\"|>INTEGER<|\"|>}},required:[<|\"|>to<|\"|>],type:<|\"|>OBJECT<|\"|>}}<tool|><|tool>declaration:delegate{description:<|\"|>Delegate to a subagent to perform relevent tasks and summarize findings.<|\"|>,parameters:{properties:{agent_type:{description:<|\"|>which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder<|\"|>,type:<|\"|>STRING<|\"|>},description:{description:<|\"|>describe the task for the agent to perform<|\"|>,type:<|\"|>STRING<|\"|>},recursion_limit:{description:<|\"|>LangChain's max messages for the subagent before stopping. Each subagent tool call produces 2 messages (input + output). Leave unset unless the task needs more or fewer than the default (50).<|\"|>,type:<|\"|>INTEGER<|\"|>}},required:[<|\"|>description<|\"|>],type:<|\"|>OBJECT<|\"|>}}<tool|><|tool>declaration:semantic_grep{description:<|\"|>Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.<|\"|>,parameters:{properties:{embed_top_k:{description:<|\"|>number of embeddings matches to consider for reranking<|\"|>,type:<|\"|>NUMBER<|\"|>},filetype:{description:<|\"|>limit matches to a vim compatible filetype. default includes all filetypes<|\"|>,type:<|\"|>STRING<|\"|>},instruct:{description:<|\"|>instructions for the query, explain the type of query<|\"|>,type:<|\"|>STRING<|\"|>},query:{description:<|\"|>query text, what you are looking for<|\"|>,type:<|\"|>STRING<|\"|>},top_k:{description:<|\"|>number of matches to return (post reranking)<|\"|>,type:<|\"|>NUMBER<|\"|>}},required:[<|\"|>query<|\"|>],type:<|\"|>OBJECT<|\"|>}}<tool|><|tool>declaration:run_in_neovim{description:<|\"|>Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()<|\"|>,parameters:{properties:{lua:{description:<|\"|>Lua code to execute. Should be a valid Lua chunk.<|\"|>,type:<|\"|>STRING<|\"|>}},required:[<|\"|>lua<|\"|>],type:<|\"|>OBJECT<|\"|>}}<tool|><turn|>\n<|turn>user\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    --...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    --...\nend\n```<turn|>\n<|turn>user\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```<turn|>\n<|turn>user\n# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua:72-75\n---@return string\nfunction M.get_agents_model()\n    return config.local_share.get_agents_model()\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/messages/chat_params.lua:0-16\n---@class ChatParams\n---@field model string\n---@field stream boolean|nil\n---@field messages TxChatMessage[]\n---\n--- TODO validate these are correct:\n---@field temperature number|nil\n---@field top_p number|nil\n---@field n number|nil\n---@field stop string[]|nil\n---@field max_tokens number|nil\n---@field presence_penalty number|nil\n---@field frequency_penalty number|nil\n---@field tools table[]|nil\n--- TODO MORE\nlocal ChatParams = {}\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:179-191\nfunction M.toggle_agents_model()\n    local current = M.get_agents_model()\n    local next_model\n    if current == \"gptoss\" then\n        next_model = \"qwen\"\n    elseif current == \"qwen\" then\n        next_model = \"gemma4\"\n    else\n        next_model = \"gptoss\"\n    end\n    M.set_agents_model(next_model)\n    return next_model\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:166-170\n-- * agents model\nfunction M.get_agents_model()\n    local cfg = get()\n    return cfg.agents and cfg.agents.model or \"gptoss\" -- default to gptoss\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal completion_logger = require(\"ask-openai.logs.completion_logger\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal AgentWindow = require(\"ask-openai.agents.viewer.window\")\nlocal AgentTrace = require(\"ask-openai.agents.trace\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal LinesBuilder = require(\"ask-openai.agents.viewer.lines_builder\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal formatters = require(\"ask-openai.agents.viewer.formatters\")<turn|>\n<|turn>user\nwhat is the date<turn|>\n<|turn>model\n<|channel>thought\nThe user is asking \"what is the date\".\nI don't have access to the current system time directly through a tool, but I can try to run a shell command to get it.\nThe `run_process` tool can be used to execute `date`.\n\nWait, I should check if I have a `date` tool. No, I have `run_process`, `fetch`, `count`, `delegate`, `semantic_grep`, and `run_in_neovim`.\nI'll use `run_process` with `date`.\n<channel|><|tool_call>call:run_process{argv:{\"date\"],command_line:<|\"|>date<|\"|>}}<tool_call|><|tool_response>response:run_process{value:<|\"|>{\"isError\":true,\"content\":[{\"name\":\"ERROR\",\"type\":\"text\",\"text\":\"Either 'command_line' (string) or 'argv' (array) is required.\"}]}<|\"|>}<tool_response|><|channel>thought\nAh, I provided both `argv` and `command_line` in my previous tool call, and the tool description says: \"Either 'command_line' (string) or 'argv' (array) is required. Cannot be combined with 'command_line'.\"\nActually, I sent both. Let me try just `argv`.\n\n<channel|><|tool_call>call:run_process{argv:{\"date\"]],command_line:}}<tool_call|><|tool_response>response:run_process{value:<|\"|>{\"isError\":true,\"content\":[{\"name\":\"ERROR\",\"type\":\"text\",\"text\":\"Either 'command_line' (string) or 'argv' (array) is required.\"}]}<|\"|>}<tool_response|><|channel>thought\nMy previous attempt was malformed. I will use `command_line: \"date\"`.\n\n<channel|><|tool_call>call:run_process{command_line:<|\"|>date<|\"|>}<tool_call|><|tool_response>response:run_process{value:<|\"|>{\"content\":[{\"name\":\"EXIT_CODE\",\"type\":\"text\",\"text\":\"0\"},{\"name\":\"STDOUT\",\"type\":\"text\",\"text\":\"Mon Jun  8 08:05:08 CDT 2026\\n\"}]}<|\"|>}<tool_response|>",
+      "tokens":[],
+      "generation_settings":{
+        "n_keep":0,
+        "top_k":64,
+        "repeat_penalty":1,
+        "seed":4294967295,
+        "dynatemp_range":0,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":262144,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "n_predict":-1,
+        "ignore_eos":false,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "token":48,
+            "type":0,
+            "value":"<|tool_call>"
+          }],
+        "preserved_tokens":[48,49,100,101,105],
+        "top_p":0.94999998807907,
+        "temperature":1,
+        "reasoning_in_content":false,
+        "generation_prompt":"",
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "speculative.types":"none",
+        "timings_per_token":false,
+        "post_sampling_probs":false,
+        "backend_sampling":false,
+        "lora":[],
+        "max_tokens":-1,
+        "reasoning_format":"deepseek",
+        "chat_format":"peg-gemma4",
+        "grammar":"gemma4-array ::= \"[\" space (\"]\" | gemma4-value (\",\" space gemma4-value)* space \"]\")\ngemma4-bool ::= json-bool\ngemma4-dict ::= \"{\" space (\"}\" | gemma4-dict-kv (\",\" space gemma4-dict-kv)* space \"}\")\ngemma4-dict-key ::= gemma4-dict-key-name \":\"\ngemma4-dict-key-name ::= [^:}]+\ngemma4-dict-kv ::= gemma4-dict-key space gemma4-value\ngemma4-null ::= json-null\ngemma4-number ::= json-number\ngemma4-string ::= \"<|\\\"|>\" gemma4-string-content \"<|\\\"|>\"\ngemma4-string-content ::= ([^<] | \"<\" [^|] | \"<|\" [^\"] | \"<|\\\"\" [^|] | \"<|\\\"|\" [^>])*\ngemma4-value ::= gemma4-string | gemma4-dict | gemma4-array | gemma4-number | gemma4-bool | gemma4-null\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\ntool-call ::= (\"<|tool_call>call:\" (tool-run-process | tool-fetch | tool-count | tool-delegate | tool-semantic-grep | tool-run-in-neovim) \"<tool_call|>\")*\ntool-count ::= (\"count\") gemma4-dict\ntool-delegate ::= (\"delegate\") gemma4-dict\ntool-fetch ::= (\"fetch\") gemma4-dict\ntool-run-in-neovim ::= (\"run_in_neovim\") gemma4-dict\ntool-run-process ::= (\"run_process\") gemma4-dict\ntool-semantic-grep ::= (\"semantic_grep\") gemma4-dict\n",
+        "stream":true,
+        "stop":[],
+        "n_discard":0
+      },
+      "content":"",
+      "stop":true
+    },
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "created":1780923825
+  },
+  "request_body":{
+    "verbose":true,
+    "messages":[{
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n\n## Fetch Tool\n\n- Use repo's README `https://raw.githubusercontent.com/openai/evals/refs/heads/main/README.md` instead of `https://github.com/openai/evals`.\n- Prefer raw content like `https://raw.githubusercontent.com/g0t4/dotfiles/refs/heads/master/install/symlinks.fish` instead of `https://github.com/g0t4/dotfiles/blob/master/install/symlinks.fish`\n- When relevant, prefer github CLI: `gh pr list` or `gh issue view 12`\n\n",
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/api.lua:72-75\n---@return string\nfunction M.get_agents_model()\n    return config.local_share.get_agents_model()\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/messages/chat_params.lua:0-16\n---@class ChatParams\n---@field model string\n---@field stream boolean|nil\n---@field messages TxChatMessage[]\n---\n--- TODO validate these are correct:\n---@field temperature number|nil\n---@field top_p number|nil\n---@field n number|nil\n---@field stop string[]|nil\n---@field max_tokens number|nil\n---@field presence_penalty number|nil\n---@field frequency_penalty number|nil\n---@field tools table[]|nil\n--- TODO MORE\nlocal ChatParams = {}\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:179-191\nfunction M.toggle_agents_model()\n    local current = M.get_agents_model()\n    local next_model\n    if current == \"gptoss\" then\n        next_model = \"qwen\"\n    elseif current == \"qwen\" then\n        next_model = \"gemma4\"\n    else\n        next_model = \"gptoss\"\n    end\n    M.set_agents_model(next_model)\n    return next_model\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:166-170\n-- * agents model\nfunction M.get_agents_model()\n    local cfg = get()\n    return cfg.agents and cfg.agents.model or \"gptoss\" -- default to gptoss\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/frontend.lua:0-19\nlocal buffers = require(\"ask-openai.helpers.buffers\")\nlocal log = require(\"ask-openai.logs.logger\").predictions()\nlocal completion_logger = require(\"ask-openai.logs.completion_logger\")\nlocal tool_router = require(\"ask-openai.tools.router\")\nlocal curl = require(\"ask-openai.backends.curl\")\nlocal agentica = require(\"ask-openai.backends.models.agentica\")\nlocal AgentWindow = require(\"ask-openai.agents.viewer.window\")\nlocal AgentTrace = require(\"ask-openai.agents.trace\")\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\nlocal Selection = require(\"ask-openai.helpers.selection\")\nlocal CurrentContext = require(\"ask-openai.frontends.context\")\nlocal api = require(\"ask-openai.api\")\nlocal rag_client = require(\"ask-openai.rag.client\")\nlocal files = require(\"ask-openai.helpers.files\")\nlocal model_params = require(\"ask-openai.agents.models.params\")\nlocal LinesBuilder = require(\"ask-openai.agents.viewer.lines_builder\")\nlocal MessageBuilder = require(\"ask-openai.rewrites.message_builder\")\nlocal prompt_parser = require(\"ask-openai.frontends.context.prompt_parser\")\nlocal HLGroups = require(\"ask-openai.hlgroups\")\nlocal formatters = require(\"ask-openai.agents.viewer.formatters\")\n\n",
+        "role":"user"
+      },{
+        "content":"what is the date",
+        "role":"user"
+      },{
+        "reasoning_content":"The user is asking \"what is the date\".\nI don't have access to the current system time directly through a tool, but I can try to run a shell command to get it.\nThe `run_process` tool can be used to execute `date`.\n\nWait, I should check if I have a `date` tool. No, I have `run_process`, `fetch`, `count`, `delegate`, `semantic_grep`, and `run_in_neovim`.\nI'll use `run_process` with `date`.",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_token_ms":0.088804624277457,
+          "predicted_ms":632.118,
+          "predicted_per_token_ms":4.3594344827586,
+          "predicted_per_second":229.3875510585,
+          "predicted_n":145,
+          "prompt_per_second":11260.674859404,
+          "cache_n":0,
+          "prompt_n":2595,
+          "prompt_ms":230.448
+        },
+        "content":"",
+        "tool_calls":[{
+            "id":"HSxTrMkulmIy7woIqKs0UM3dCvCBl8Zt",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"argv\":{\"\\\"date\\\"],command_line\":\"date\"}}"
+            },
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":15711731,
+        "duration_ms":3,
+        "tool_call_id":"HSxTrMkulmIy7woIqKs0UM3dCvCBl8Zt",
+        "role":"tool",
+        "content":"{\"isError\":true,\"content\":[{\"name\":\"ERROR\",\"type\":\"text\",\"text\":\"Either 'command_line' (string) or 'argv' (array) is required.\"}]}",
+        "progress_notifications":[]
+      },{
+        "reasoning_content":"Ah, I provided both `argv` and `command_line` in my previous tool call, and the tool description says: \"Either 'command_line' (string) or 'argv' (array) is required. Cannot be combined with 'command_line'.\"\nActually, I sent both. Let me try just `argv`.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_token_ms":0.29983783783784,
+          "predicted_ms":449.819,
+          "predicted_per_token_ms":4.6856145833333,
+          "predicted_per_second":213.41917526827,
+          "predicted_n":96,
+          "prompt_per_second":3335.1361096088,
+          "cache_n":2716,
+          "prompt_n":74,
+          "prompt_ms":22.188
+        },
+        "content":"",
+        "tool_calls":[{
+            "id":"unGwetNrsBuo31dDMroSNV1dN5BTdXCl",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"argv\":{\"\\\"date\\\"]] ,command_line\":null}}"
+            },
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":15712290,
+        "duration_ms":1,
+        "tool_call_id":"unGwetNrsBuo31dDMroSNV1dN5BTdXCl",
+        "role":"tool",
+        "content":"{\"isError\":true,\"content\":[{\"name\":\"ERROR\",\"type\":\"text\",\"text\":\"Either 'command_line' (string) or 'argv' (array) is required.\"}]}",
+        "progress_notifications":[]
+      },{
+        "reasoning_content":"My previous attempt was malformed. I will use `command_line: \"date\"`.\n",
+        "role":"assistant",
+        "timings":{
+          "prompt_per_token_ms":0.68755555555556,
+          "predicted_ms":164.126,
+          "predicted_per_token_ms":4.0030731707317,
+          "predicted_per_second":249.80807428439,
+          "predicted_n":41,
+          "prompt_per_second":1454.4279250162,
+          "cache_n":2862,
+          "prompt_n":72,
+          "prompt_ms":49.504
+        },
+        "content":"",
+        "tool_calls":[{
+            "id":"SoSrzCBZ63pFUdOdbCJpW4duBMYmDF6B",
+            "function":{
+              "name":"run_process",
+              "arguments":"{\"command_line\":\"date\"}"
+            },
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":15712586,
+        "duration_ms":10,
+        "tool_call_id":"SoSrzCBZ63pFUdOdbCJpW4duBMYmDF6B",
+        "role":"tool",
+        "content":"{\"content\":[{\"name\":\"EXIT_CODE\",\"type\":\"text\",\"text\":\"0\"},{\"name\":\"STDOUT\",\"type\":\"text\",\"text\":\"Mon Jun  8 08:05:08 CDT 2026\\n\"}]}",
+        "progress_notifications":[]
+      },{
+        "content":"Mon Jun 8 08:05:08 CDT 2026",
+        "finish_reason":"stop",
+        "reasoning_content":"The date is Mon Jun 8 08:05:08 CDT 2026.\n",
+        "role":"assistant"
+      }],
+    "model":"",
+    "top_k":64,
+    "top_p":0.95,
+    "tools":[{
+        "type":"function",
+        "function":{
+          "name":"run_process",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "argv":{
+                "items":{
+                  "type":"string"
+                },
+                "minItems":1,
+                "type":"array",
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'."
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              },
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              }
+            }
+          },
+          "description":"Run a process on this darwin machine"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "name":"fetch",
+          "parameters":{
+            "required":["url"],
+            "type":"object",
+            "properties":{
+              "raw":{
+                "default":false,
+                "type":"boolean",
+                "description":"Do not convert HTML to markdown"
+              },
+              "start_index":{
+                "default":0,
+                "type":"integer",
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required"
+              },
+              "max_chars":{
+                "default":50000,
+                "type":"integer",
+                "description":"Maximum number of characters to return"
+              },
+              "url":{
+                "type":"string"
+              }
+            }
+          },
+          "description":"Fetch a URL and extract HTML contents as markdown"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "name":"count",
+          "parameters":{
+            "required":["to"],
+            "type":"object",
+            "properties":{
+              "to":{
+                "type":"integer",
+                "description":"the integer to count to"
+              }
+            }
+          },
+          "description":"Count to, for testing progress and cancellation"
+        }
+      },{
+        "type":"function",
+        "function":{
+          "name":"delegate",
+          "parameters":{
+            "required":["description"],
+            "type":"object",
+            "properties":{
+              "agent_type":{
+                "type":"string",
+                "description":"which subagent profile to use, options: assistant, web-researcher, command-runner, file-finder, test-finder"
+              },
+              "description":{
+                "type":"string",
+                "description":"describe the task for the agent to perform"
+              },
+              "recursion_limit":{
+                "type":"integer",
+                "description":"LangChain's max messages for the subagent before stopping. Each subagent tool call produces 2 messages (input + output). Leave unset unless the task needs more or fewer than the default (50)."
+              }
+            }
+          },
+          "description":"Delegate to a subagent to perform relevent tasks and summarize findings."
+        }
+      },{
+        "function":{
+          "name":"semantic_grep",
+          "parameters":{
+            "properties":{
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              },
+              "top_k":{
+                "type":"number",
+                "description":"number of matches to return (post reranking)"
+              },
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              }
+            },
+            "type":"object",
+            "required":["query"]
+          },
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results."
+        },
+        "type":"function"
+      },{
+        "function":{
+          "name":"run_in_neovim",
+          "parameters":{
+            "properties":{
+              "lua":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            },
+            "type":"object",
+            "required":["lua"]
+          },
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()"
+        },
+        "type":"function"
+      }],
+    "temperature":1,
+    "stream":true
+  }
+}
