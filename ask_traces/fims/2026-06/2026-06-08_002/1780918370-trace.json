@@ -1,0 +1,56 @@
+{
+  "request_body":{
+    "stream":true,
+    "raw":false,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/tests/calc/calc-from-14b-q8-way-further-coherent.lua:6-8\nfunction M.sub(a, b)\n    return a - b\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/tests/calc/calc-from-14b-q8-way-further-coherent.lua:2-4\nfunction M.add(a, b)\n    return a + b\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/tests/calc/calc-from-14b-q8-way-further-coherent.lua:10-12\nfunction M.mul(a, b)\n    return a * b\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/tests/calc/calc-from-14b-q8-way-further-coherent.lua:49-49\nfunction M.min(a, b) return math.min(a, b) end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/tests/calc/calc-from-14b-q8-way-further-coherent.lua:14-19\nfunction M.div(a, b)\n    if b == 0 then\n        error(\"Cannot divide by zero\")\n    end\n    return a / b\nend\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/ask-openai/predictions/tests/calc/calc.lua\nlocal M = {}\n\nfunction M.add(a, b)\n    return a + b\nend\n\nfunction M.sub(a, b)\n    return b\nend\n\n<|fim_middle|>\n\nreturn M\n```\n\n## Reminders about the cursor line:\n"
+      },{
+        "role":"assistant",
+        "content":"<|channel|>analysis<|message|>The user is asking for a code completion.\nThey provided the existing code with a <|fim_middle|> tag where their cursor is currently located. Whatever I provide will replace <|fim_middle|>To clarify, the code before <|fim_middle|> is the prefix. The code after is the suffix.\nI am not changing the prefix nor the suffix.\nI will NOT wrap my response in ``` markdown blocks.\nI will not explain anything.\nThey also carefully preserved indentation, so I need to carefully consider indentation in my response.\nI will fill-in-the-middles in the most awesome way!<|end|><|start|>assistant"
+      },{
+        "role":"assistant",
+        "content":"\nfunction M.mul(a, b)\n    return a * b\nend\n\nfunction M.div(a, b)\n    if b == 0 then\n        error(\"Cannot divide by zero\")\n    end\n    return a / b\nend",
+        "finish_reason":"stop"
+      }],
+    "top_p":1,
+    "options":[],
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_effort":"off"
+    },
+    "max_tokens":2048
+  },
+  "last_sse":{
+    "created":1780918287,
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "system_fingerprint":"b9503-ac5f82a6a",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "prompt_per_second":221.92632046161,
+      "prompt_n":1,
+      "predicted_ms":231.599,
+      "cache_n":1670,
+      "predicted_per_token_ms":3.7967049180328,
+      "prompt_ms":4.506,
+      "prompt_per_token_ms":4.506,
+      "predicted_per_second":263.38628405131,
+      "predicted_n":61
+    },
+    "id":"chatcmpl-k4iUp4UD9kYDnuD5fi734yUukV27Bk4e",
+    "model":"google/gemma-4-26B-A4B-it-qat-q4_0-gguf"
+  }
+}
