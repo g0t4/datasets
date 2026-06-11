@@ -1,0 +1,3 @@
+didn't realize I had gptoss as agent model... it made the change so new tabs/panes/windows use fish shell to spawn ssh... when cloning SSH pane...
+- it didn't pay attention to `-C` that I initially told it to use though, it incorrectly used `-c` so I had to prompt it to fix it
+  even after prompting it left a comment behind that had `-c` (lowercase c) in it
