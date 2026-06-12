@@ -1,0 +1,51 @@
+{
+  "request_body":{
+    "stream":true,
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/ask-openai/helpers/float_window.lua\nlocal log = require(\"ask-openai.logs.logger\"):predictions()\n---@class FloatWindow\n---@field buffer_number? integer\n---@field win_id? integer\n---@field opts FloatWindowOptions\nlocal FloatWindow = {}\n\n---@param opts FloatWindowOptions\n---@return vim.<|fim_middle|> \nfunction FloatWindow.window_config(opts)\n    opts.width_ratio = opts.width_ratio or 0.6\n    opts.height_ratio = opts.height_ratio or 0.6\n\n    -- PRN minimum width? basically a point at which the window is allowed to cover more than 50% wide and 80% tall\n    local win_height = math.ceil(opts.height_ratio * vim.o.lines)\n    local win_width = math.ceil(opts.width_ratio * vim.o.columns)\n    local top_is_at_row = math.floor((vim.o.lines - win_height) / 2)\n    local left_is_at_col = math.floor((vim.o.columns - win_width) / 2)\n    return {\n        -- position:\n        row = top_is_at_row,\n        col = left_is_at_col,\n        -- size:\n        width = win_width,\n        height = win_height,\n        -- attributes:\n        relative = \"editor\",\n        style = \"minimal\",\n        border = \"single\", -- \"rounded\"\n    }\nend\n\n---@class FloatWindowOptions\n---@field width_ratio? number -- ratio 0 to 1\n---@field height_ratio? number -- ratio 0 to 1\n---@field filetype? string\n---@field buffer_name? string\n\n---@param opts FloatWindowOptions\n---@param initial_lines? string[]\n---@return FloatWindow\nfunction FloatWindow:new(opts, initial_lines)\n    local instance_mt = { __index = self }\n    local instance = setmetatable({ opts = opts, }, instance_mt)\n\n    -- * create a scratch buffer\n    local NOT_LISTED_BUFFER = false\n    local IS_SCRATCH_BUFFER = true -- must be scratch, otherwise have to save contents or trash it on exit\n    instance.buffer_number = vim.api.nvim_create_buf(NOT_LISTED_BUFFER, IS_SCRATCH_BUFFER)\n\n    -- * lines to buffer\n    if initial_lines then\n        vim.api.nvim_buf_set_lines(instance.buffer_number, 0, -1, false, initial_lines)\n    end\n\n    if opts.filetype then\n        vim.api.nvim_set_option_value('filetype', opts.filetype, { buf = instance.buffer_number })\n    end\n\n    if opts.buffer_name then\n        vim.api.nvim_buf_set_name(instance.buffer_number, opts.buffer_name)\n    end\n\n    instance:open()\n\n    return instance\nend\n\nfunction FloatWindow:open()\n    if self.win_id and vim.api.nvim_win_is_valid(self.win_id) then\n        return\n    end\n    local initial_config = self.window_config(self.opts)\n    self.win_id = vim.api.nvim_open_win(self.buffer_number, true, initial_config)\n\n    -- * make window resizable\n    local group_id = vim.api.nvim_create_augroup(\"float_window_\" .. self.win_id, { clear = true })\n    vim.api.nvim_create_autocmd(\"VimResized\", {\n        group = group_id,\n        callback = function()\n            if not vim.api.nvim_win_is_valid(self.win_id) then return end\n            local resized_config = self.window_config(self.opts)\n            vim.api.nvim_win_set_config(self.win_id, resized_config)\n        end,\n    })\n    vim.api.nvim_create_autocmd(\"WinClosed\", {\n        group = group_id,\n        pattern = tostring(self.win_id),\n        callback = function()\n            -- when THIS window closes, drop its autocmds\n            pcall(vim.api.nvim_del_augroup_by_id, group_id)\n        end,\n        once = true,\n    })\nend\n\n---@param title string\nfunction FloatWindow:set_title(title)\n    if not title then\n        log:info(\"set_title is missing the title\", title)\n    end\n    title = title or \"\"\n    vim.schedule(function()\n        if not self.win_id or not vim.api.nvim_win_is_valid(self.win_id) then\n            return\n        end\n        vim.api.nvim_win_set_config(self.win_id, { title = \" \" .. title .. \" \", title_pos = \"center\" })\n    end)\nend\n\nreturn FloatWindow\n```\n\n## Reminders about the cursor line:\nText before cursor: `---@return vim.`\nText after cursor: ` `"
+      },{
+        "role":"assistant",
+        "finish_reason":"stop",
+        "content":"api.keyset.win_config",
+        "reasoning_content":"We need return type after vim., likely vim.api.nvim_win_config? Actually return from window_config is a table config. Type is vim.api.keyset.win_config? In Neovim Lua, window config type is vim.api.keyset.win_config. So return annotation: `vim.api.keyset.win_config`. Provide that."
+      }],
+    "temperature":1,
+    "options":[],
+    "raw":false,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "max_tokens":4096
+  },
+  "last_sse":{
+    "created":1781299136,
+    "system_fingerprint":"b9593-a39fea115",
+    "id":"chatcmpl-5GiUgGfAEEufByVKEiIsRmEm6eUS5HiG",
+    "timings":{
+      "predicted_n":80,
+      "prompt_per_second":9374.0517577702,
+      "prompt_n":865,
+      "cache_n":1039,
+      "prompt_ms":92.276,
+      "prompt_per_token_ms":0.1066774566474,
+      "predicted_ms":297.586,
+      "predicted_per_token_ms":3.719825,
+      "predicted_per_second":268.82985086664
+    },
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
