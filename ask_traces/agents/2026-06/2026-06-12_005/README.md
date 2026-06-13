@@ -8,3 +8,8 @@ OMG I just wanna marry Qwen! he knows me so well!.. he friggin NAILED this one! 
   - basicaly make this generic like with `strip_slash_command_from_prompt(prompt)`
 - complaints:
   - Qwen found a change it didn't make in `float_window.lua`: `---@return vim.api.keyset.win_config` ... Qwen should NOT revert (checkout) to erase that but it should just not add it! yikes
+
+## follow up
+- ok qwen nailed it on the refactor to register lazy evaluated replacements!
+- AND, I had qwen remove an unused slash command `/k=3` that allowed overriding # of RAG matches to include
+  - I never use this AND I was curious to see how Qwen would handle removing ONLY `top_k` code related to this specific feature of the slash command in the prompt parser and then consumers of the parsed prompt includes!... it correctly removed only the code that used this slash command value! bonkers cool!
