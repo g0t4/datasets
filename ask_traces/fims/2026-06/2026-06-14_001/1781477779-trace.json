@@ -1,0 +1,54 @@
+{
+  "request_body":{
+    "options":[],
+    "raw":false,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/wrap_getpos.lua:33-35\nfunction GetPosPosition:col_base0()\n    return self.col_base1 - 1\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/wrap_getpos.lua:126-128\nfunction GetPosSelectionRange:end_col_base0()\n    return self.end_col_base1 - 1\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/wrap_getpos.lua:122-124\nfunction GetPosSelectionRange:start_col_base0()\n    return self.start_col_base1 - 1\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/selection.lua:43-45\nfunction Selection:end_col_0indexed()\n    return self._end_col_0indexed\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/selection.lua:51-53\nfunction Selection:start_col_1indexed()\n    return self._start_col_0indexed + 1\nend\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/ask-openai/rewrites/WindowController.lua\nlocal BufferController0Indexed = require('ask-openai.rewrites.BufferController')\n\n---This entire class operates on 0-indexed row and column positions\n---   if that seems wrong I'll go to all 1-indexed\n---Also intended to hide away complexities in nvim_ apis\n---  i.e. tracking window ids, buffer numbers\n---@class WindowController0Indexed\n---@field window_id integer\nlocal WindowController0Indexed = {}\nWindowController0Indexed.__index = WindowController0Indexed\n\n---@param window_id integer\nfunction WindowController0Indexed:new(window_id)\n    self = setmetatable(self, WindowController0Indexed)\n    self.window_id = window_id\n    return self\nend\n\nfunction WindowController0Indexed:new_for_current_window()\n    local current_window_id = vim.api.nvim_get_current_win()\n    return WindowController0Indexed:new(current_window_id)\nend\n\n---@return integer row_base0 # 0-indexed\n---@return integer column_base0 # <|fim_middle|>\nfunction WindowController0Indexed:get_cursor_position()\n    -- keep in mind different windows w/ same buffer have their own cursor positions\n    -- that's why this is window specific\n    -- get_cursor returns 1-indexed row, 0-indexed column\n    local pos = vim.api.nvim_win_get_cursor(self.window_id)\n    -- ? do I prefer to use a table or two return values?\n    return pos[1] - 1, pos[2]\nend\n\n---@return integer row 0-indexed\nfunction WindowController0Indexed:get_cursor_row()\n    local row, _ = self:get_cursor_position()\n    return row\nend\n\n---@return integer column 0-indexed\nfunction WindowController0Indexed:get_cursor_column()\n    local _, column = self:get_cursor_position()\n    return column\nend\n\n---@param row integer 0-indexed\n---@param column integer 0-indexed\nfunction WindowController0Indexed:set_cursor_position(row, column)\n    vim.api.nvim_win_set_cursor(self.window_id, { row + 1, column })\nend\n\nfunction WindowController0Indexed:buffer()\n    -- old troubleshooting code for some issues around invalid window_ids\n    -- logs.trace('getting buffer for window ' .. self.window_id)\n    -- log:info('windows: ' .. vim.inspect(vim.api.nvim_list_wins()))\n    -- nvim_helpers.dump_windows()\n    -- nvim_helpers.dump_buffers()\n    local buffer_number = vim.api.nvim_win_get_buf(self.window_id)\n    return BufferController0Indexed:new(buffer_number)\nend\n\nfunction WindowController0Indexed:get_node_at_cursor()\n    local row, column = self:get_cursor_position()\n    return self:buffer():get_node_at_position(row, column)\nend\n\nreturn WindowController0Indexed\n```\n\n## Reminders about the cursor line:\nText before cursor: `---@return integer column_base0 # `",
+        "role":"user"
+      },{
+        "content":"0-indexed",
+        "finish_reason":"stop",
+        "reasoning_content":"We need to fill column_base0 description. Likely \"0-indexed\". So after # space maybe description. Return just text to replace <|fim_middle|>. Should be \"0-indexed\".",
+        "role":"assistant"
+      }],
+    "stream":true,
+    "top_p":1,
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "temperature":1
+  },
+  "last_sse":{
+    "id":"chatcmpl-yPwlNpUgigVTQhz1nermojIVtrpiMTx0",
+    "created":1781477689,
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "timings":{
+      "predicted_n":54,
+      "prompt_per_second":6567.4044265594,
+      "prompt_n":816,
+      "cache_n":1073,
+      "predicted_per_second":266.77074019,
+      "prompt_ms":124.25,
+      "prompt_per_token_ms":0.15226715686275,
+      "predicted_ms":202.421,
+      "predicted_per_token_ms":3.748537037037
+    },
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b9593-a39fea115",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }]
+  }
+}
