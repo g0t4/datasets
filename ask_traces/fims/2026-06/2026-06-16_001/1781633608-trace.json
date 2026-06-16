@@ -1,0 +1,51 @@
+{
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "raw":false,
+    "options":[],
+    "temperature":1,
+    "stream":true,
+    "top_p":1,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```.agents/instructs/rag.md\n## RAG entryoints\n\n### python tools to maintain indexes\n\n- cd to any dir with a `.rag/` directory, largely in root dir of a git repo\n  - exception to repo root is in this ask-openai repo... there's a tests `.rag/` dir in <|fim_middle|>\n- dotfiles repo has fish wrapper functions to invoke these tools:\n  - `~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/always/always.fish`\n  - build/update index with `rag_indexer` => runs `lua/ask-openai/rag/indexer.py`\n  - rebuild with `rag_rebuilder` abbr expands to `time rag_indexer --rebuild --info`\n  - use fish wrapper function `rag_validate_index` to invoke `lua/ask-openai/rag/index/validate.py`\n- tests:\n  - `cd ./lua/ask-openai/rag`\n  - `ptw **/*_tests.py` to run all tests\n  - `ptw indexer_tests.py` for key index build/rebuild integration tests, will rebuild an actual index in `.rag` in the `rag` dir\n\n### ask-language-server (RAG/semantic_grep language server)\n\n- built with `pygls`\n- entrypoint: `lua/ask-openai/rag/lsp/server.py`\n- Used by neovim to provide RAG queries, to update embeddings when files are edited, etc\n\n### MCP server for RAG lua/ask-openai/rag/mcp_server/__main__.py\n\nThis can be tested with a few key scripts:\n- `./lua/ask-openai/rag/tests/stdio/semantic_grep_list_tools.fish`\n  - a good first test is that the server can enumerate tools\n- `./lua/ask-openai/rag/tests/stdio/semantic_grep_call_tool.fish`\n  - this tests that a RAG query works\n\n### inference server\n\n- entrypoint: `lua/ask-openai/rag/lsp/inference/server/__main__.py`\n- runs Qwen3-Embeddings and Qwen3-Reranker models to embed/rerank queries/docs\n- can run on any OS but I prefer arch\n- custom protocol using MessagePack\n  - focused on performance, low latency\n  - central instance for embeddings across my network\n- clients exist for both python and lua\n  - python client is for `indexer`, `ask-language-server`, `MCP RAG server`\n  - lua client is for `neovim` (via this repo's ask-openai.nvim neovim plugin)\n    - for automatic RAG context in several AI tools: copilot predictions, rewriting code, and agent harness\n    - also agents can use `semantic_grep` tool to perform adhoc queries\n```\n\n## Reminders about the cursor line:\nText before cursor: `  - exception to repo root is in this ask-openai repo... there's a tests `.rag/` dir in `",
+        "role":"user"
+      },{
+        "reasoning_content":"We need fill path. Likely \"`lua/ask-openai/rag/tests/.rag/`\". Actually tests .rag dir location. Probably `lua/ask-openai/rag/tests/.rag/`. Provide that.",
+        "role":"assistant",
+        "content":"lua/ask-openai/rag/tests/.rag/",
+        "finish_reason":"stop"
+      }],
+    "max_tokens":4096
+  },
+  "last_sse":{
+    "created":1781633516,
+    "id":"chatcmpl-jHNtuemMl2RWoq0V6tfg5FpzZl3QahiQ",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "system_fingerprint":"b9593-a39fea115",
+    "object":"chat.completion.chunk",
+    "timings":{
+      "predicted_per_second":273.04319046831,
+      "predicted_n":66,
+      "prompt_ms":75.522,
+      "prompt_per_token_ms":0.13043523316062,
+      "predicted_ms":241.72,
+      "predicted_per_token_ms":3.6624242424242,
+      "cache_n":881,
+      "prompt_n":579,
+      "prompt_per_second":7666.6401843172
+    },
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }]
+  }
+}
