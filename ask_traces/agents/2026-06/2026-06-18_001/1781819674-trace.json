@@ -1,0 +1,551 @@
+{
+  "request_body":{
+    "temperature":0.7,
+    "model":"",
+    "top_k":20,
+    "messages":[{
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n",
+        "role":"system"
+      },{
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n",
+        "role":"user"
+      },{
+        "content":"## Fish Shell\n\n- Use snake_case for names\n- Use long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n\nTake advantage of fish-isms:\n```fish\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\nend\n\n# capture command output and react to its success/failure (exit status)\nif set some_output (some_command)\n    echo \"ok: $some_output\"\nelse\n    echo \"fail: $some_output\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use mulit-line strings:\necho \"foo\nbar\" | string join \",\"\n\n# blocks combine the output of multiple commands:\nbegin\n    echo -n \"Hello Wes, the time is: \"\n    date\nend > welcome.txt\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nstring match '*.lua' $files\nstring replace wrong right $in_this_text\nstring replace --regex '\\s+' ' ' $line\nset lines (string split '\\n' $text)\nstring join ',' $argv\nstring length $name\n\nstring escape $file_path\nstring unescape $escaped\n\npath change-extension mov ./foo.mp4 # ./foo.mov\npath sort 10-foo 2-bar # returns 2 before 10\n\nmath 10 / 5\nmath \"5 * 2\"\n\ncount *.txt\n\nif contains -- \"-q\" $argv\n    # ...\nend\n\nstatus filename # current script file\nstatus function # current function\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:15-34\n  abbr apvv \"ansible-playbook -vv\"\n  abbr apvvv \"ansible-playbook -vvv\"\nabbr aps \"ansible-playbook --syntax-check\"\n  abbr apc \"ansible-playbook --check\"\n  abbr apcd \"ansible-playbook --check --diff\"\n\nabbr aplsh \"ansible-playbook --list-hosts\"\nabbr aplst \"ansible-playbook --list-tags\"\n  abbr aplsk \"ansible-playbook --list-tasks\"\n\nabbr al \"ansible-lint\"\n\nabbr ad \"ansible-doc\"\n# abbr admdd \"ansible-doc --metadata-dump COLLECTION | jq\"\n#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \".all | keys\"  #  all builtin plugin types\nabbr adls \"ansible-doc --list\"\nabbr adlsf \"ansible-doc --list_files\"\n  abbr ads \"ansible-doc --snippet\" # ads homebrew\n\n# \"ag\" reserved for silver searcher\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:60-71\nabbr ails_toml \"ansible-inventory --list --toml\"\nabbr ails_toml_vars \"ansible-inventory --list --toml --vars\"\n#\n# generate inventory file off of `-i` arg\nabbr --set-cursor ails_generate_yaml_inventory \"ansible-inventory --list --yaml -i foo,bar% > inventory.yml\"\nabbr --set-cursor ails_generate_toml_inventory \"ansible-inventory --list --toml -i foo,bar% > inventory.yml\"\n#\nabbr aig \"ansible-inventory --graph\"\nabbr aih \"ansible-inventory --host\"\n\nabbr apull \"ansible-pull\"\n\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:45-64\n  abbr acv \"ansible-config view\"\n  abbr acd \"ansible-config dump\"\n    abbr acdo \"ansible-config dump --only-changed\"\n  abbr aci \"ansible-config init\"\n    abbr acif \"ansible-config init --format\" # ini,env,vars\n    abbr acifi \"ansible-config init --format ini\"\n    abbr acife \"ansible-config init --format env\"\n    abbr acifv \"ansible-config init --format vars\"\n\nabbr av \"ansible-vault\"\n\nabbr ai ansible-inventory\n# list\nabbr ails \"ansible-inventory --list --yaml\" # set --yaml here b/c otherwise I'll get JSON (default format) and I prefer yaml\nabbr ails_vars \"ansible-inventory --list --yaml --vars\"\nabbr ails_toml \"ansible-inventory --list --toml\"\nabbr ails_toml_vars \"ansible-inventory --list --toml --vars\"\n#\n# generate inventory file off of `-i` arg\nabbr --set-cursor ails_generate_yaml_inventory \"ansible-inventory --list --yaml -i foo,bar% > inventory.yml\"\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:30-49\nabbr adls \"ansible-doc --list\"\nabbr adlsf \"ansible-doc --list_files\"\n  abbr ads \"ansible-doc --snippet\" # ads homebrew\n\n# \"ag\" reserved for silver searcher\nabbr a-gc \"ansible-galaxy collection\"\nabbr a-gcls \"ansible-galaxy collection list\"\nabbr a-gci \"ansible-galaxy collection install\"\nabbr a-gcir \"ansible-galaxy collection install -r requirements.yml\"\nabbr a-gcd \"ansible-galaxy collection download\"\n# ? info, search, uninstall* (especially) sub commands\n\nabbr ac \"ansible-config\"\n  abbr acl \"ansible-config list\"\n    abbr acls \"ansible-config list\"\n  abbr acv \"ansible-config view\"\n  abbr acd \"ansible-config dump\"\n    abbr acdo \"ansible-config dump --only-changed\"\n  abbr aci \"ansible-config init\"\n    abbr acif \"ansible-config init --format\" # ini,env,vars\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/symbols-specific.fish:15-34\n        #  might need to prefix each line with the type? for cases where we just get name\n\n        alias # even though these are functions (and thus show up in `functions`) I want to see aliasdef\n        functions --all # --all => hidden too  # shows names only\n        functions --handlers # missing context of event handler type, but let it be for now to see how this works or doesn't work\n        builtin --names\n        set # variables (all - universal, global, local, func)\n        abbr # abbreviations\n        # PRN what else?\n        # history?\n        bind --all # key bindings\n        bind --function-names # avail input functions (beyond just what is bound) IIAC these are not listed in `functions` output?\n    end | rg_grep -i \"$argv\"\n\nend\n\n# OR, `fs`/`fsym` and `ffb`?\n# abbr ss get_fish_symbols # conflicts with `ss` (netstat replacement)\n# abbr sfb get_fish_function_bodies\n\n\n",
+        "role":"user"
+      },{
+        "content":"modify my ansible abbrs (fish) to include more ansible-doc abbrs ... I want adlsi for ansible-doc --list --type inventory # for inventory plugins... then use the help for ansible-doc to see the full list of plugin types and add the respective abbrs adls_ ",
+        "role":"user"
+      },{
+        "timings":{
+          "prompt_n":2993,
+          "cache_n":0,
+          "predicted_per_second":208.89753522334,
+          "predicted_n":195,
+          "prompt_per_second":8333.5189557625,
+          "prompt_ms":359.152,
+          "prompt_per_token_ms":0.11999732709656,
+          "predicted_ms":933.472,
+          "predicted_per_token_ms":4.7870358974359
+        },
+        "reasoning_content":"The user wants me to:\n1. Look at their existing ansible-doc abbreviations in fish shell\n2. Add `adlsi` for `ansible-doc --list --type inventory`\n3. Use `ansible-doc --help` to get the full list of plugin types\n4. Create corresponding abbreviations for each plugin type\n\nLet me first check the current state of the file and then run ansible-doc --help to see the plugin types.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"ansible-doc --help 2>&1 | rg -A 30 \\\"plugin types\\\"\"}",
+              "name":"run_process"
+            },
+            "id":"lhT5dyy6kID0rX3iDfd4XuivUZpf1Qar",
+            "type":"function"
+          },{
+            "function":{
+              "arguments":"{\"command_line\":\"cat ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish\"}",
+              "name":"run_process"
+            },
+            "id":"ZQ9z35pC534xDknijLHe8au8AyyJOosp",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96273577,
+        "duration_ms":10,
+        "tool_call_id":"ZQ9z35pC534xDknijLHe8au8AyyJOosp",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"# pass an option (key) filter => 0 or more matching option names and details of each!\\nabbr aclsn \\\"_ansible-config_options_name_contains\\\"\\nfunction _ansible-config_options_name_contains\\n    set -l filter $argv\\n    command ansible-config list | yq \\\"with_entries(select(.key | test(\\\\\\\"(?i).*$filter.*\\\\\\\")))\\\"\\nend\\nabbr aclsd \\\"_ansible-config_option_details_contains\\\"\\nfunction _ansible-config_option_details_contains\\n    # TODO verify works in fish\\n    set -l key $1\\n    command ansible-config list | yq \\\"with_entries(select(.. | has(\\\\\\\"$key\\\\\\\")))\\\"\\nend\\n\\nabbr ap \\\"ansible-playbook\\\"\\n  abbr apv \\\"ansible-playbook -v\\\"\\n  abbr apvv \\\"ansible-playbook -vv\\\"\\n  abbr apvvv \\\"ansible-playbook -vvv\\\"\\nabbr aps \\\"ansible-playbook --syntax-check\\\"\\n  abbr apc \\\"ansible-playbook --check\\\"\\n  abbr apcd \\\"ansible-playbook --check --diff\\\"\\n\\nabbr aplsh \\\"ansible-playbook --list-hosts\\\"\\nabbr aplst \\\"ansible-playbook --list-tags\\\"\\n  abbr aplsk \\\"ansible-playbook --list-tasks\\\"\\n\\nabbr al \\\"ansible-lint\\\"\\n\\nabbr ad \\\"ansible-doc\\\"\\n# abbr admdd \\\"ansible-doc --metadata-dump COLLECTION | jq\\\"\\n#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \\\".all | keys\\\"  #  all builtin plugin types\\nabbr adls \\\"ansible-doc --list\\\"\\nabbr adlsf \\\"ansible-doc --list_files\\\"\\n  abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n\\n# \\\"ag\\\" reserved for silver searcher\\nabbr a-gc \\\"ansible-galaxy collection\\\"\\nabbr a-gcls \\\"ansible-galaxy collection list\\\"\\nabbr a-gci \\\"ansible-galaxy collection install\\\"\\nabbr a-gcir \\\"ansible-galaxy collection install -r requirements.yml\\\"\\nabbr a-gcd \\\"ansible-galaxy collection download\\\"\\n# ? info, search, uninstall* (especially) sub commands\\n\\nabbr ac \\\"ansible-config\\\"\\n  abbr acl \\\"ansible-config list\\\"\\n    abbr acls \\\"ansible-config list\\\"\\n  abbr acv \\\"ansible-config view\\\"\\n  abbr acd \\\"ansible-config dump\\\"\\n    abbr acdo \\\"ansible-config dump --only-changed\\\"\\n  abbr aci \\\"ansible-config init\\\"\\n    abbr acif \\\"ansible-config init --format\\\" # ini,env,vars\\n    abbr acifi \\\"ansible-config init --format ini\\\"\\n    abbr acife \\\"ansible-config init --format env\\\"\\n    abbr acifv \\\"ansible-config init --format vars\\\"\\n\\nabbr av \\\"ansible-vault\\\"\\n\\nabbr ai ansible-inventory\\n# list\\nabbr ails \\\"ansible-inventory --list --yaml\\\" # set --yaml here b/c otherwise I'll get JSON (default format) and I prefer yaml\\nabbr ails_vars \\\"ansible-inventory --list --yaml --vars\\\"\\nabbr ails_toml \\\"ansible-inventory --list --toml\\\"\\nabbr ails_toml_vars \\\"ansible-inventory --list --toml --vars\\\"\\n#\\n# generate inventory file off of `-i` arg\\nabbr --set-cursor ails_generate_yaml_inventory \\\"ansible-inventory --list --yaml -i foo,bar% > inventory.yml\\\"\\nabbr --set-cursor ails_generate_toml_inventory \\\"ansible-inventory --list --toml -i foo,bar% > inventory.yml\\\"\\n#\\nabbr aig \\\"ansible-inventory --graph\\\"\\nabbr aih \\\"ansible-inventory --host\\\"\\n\\nabbr apull \\\"ansible-pull\\\"\\n\\n\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[]
+      },{
+        "start_time_ms":96273577,
+        "duration_ms":412,
+        "tool_call_id":"lhT5dyy6kID0rX3iDfd4XuivUZpf1Qar",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"46:57:  -s, --snippet         Show playbook snippet for these plugin types:\\n47-                        inventory, lookup, module\\n48-  -t, --type {become,cache,callback,cliconf,connection,httpapi,inventory,lookup,netconf,shell,vars,module,strategy,test,filter,role,keyword}\\n49-                        Choose which plugin type (defaults to \\\"module\\\").\\n50:35:                        Available plugin types are : ('become', 'cache',\\n51-                        'callback', 'cliconf', 'connection', 'httpapi',\\n52-                        'inventory', 'lookup', 'netconf', 'shell', 'vars',\\n53-                        'module', 'strategy', 'test', 'filter', 'role',\\n54-                        'keyword')\\n55-  -v, --verbose         Causes Ansible to print more debug messages. Adding\\n56-                        multiple -v will increase the verbosity, the builtin\\n57-                        plugins currently evaluate up to -vvvvvv. A reasonable\\n58-                        level to start is -vvv, connection debugging might\\n59-                        require -vvvv. This argument may be specified multiple\\n60-                        times.\\n61-\\n62-See man pages for Ansible CLI options or website for tutorials\\n63-https://docs.ansible.com\\n\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":1192,
+          "cache_n":3187,
+          "predicted_per_second":210.69574243313,
+          "predicted_n":571,
+          "prompt_per_second":6471.1566649656,
+          "prompt_ms":184.202,
+          "prompt_per_token_ms":0.15453187919463,
+          "predicted_ms":2710.069,
+          "predicted_per_token_ms":4.746180385289
+        },
+        "reasoning_content":"Now I have the full list of plugin types from `ansible-doc --help`:\n- become\n- cache\n- callback\n- cliconf\n- connection\n- httpapi\n- inventory\n- lookup\n- netconf\n- shell\n- vars\n- module\n- strategy\n- test\n- filter\n- role\n- keyword\n\nI need to add abbreviations for each of these types under the `ansible-doc --list` pattern. The user wants `adlsi` for inventory specifically, and then similar abbrs for other types.\n\nLooking at the existing pattern:\n- `adls` = ansible-doc --list\n- `adlsf` = ansible-doc --list_files\n- `ads` = ansible-doc --snippet\n\nSo for typed lists, I'll use `adlst_` followed by the type name (snake_case as per fish preferences).\n\nLet me create the abbrs:\n- `adlst_inventory` or `adlsi` for inventory\n- `adlst_become` for become\n- etc.\n\nThe user specifically asked for `adlsi` for inventory, so I'll use that short form for inventory and `adlst_` + type for others.\n\nLet me update the file.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat > /tmp/ansible_doc_abbrs.txt << 'EOF'\\n# list by plugin type\\nabbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\nabbr adlst_become \\\"ansible-doc --list --type become\\\"\\nabbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\nabbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\nabbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\nabbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\nabbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\nabbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\nabbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\nabbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\nabbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\nabbr adlst_module \\\"ansible-doc --list --type module\\\"\\nabbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\nabbr adlst_test \\\"ansible-doc --list --type test\\\"\\nabbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\nabbr adlst_role \\\"ansible-doc --list --type role\\\"\\nabbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"\\nEOF\\ncat /tmp/ansible_doc_abbrs.txt\"}",
+              "name":"run_process"
+            },
+            "id":"li3VE8SCL6iLPd4DI8BSQyWWd3WyiEiF",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96276971,
+        "duration_ms":10,
+        "tool_call_id":"li3VE8SCL6iLPd4DI8BSQyWWd3WyiEiF",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"# list by plugin type\\nabbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\nabbr adlst_become \\\"ansible-doc --list --type become\\\"\\nabbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\nabbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\nabbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\nabbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\nabbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\nabbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\nabbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\nabbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\nabbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\nabbr adlst_module \\\"ansible-doc --list --type module\\\"\\nabbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\nabbr adlst_test \\\"ansible-doc --list --type test\\\"\\nabbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\nabbr adlst_role \\\"ansible-doc --list --type role\\\"\\nabbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"\\n\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":300,
+          "cache_n":4949,
+          "predicted_per_second":211.33954045391,
+          "predicted_n":180,
+          "prompt_per_second":4001.9743073249,
+          "prompt_ms":74.963,
+          "prompt_per_token_ms":0.24987666666667,
+          "predicted_ms":851.71,
+          "predicted_per_token_ms":4.7317222222222
+        },
+        "reasoning_content":"Now I need to insert these into the ansibles.fish file after the existing ansible-doc abbrs. Let me find the right spot and use sed or a fish-compatible approach to insert them.\n\nLooking at the current file, the ansible-doc section is around lines 30-37:\n```\nabbr adls \"ansible-doc --list\"\nabbr adlsf \"ansible-doc --list_files\"\n  abbr ads \"ansible-doc --snippet\" # ads homebrew\n```\n\nI'll insert after line 37 (after `ads`).\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/dotfiles && cat -n fish/load_last_interactive_only/ansibles.fish | head -45\"}",
+              "name":"run_process"
+            },
+            "id":"ZNcHtIYUXWTiGHGDXra9apzPS5w34jp6",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96278004,
+        "duration_ms":10,
+        "tool_call_id":"ZNcHtIYUXWTiGHGDXra9apzPS5w34jp6",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"     1\\t# pass an option (key) filter => 0 or more matching option names and details of each!\\n     2\\tabbr aclsn \\\"_ansible-config_options_name_contains\\\"\\n     3\\tfunction _ansible-config_options_name_contains\\n     4\\t    set -l filter $argv\\n     5\\t    command ansible-config list | yq \\\"with_entries(select(.key | test(\\\\\\\"(?i).*$filter.*\\\\\\\")))\\\"\\n     6\\tend\\n     7\\tabbr aclsd \\\"_ansible-config_option_details_contains\\\"\\n     8\\tfunction _ansible-config_option_details_contains\\n     9\\t    # TODO verify works in fish\\n    10\\t    set -l key $1\\n    11\\t    command ansible-config list | yq \\\"with_entries(select(.. | has(\\\\\\\"$key\\\\\\\")))\\\"\\n    12\\tend\\n    13\\t\\n    14\\tabbr ap \\\"ansible-playbook\\\"\\n    15\\t  abbr apv \\\"ansible-playbook -v\\\"\\n    16\\t  abbr apvv \\\"ansible-playbook -vv\\\"\\n    17\\t  abbr apvvv \\\"ansible-playbook -vvv\\\"\\n    18\\tabbr aps \\\"ansible-playbook --syntax-check\\\"\\n    19\\t  abbr apc \\\"ansible-playbook --check\\\"\\n    20\\t  abbr apcd \\\"ansible-playbook --check --diff\\\"\\n    21\\t\\n    22\\tabbr aplsh \\\"ansible-playbook --list-hosts\\\"\\n    23\\tabbr aplst \\\"ansible-playbook --list-tags\\\"\\n    24\\t  abbr aplsk \\\"ansible-playbook --list-tasks\\\"\\n    25\\t\\n    26\\tabbr al \\\"ansible-lint\\\"\\n    27\\t\\n    28\\tabbr ad \\\"ansible-doc\\\"\\n    29\\t# abbr admdd \\\"ansible-doc --metadata-dump COLLECTION | jq\\\"\\n    30\\t#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \\\".all | keys\\\"  #  all builtin plugin types\\n    31\\tabbr adls \\\"ansible-doc --list\\\"\\n    32\\tabbr adlsf \\\"ansible-doc --list_files\\\"\\n    33\\t  abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n    34\\t\\n    35\\t# \\\"ag\\\" reserved for silver searcher\\n    36\\tabbr a-gc \\\"ansible-galaxy collection\\\"\\n    37\\tabbr a-gcls \\\"ansible-galaxy collection list\\\"\\n    38\\tabbr a-gci \\\"ansible-galaxy collection install\\\"\\n    39\\tabbr a-gcir \\\"ansible-galaxy collection install -r requirements.yml\\\"\\n    40\\tabbr a-gcd \\\"ansible-galaxy collection download\\\"\\n    41\\t# ? info, search, uninstall* (especially) sub commands\\n    42\\t\\n    43\\tabbr ac \\\"ansible-config\\\"\\n    44\\t  abbr acl \\\"ansible-config list\\\"\\n    45\\t    abbr acls \\\"ansible-config list\\\"\\n\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":747,
+          "cache_n":5428,
+          "predicted_per_second":210.75258487145,
+          "predicted_n":351,
+          "prompt_per_second":5793.3024150393,
+          "prompt_ms":128.942,
+          "prompt_per_token_ms":0.17261311914324,
+          "predicted_ms":1665.46,
+          "predicted_per_token_ms":4.7449002849003
+        },
+        "reasoning_content":"I need to insert the new abbrs after line 33 (after `ads`). I'll use sed to do this.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/dotfiles && sed -i '' '33a\\\\\\n# list by plugin type\\\\\\nabbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\\\\\nabbr adlst_become \\\"ansible-doc --list --type become\\\"\\\\\\nabbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\\\\\nabbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\\\\\nabbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\\\\\nabbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\\\\\nabbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\\\\\nabbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\\\\\nabbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\\\\\nabbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\\\\\nabbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\\\\\nabbr adlst_module \\\"ansible-doc --list --type module\\\"\\\\\\nabbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\\\\\nabbr adlst_test \\\"ansible-doc --list --type test\\\"\\\\\\nabbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\\\\\nabbr adlst_role \\\"ansible-doc --list --type role\\\"\\\\\\nabbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"' fish/load_last_interactive_only/ansibles.fish\"}",
+              "name":"run_process"
+            },
+            "id":"ujVLpOcWNcZMCEyRnpBbkSqy3hzbeNOJ",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96279917,
+        "duration_ms":11,
+        "tool_call_id":"ujVLpOcWNcZMCEyRnpBbkSqy3hzbeNOJ",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":33,
+          "cache_n":6525,
+          "predicted_per_second":207.7145171676,
+          "predicted_n":80,
+          "prompt_per_second":826.07389606488,
+          "prompt_ms":39.948,
+          "prompt_per_token_ms":1.2105454545455,
+          "predicted_ms":385.144,
+          "predicted_per_token_ms":4.8143
+        },
+        "reasoning_content":"Let me verify the changes look correct.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cat -n ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish | sed -n '28,60p'\"}",
+              "name":"run_process"
+            },
+            "id":"JlonGYdUMxbMSQCV5a2KNsVmUsPxSED4",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96280452,
+        "duration_ms":9,
+        "tool_call_id":"JlonGYdUMxbMSQCV5a2KNsVmUsPxSED4",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"    28\\tabbr ad \\\"ansible-doc\\\"\\n    29\\t# abbr admdd \\\"ansible-doc --metadata-dump COLLECTION | jq\\\"\\n    30\\t#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \\\".all | keys\\\"  #  all builtin plugin types\\n    31\\tabbr adls \\\"ansible-doc --list\\\"\\n    32\\tabbr adlsf \\\"ansible-doc --list_files\\\"\\n    33\\t  abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n    34\\t# list by plugin type\\n    35\\tabbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\n    36\\tabbr adlst_become \\\"ansible-doc --list --type become\\\"\\n    37\\tabbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\n    38\\tabbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\n    39\\tabbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\n    40\\tabbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\n    41\\tabbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\n    42\\tabbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\n    43\\tabbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\n    44\\tabbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\n    45\\tabbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\n    46\\tabbr adlst_module \\\"ansible-doc --list --type module\\\"\\n    47\\tabbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\n    48\\tabbr adlst_test \\\"ansible-doc --list --type test\\\"\\n    49\\tabbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\n    50\\tabbr adlst_role \\\"ansible-doc --list --type role\\\"\\n    51\\tabbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"\\n    52\\t\\n    53\\t# \\\"ag\\\" reserved for silver searcher\\n    54\\tabbr a-gc \\\"ansible-galaxy collection\\\"\\n    55\\tabbr a-gcls \\\"ansible-galaxy collection list\\\"\\n    56\\tabbr a-gci \\\"ansible-galaxy collection install\\\"\\n    57\\tabbr a-gcir \\\"ansible-galaxy collection install -r requirements.yml\\\"\\n    58\\tabbr a-gcd \\\"ansible-galaxy collection download\\\"\\n    59\\t# ? info, search, uninstall* (especially) sub commands\\n    60\\t\\n\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":647,
+          "cache_n":6637,
+          "predicted_per_second":205.37435343753,
+          "predicted_n":70,
+          "prompt_per_second":5942.867640305,
+          "prompt_ms":108.87,
+          "prompt_per_token_ms":0.16826893353941,
+          "predicted_ms":340.841,
+          "predicted_per_token_ms":4.8691571428571
+        },
+        "reasoning_content":"Looks good. Now let me commit the changes.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/dotfiles && git diff fish/load_last_interactive_only/ansibles.fish\"}",
+              "name":"run_process"
+            },
+            "id":"Bl6KJ1G7crJ1di4Pld2WT9DsV5OLXD3F",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96281017,
+        "duration_ms":16,
+        "tool_call_id":"Bl6KJ1G7crJ1di4Pld2WT9DsV5OLXD3F",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"diff --git a/fish/load_last_interactive_only/ansibles.fish b/fish/load_last_interactive_only/ansibles.fish\\nindex b8e91b40..2e47621d 100644\\n--- a/fish/load_last_interactive_only/ansibles.fish\\n+++ b/fish/load_last_interactive_only/ansibles.fish\\n@@ -31,6 +31,24 @@ abbr ad \\\"ansible-doc\\\"\\n abbr adls \\\"ansible-doc --list\\\"\\n abbr adlsf \\\"ansible-doc --list_files\\\"\\n   abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n+# list by plugin type\\n+abbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\n+abbr adlst_become \\\"ansible-doc --list --type become\\\"\\n+abbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\n+abbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\n+abbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\n+abbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\n+abbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\n+abbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\n+abbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\n+abbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\n+abbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\n+abbr adlst_module \\\"ansible-doc --list --type module\\\"\\n+abbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\n+abbr adlst_test \\\"ansible-doc --list --type test\\\"\\n+abbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\n+abbr adlst_role \\\"ansible-doc --list --type role\\\"\\n+abbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"\\n \\n # \\\"ag\\\" reserved for silver searcher\\n abbr a-gc \\\"ansible-galaxy collection\\\"\\n\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":482,
+          "cache_n":7353,
+          "predicted_per_second":204.65749560729,
+          "predicted_n":193,
+          "prompt_per_second":6151.9610971423,
+          "prompt_ms":78.349,
+          "prompt_per_token_ms":0.16254979253112,
+          "predicted_ms":943.039,
+          "predicted_per_token_ms":4.8862124352332
+        },
+        "reasoning_content":"Perfect. The diff looks clean and correct. Now let me commit.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/dotfiles && git add fish/load_last_interactive_only/ansibles.fish && git commit --author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\" -m \\\"add ansible-doc plugin type list abbreviations\\n\\nAdd abbrs for all 17 ansible-doc plugin types:\\n- adlsi: inventory (shortcut)\\n- adlst_*: become, cache, callback, cliconf, connection, httpapi,\\n  lookup, netconf, shell, vars, module, strategy, test, filter, role,\\n  keyword\\\"\"}",
+              "name":"run_process"
+            },
+            "id":"aXkPQx8qm5ye7waXnZIEUpv0FbUxW3Hp",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96282165,
+        "duration_ms":877,
+        "tool_call_id":"aXkPQx8qm5ye7waXnZIEUpv0FbUxW3Hp",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"[master f820080a] add ansible-doc plugin type list abbreviations\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 1 file changed, 18 insertions(+)\\n\",\"name\":\"STDOUT\"},{\"type\":\"text\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\",\"name\":\"STDERR\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":146,
+          "cache_n":8027,
+          "predicted_per_second":205.56684813651,
+          "predicted_n":420,
+          "prompt_per_second":2790.3065514869,
+          "prompt_ms":52.324,
+          "prompt_per_token_ms":0.35838356164384,
+          "predicted_ms":2043.131,
+          "predicted_per_token_ms":4.8645976190476
+        },
+        "reasoning_content":"Done! I've added all the ansible-doc abbreviations for each plugin type. The user now has:\n- `adlsi` for inventory (the shortcut they specifically requested)\n- `adlst_become`, `adlst_cache`, etc. for all other plugin types\n\nThe commit is done with the proper author header.\n",
+        "role":"assistant",
+        "content":"Done! Added 17 abbreviations for all ansible-doc plugin types from `ansible-doc --help`:\n\n| Abbrev | Command |\n|--------|---------|\n| `adlsi` | `ansible-doc --list --type inventory` |\n| `adlst_become` | `ansible-doc --list --type become` |\n| `adlst_cache` | `ansible-doc --list --type cache` |\n| `adlst_callback` | `ansible-doc --list --type callback` |\n| `adlst_cliconf` | `ansible-doc --list --type cliconf` |\n| `adlst_connection` | `ansible-doc --list --type connection` |\n| `adlst_httpapi` | `ansible-doc --list --type httpapi` |\n| `adlst_lookup` | `ansible-doc --list --type lookup` |\n| `adlst_netconf` | `ansible-doc --list --type netconf` |\n| `adlst_shell` | `ansible-doc --list --type shell` |\n| `adlst_vars` | `ansible-doc --list --type vars` |\n| `adlst_module` | `ansible-doc --list --type module` |\n| `adlst_strategy` | `ansible-doc --list --type strategy` |\n| `adlst_test` | `ansible-doc --list --type test` |\n| `adlst_filter` | `ansible-doc --list --type filter` |\n| `adlst_role` | `ansible-doc --list --type role` |\n| `adlst_keyword` | `ansible-doc --list --type keyword` |",
+        "tool_calls":[]
+      },{
+        "content":"ok I like the _ can you change the adlsi to that too",
+        "role":"user"
+      },{
+        "timings":{
+          "prompt_n":5065,
+          "cache_n":2926,
+          "predicted_per_second":204.31640616325,
+          "predicted_n":184,
+          "prompt_per_second":8406.6110983864,
+          "prompt_ms":602.502,
+          "prompt_per_token_ms":0.11895399802567,
+          "predicted_ms":900.564,
+          "predicted_per_token_ms":4.8943695652174
+        },
+        "reasoning_content":"The user wants me to rename `adlsi` to follow the same naming convention as the others, which is `adlst_inventory`.\nLet's update the abbreviation.\n\nCurrent line:\n`abbr adlsi \"ansible-doc --list --type inventory\" # inventory plugins`\n\nNew line:\n`abbr adlst_inventory \"ansible-doc --list --type inventory\"`\n\nI'll use `sed` to make this change and commit.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/dotfiles && sed -i '' 's/abbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins/abbr adlst_inventory \\\"ansible-doc --list --type inventory\\\"/' fish/load_last_interactive_only/ansibles.fish\"}",
+              "name":"run_process"
+            },
+            "id":"6xzV5fKTvretEBN4Ga5xV6Nkm3EymXQS",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96394656,
+        "duration_ms":35,
+        "tool_call_id":"6xzV5fKTvretEBN4Ga5xV6Nkm3EymXQS",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":33,
+          "cache_n":8174,
+          "predicted_per_second":204.97837622482,
+          "predicted_n":71,
+          "prompt_per_second":1087.0281309704,
+          "prompt_ms":30.358,
+          "prompt_per_token_ms":0.91993939393939,
+          "predicted_ms":346.378,
+          "predicted_per_token_ms":4.8785633802817
+        },
+        "reasoning_content":"Good, let's verify the change and commit it.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/dotfiles && git diff fish/load_last_interactive_only/ansibles.fish\"}",
+              "name":"run_process"
+            },
+            "id":"VUJk6ZuigAw8skW2ZmFDH1w26FV8Dixf",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96395185,
+        "duration_ms":14,
+        "tool_call_id":"VUJk6ZuigAw8skW2ZmFDH1w26FV8Dixf",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"diff --git a/fish/load_last_interactive_only/ansibles.fish b/fish/load_last_interactive_only/ansibles.fish\\nindex 2e47621d..341081d1 100644\\n--- a/fish/load_last_interactive_only/ansibles.fish\\n+++ b/fish/load_last_interactive_only/ansibles.fish\\n@@ -32,7 +32,7 @@ abbr adls \\\"ansible-doc --list\\\"\\n abbr adlsf \\\"ansible-doc --list_files\\\"\\n   abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n # list by plugin type\\n-abbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\n+abbr adlst_inventory \\\"ansible-doc --list --type inventory\\\"\\n abbr adlst_become \\\"ansible-doc --list --type become\\\"\\n abbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\n abbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\n\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[]
+      },{
+        "timings":{
+          "prompt_n":260,
+          "cache_n":8277,
+          "predicted_per_second":203.45184260692,
+          "predicted_n":119,
+          "prompt_per_second":3792.022168745,
+          "prompt_ms":68.565,
+          "prompt_per_token_ms":0.26371153846154,
+          "predicted_ms":584.905,
+          "predicted_per_token_ms":4.9151680672269
+        },
+        "reasoning_content":"Looks good. Committing now.\n",
+        "role":"assistant",
+        "content":"",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"cd ~/repos/github/g0t4/dotfiles && git add fish/load_last_interactive_only/ansibles.fish && git commit --author=\\\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\\" -m \\\"rename adlsi to adlst_inventory for consistency\\\"\"}",
+              "name":"run_process"
+            },
+            "id":"GjHiHRB8IL3aoYsejeWu1WGOrgILlNO0",
+            "type":"function"
+          }]
+      },{
+        "start_time_ms":96395971,
+        "duration_ms":741,
+        "tool_call_id":"GjHiHRB8IL3aoYsejeWu1WGOrgILlNO0",
+        "role":"tool",
+        "content":"{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"[master 59561d1e] rename adlsi to adlst_inventory for consistency\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 1 file changed, 1 insertion(+), 1 deletion(-)\\n\",\"name\":\"STDOUT\"},{\"type\":\"text\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\",\"name\":\"STDERR\"}]}",
+        "progress_notifications":[]
+      },{
+        "reasoning_content":"Done! I've renamed `adlsi` to `adlst_inventory` so it follows the same `adlst_<plugin_type>` naming convention as the rest. Committed.\n",
+        "role":"assistant",
+        "content":"Done! Renamed `adlsi` to `adlst_inventory` so all abbreviations follow the consistent `adlst_<plugin_type>` pattern.",
+        "finish_reason":"stop"
+      }],
+    "tools":[{
+        "type":"function",
+        "function":{
+          "name":"run_process",
+          "description":"Run a process on this darwin machine",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "command_line":{
+                "type":"string",
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'."
+              },
+              "stdin_text":{
+                "type":"string",
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents."
+              },
+              "argv":{
+                "type":"array",
+                "minItems":1,
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "items":{
+                  "type":"string"
+                }
+              },
+              "cwd":{
+                "type":"string",
+                "description":"Optional to set working directory"
+              },
+              "timeout_ms":{
+                "type":"number",
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms"
+              }
+            }
+          }
+        }
+      },{
+        "function":{
+          "name":"run_in_neovim",
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "parameters":{
+            "properties":{
+              "lua":{
+                "type":"string",
+                "description":"Lua code to execute. Should be a valid Lua chunk."
+              }
+            },
+            "required":["lua"],
+            "type":"object"
+          }
+        },
+        "type":"function"
+      },{
+        "function":{
+          "name":"semantic_grep",
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "parameters":{
+            "properties":{
+              "top_k":{
+                "type":"number",
+                "description":"number of matches, defaults to 5 which is usually plenty!"
+              },
+              "embed_top_k":{
+                "type":"number",
+                "description":"number of embeddings matches to consider for reranking"
+              },
+              "filetype":{
+                "type":"string",
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes"
+              },
+              "instruct":{
+                "type":"string",
+                "description":"instructions for the query, explain the type of query"
+              },
+              "query":{
+                "type":"string",
+                "description":"query text, what you are looking for"
+              }
+            },
+            "required":["query"],
+            "type":"object"
+          }
+        },
+        "type":"function"
+      }],
+    "stream":true,
+    "repeat_penalty":1.05,
+    "verbose":true,
+    "top_p":0.8
+  },
+  "last_sse":{
+    "timings":{
+      "prompt_n":151,
+      "cache_n":8655,
+      "predicted_per_second":204.05069785339,
+      "predicted_n":70,
+      "prompt_per_second":2729.5733911786,
+      "prompt_ms":55.32,
+      "prompt_per_token_ms":0.36635761589404,
+      "predicted_ms":343.052,
+      "predicted_per_token_ms":4.9007428571429
+    },
+    "__verbose":{
+      "has_new_line":true,
+      "tokens":[],
+      "id_slot":3,
+      "tokens_predicted":70,
+      "tokens_evaluated":8806,
+      "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+      "content":"",
+      "truncated":false,
+      "timings":{
+        "prompt_n":151,
+        "cache_n":8655,
+        "predicted_per_second":204.05069785339,
+        "predicted_n":70,
+        "prompt_per_second":2729.5733911786,
+        "prompt_ms":55.32,
+        "prompt_per_token_ms":0.36635761589404,
+        "predicted_ms":343.052,
+        "predicted_per_token_ms":4.9007428571429
+      },
+      "stopping_word":"",
+      "prompt":"<|im_start|>system\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"run_process\", \"description\": \"Run a process on this darwin machine\", \"parameters\": {\"type\": \"object\", \"properties\": {\"command_line\": {\"type\": \"string\", \"description\": \"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\"}, \"stdin_text\": {\"type\": \"string\", \"description\": \"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\"}, \"argv\": {\"type\": \"array\", \"minItems\": 1, \"description\": \"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\", \"items\": {\"type\": \"string\"}}, \"cwd\": {\"type\": \"string\", \"description\": \"Optional to set working directory\"}, \"timeout_ms\": {\"type\": \"number\", \"description\": \"Optional timeout in milliseconds, defaults to 30,000ms\"}}}}}\n{\"type\": \"function\", \"function\": {\"name\": \"run_in_neovim\", \"description\": \"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()\", \"parameters\": {\"properties\": {\"lua\": {\"type\": \"string\", \"description\": \"Lua code to execute. Should be a valid Lua chunk.\"}}, \"required\": [\"lua\"], \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"semantic_grep\", \"description\": \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\", \"parameters\": {\"properties\": {\"top_k\": {\"type\": \"number\", \"description\": \"number of matches, defaults to 5 which is usually plenty!\"}, \"embed_top_k\": {\"type\": \"number\", \"description\": \"number of embeddings matches to consider for reranking\"}, \"filetype\": {\"type\": \"string\", \"description\": \"limit matches to a vim compatible filetype. default includes all filetypes\"}, \"instruct\": {\"type\": \"string\", \"description\": \"instructions for the query, explain the type of query\"}, \"query\": {\"type\": \"string\", \"description\": \"query text, what you are looking for\"}}, \"required\": [\"query\"], \"type\": \"object\"}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.<|im_end|>\n<|im_start|>user\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```<|im_end|>\n<|im_start|>user\n## Fish Shell\n\n- Use snake_case for names\n- Use long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n\nTake advantage of fish-isms:\n```fish\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\nend\n\n# capture command output and react to its success/failure (exit status)\nif set some_output (some_command)\n    echo \"ok: $some_output\"\nelse\n    echo \"fail: $some_output\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use mulit-line strings:\necho \"foo\nbar\" | string join \",\"\n\n# blocks combine the output of multiple commands:\nbegin\n    echo -n \"Hello Wes, the time is: \"\n    date\nend > welcome.txt\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nstring match '*.lua' $files\nstring replace wrong right $in_this_text\nstring replace --regex '\\s+' ' ' $line\nset lines (string split '\\n' $text)\nstring join ',' $argv\nstring length $name\n\nstring escape $file_path\nstring unescape $escaped\n\npath change-extension mov ./foo.mp4 # ./foo.mov\npath sort 10-foo 2-bar # returns 2 before 10\n\nmath 10 / 5\nmath \"5 * 2\"\n\ncount *.txt\n\nif contains -- \"-q\" $argv\n    # ...\nend\n\nstatus filename # current script file\nstatus function # current function\n```<|im_end|>\n<|im_start|>user\n# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:15-34\n  abbr apvv \"ansible-playbook -vv\"\n  abbr apvvv \"ansible-playbook -vvv\"\nabbr aps \"ansible-playbook --syntax-check\"\n  abbr apc \"ansible-playbook --check\"\n  abbr apcd \"ansible-playbook --check --diff\"\n\nabbr aplsh \"ansible-playbook --list-hosts\"\nabbr aplst \"ansible-playbook --list-tags\"\n  abbr aplsk \"ansible-playbook --list-tasks\"\n\nabbr al \"ansible-lint\"\n\nabbr ad \"ansible-doc\"\n# abbr admdd \"ansible-doc --metadata-dump COLLECTION | jq\"\n#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \".all | keys\"  #  all builtin plugin types\nabbr adls \"ansible-doc --list\"\nabbr adlsf \"ansible-doc --list_files\"\n  abbr ads \"ansible-doc --snippet\" # ads homebrew\n\n# \"ag\" reserved for silver searcher\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:60-71\nabbr ails_toml \"ansible-inventory --list --toml\"\nabbr ails_toml_vars \"ansible-inventory --list --toml --vars\"\n#\n# generate inventory file off of `-i` arg\nabbr --set-cursor ails_generate_yaml_inventory \"ansible-inventory --list --yaml -i foo,bar% > inventory.yml\"\nabbr --set-cursor ails_generate_toml_inventory \"ansible-inventory --list --toml -i foo,bar% > inventory.yml\"\n#\nabbr aig \"ansible-inventory --graph\"\nabbr aih \"ansible-inventory --host\"\n\nabbr apull \"ansible-pull\"\n\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:45-64\n  abbr acv \"ansible-config view\"\n  abbr acd \"ansible-config dump\"\n    abbr acdo \"ansible-config dump --only-changed\"\n  abbr aci \"ansible-config init\"\n    abbr acif \"ansible-config init --format\" # ini,env,vars\n    abbr acifi \"ansible-config init --format ini\"\n    abbr acife \"ansible-config init --format env\"\n    abbr acifv \"ansible-config init --format vars\"\n\nabbr av \"ansible-vault\"\n\nabbr ai ansible-inventory\n# list\nabbr ails \"ansible-inventory --list --yaml\" # set --yaml here b/c otherwise I'll get JSON (default format) and I prefer yaml\nabbr ails_vars \"ansible-inventory --list --yaml --vars\"\nabbr ails_toml \"ansible-inventory --list --toml\"\nabbr ails_toml_vars \"ansible-inventory --list --toml --vars\"\n#\n# generate inventory file off of `-i` arg\nabbr --set-cursor ails_generate_yaml_inventory \"ansible-inventory --list --yaml -i foo,bar% > inventory.yml\"\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:30-49\nabbr adls \"ansible-doc --list\"\nabbr adlsf \"ansible-doc --list_files\"\n  abbr ads \"ansible-doc --snippet\" # ads homebrew\n\n# \"ag\" reserved for silver searcher\nabbr a-gc \"ansible-galaxy collection\"\nabbr a-gcls \"ansible-galaxy collection list\"\nabbr a-gci \"ansible-galaxy collection install\"\nabbr a-gcir \"ansible-galaxy collection install -r requirements.yml\"\nabbr a-gcd \"ansible-galaxy collection download\"\n# ? info, search, uninstall* (especially) sub commands\n\nabbr ac \"ansible-config\"\n  abbr acl \"ansible-config list\"\n    abbr acls \"ansible-config list\"\n  abbr acv \"ansible-config view\"\n  abbr acd \"ansible-config dump\"\n    abbr acdo \"ansible-config dump --only-changed\"\n  abbr aci \"ansible-config init\"\n    abbr acif \"ansible-config init --format\" # ini,env,vars\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/symbols-specific.fish:15-34\n        #  might need to prefix each line with the type? for cases where we just get name\n\n        alias # even though these are functions (and thus show up in `functions`) I want to see aliasdef\n        functions --all # --all => hidden too  # shows names only\n        functions --handlers # missing context of event handler type, but let it be for now to see how this works or doesn't work\n        builtin --names\n        set # variables (all - universal, global, local, func)\n        abbr # abbreviations\n        # PRN what else?\n        # history?\n        bind --all # key bindings\n        bind --function-names # avail input functions (beyond just what is bound) IIAC these are not listed in `functions` output?\n    end | rg_grep -i \"$argv\"\n\nend\n\n# OR, `fs`/`fsym` and `ffb`?\n# abbr ss get_fish_symbols # conflicts with `ss` (netstat replacement)\n# abbr sfb get_fish_function_bodies<|im_end|>\n<|im_start|>user\nmodify my ansible abbrs (fish) to include more ansible-doc abbrs ... I want adlsi for ansible-doc --list --type inventory # for inventory plugins... then use the help for ansible-doc to see the full list of plugin types and add the respective abbrs adls_<|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=run_process>\n<parameter=command_line>\nansible-doc --help 2>&1 | rg -A 30 \"plugin types\"\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncat ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"# pass an option (key) filter => 0 or more matching option names and details of each!\\nabbr aclsn \\\"_ansible-config_options_name_contains\\\"\\nfunction _ansible-config_options_name_contains\\n    set -l filter $argv\\n    command ansible-config list | yq \\\"with_entries(select(.key | test(\\\\\\\"(?i).*$filter.*\\\\\\\")))\\\"\\nend\\nabbr aclsd \\\"_ansible-config_option_details_contains\\\"\\nfunction _ansible-config_option_details_contains\\n    # TODO verify works in fish\\n    set -l key $1\\n    command ansible-config list | yq \\\"with_entries(select(.. | has(\\\\\\\"$key\\\\\\\")))\\\"\\nend\\n\\nabbr ap \\\"ansible-playbook\\\"\\n  abbr apv \\\"ansible-playbook -v\\\"\\n  abbr apvv \\\"ansible-playbook -vv\\\"\\n  abbr apvvv \\\"ansible-playbook -vvv\\\"\\nabbr aps \\\"ansible-playbook --syntax-check\\\"\\n  abbr apc \\\"ansible-playbook --check\\\"\\n  abbr apcd \\\"ansible-playbook --check --diff\\\"\\n\\nabbr aplsh \\\"ansible-playbook --list-hosts\\\"\\nabbr aplst \\\"ansible-playbook --list-tags\\\"\\n  abbr aplsk \\\"ansible-playbook --list-tasks\\\"\\n\\nabbr al \\\"ansible-lint\\\"\\n\\nabbr ad \\\"ansible-doc\\\"\\n# abbr admdd \\\"ansible-doc --metadata-dump COLLECTION | jq\\\"\\n#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \\\".all | keys\\\"  #  all builtin plugin types\\nabbr adls \\\"ansible-doc --list\\\"\\nabbr adlsf \\\"ansible-doc --list_files\\\"\\n  abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n\\n# \\\"ag\\\" reserved for silver searcher\\nabbr a-gc \\\"ansible-galaxy collection\\\"\\nabbr a-gcls \\\"ansible-galaxy collection list\\\"\\nabbr a-gci \\\"ansible-galaxy collection install\\\"\\nabbr a-gcir \\\"ansible-galaxy collection install -r requirements.yml\\\"\\nabbr a-gcd \\\"ansible-galaxy collection download\\\"\\n# ? info, search, uninstall* (especially) sub commands\\n\\nabbr ac \\\"ansible-config\\\"\\n  abbr acl \\\"ansible-config list\\\"\\n    abbr acls \\\"ansible-config list\\\"\\n  abbr acv \\\"ansible-config view\\\"\\n  abbr acd \\\"ansible-config dump\\\"\\n    abbr acdo \\\"ansible-config dump --only-changed\\\"\\n  abbr aci \\\"ansible-config init\\\"\\n    abbr acif \\\"ansible-config init --format\\\" # ini,env,vars\\n    abbr acifi \\\"ansible-config init --format ini\\\"\\n    abbr acife \\\"ansible-config init --format env\\\"\\n    abbr acifv \\\"ansible-config init --format vars\\\"\\n\\nabbr av \\\"ansible-vault\\\"\\n\\nabbr ai ansible-inventory\\n# list\\nabbr ails \\\"ansible-inventory --list --yaml\\\" # set --yaml here b/c otherwise I'll get JSON (default format) and I prefer yaml\\nabbr ails_vars \\\"ansible-inventory --list --yaml --vars\\\"\\nabbr ails_toml \\\"ansible-inventory --list --toml\\\"\\nabbr ails_toml_vars \\\"ansible-inventory --list --toml --vars\\\"\\n#\\n# generate inventory file off of `-i` arg\\nabbr --set-cursor ails_generate_yaml_inventory \\\"ansible-inventory --list --yaml -i foo,bar% > inventory.yml\\\"\\nabbr --set-cursor ails_generate_toml_inventory \\\"ansible-inventory --list --toml -i foo,bar% > inventory.yml\\\"\\n#\\nabbr aig \\\"ansible-inventory --graph\\\"\\nabbr aih \\\"ansible-inventory --host\\\"\\n\\nabbr apull \\\"ansible-pull\\\"\\n\\n\",\"name\":\"STDOUT\"}]}\n</tool_response>\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"46:57:  -s, --snippet         Show playbook snippet for these plugin types:\\n47-                        inventory, lookup, module\\n48-  -t, --type {become,cache,callback,cliconf,connection,httpapi,inventory,lookup,netconf,shell,vars,module,strategy,test,filter,role,keyword}\\n49-                        Choose which plugin type (defaults to \\\"module\\\").\\n50:35:                        Available plugin types are : ('become', 'cache',\\n51-                        'callback', 'cliconf', 'connection', 'httpapi',\\n52-                        'inventory', 'lookup', 'netconf', 'shell', 'vars',\\n53-                        'module', 'strategy', 'test', 'filter', 'role',\\n54-                        'keyword')\\n55-  -v, --verbose         Causes Ansible to print more debug messages. Adding\\n56-                        multiple -v will increase the verbosity, the builtin\\n57-                        plugins currently evaluate up to -vvvvvv. A reasonable\\n58-                        level to start is -vvv, connection debugging might\\n59-                        require -vvvv. This argument may be specified multiple\\n60-                        times.\\n61-\\n62-See man pages for Ansible CLI options or website for tutorials\\n63-https://docs.ansible.com\\n\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncat > /tmp/ansible_doc_abbrs.txt << 'EOF'\n# list by plugin type\nabbr adlsi \"ansible-doc --list --type inventory\" # inventory plugins\nabbr adlst_become \"ansible-doc --list --type become\"\nabbr adlst_cache \"ansible-doc --list --type cache\"\nabbr adlst_callback \"ansible-doc --list --type callback\"\nabbr adlst_cliconf \"ansible-doc --list --type cliconf\"\nabbr adlst_connection \"ansible-doc --list --type connection\"\nabbr adlst_httpapi \"ansible-doc --list --type httpapi\"\nabbr adlst_lookup \"ansible-doc --list --type lookup\"\nabbr adlst_netconf \"ansible-doc --list --type netconf\"\nabbr adlst_shell \"ansible-doc --list --type shell\"\nabbr adlst_vars \"ansible-doc --list --type vars\"\nabbr adlst_module \"ansible-doc --list --type module\"\nabbr adlst_strategy \"ansible-doc --list --type strategy\"\nabbr adlst_test \"ansible-doc --list --type test\"\nabbr adlst_filter \"ansible-doc --list --type filter\"\nabbr adlst_role \"ansible-doc --list --type role\"\nabbr adlst_keyword \"ansible-doc --list --type keyword\"\nEOF\ncat /tmp/ansible_doc_abbrs.txt\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"# list by plugin type\\nabbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\nabbr adlst_become \\\"ansible-doc --list --type become\\\"\\nabbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\nabbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\nabbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\nabbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\nabbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\nabbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\nabbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\nabbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\nabbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\nabbr adlst_module \\\"ansible-doc --list --type module\\\"\\nabbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\nabbr adlst_test \\\"ansible-doc --list --type test\\\"\\nabbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\nabbr adlst_role \\\"ansible-doc --list --type role\\\"\\nabbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"\\n\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncd ~/repos/github/g0t4/dotfiles && cat -n fish/load_last_interactive_only/ansibles.fish | head -45\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"     1\\t# pass an option (key) filter => 0 or more matching option names and details of each!\\n     2\\tabbr aclsn \\\"_ansible-config_options_name_contains\\\"\\n     3\\tfunction _ansible-config_options_name_contains\\n     4\\t    set -l filter $argv\\n     5\\t    command ansible-config list | yq \\\"with_entries(select(.key | test(\\\\\\\"(?i).*$filter.*\\\\\\\")))\\\"\\n     6\\tend\\n     7\\tabbr aclsd \\\"_ansible-config_option_details_contains\\\"\\n     8\\tfunction _ansible-config_option_details_contains\\n     9\\t    # TODO verify works in fish\\n    10\\t    set -l key $1\\n    11\\t    command ansible-config list | yq \\\"with_entries(select(.. | has(\\\\\\\"$key\\\\\\\")))\\\"\\n    12\\tend\\n    13\\t\\n    14\\tabbr ap \\\"ansible-playbook\\\"\\n    15\\t  abbr apv \\\"ansible-playbook -v\\\"\\n    16\\t  abbr apvv \\\"ansible-playbook -vv\\\"\\n    17\\t  abbr apvvv \\\"ansible-playbook -vvv\\\"\\n    18\\tabbr aps \\\"ansible-playbook --syntax-check\\\"\\n    19\\t  abbr apc \\\"ansible-playbook --check\\\"\\n    20\\t  abbr apcd \\\"ansible-playbook --check --diff\\\"\\n    21\\t\\n    22\\tabbr aplsh \\\"ansible-playbook --list-hosts\\\"\\n    23\\tabbr aplst \\\"ansible-playbook --list-tags\\\"\\n    24\\t  abbr aplsk \\\"ansible-playbook --list-tasks\\\"\\n    25\\t\\n    26\\tabbr al \\\"ansible-lint\\\"\\n    27\\t\\n    28\\tabbr ad \\\"ansible-doc\\\"\\n    29\\t# abbr admdd \\\"ansible-doc --metadata-dump COLLECTION | jq\\\"\\n    30\\t#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \\\".all | keys\\\"  #  all builtin plugin types\\n    31\\tabbr adls \\\"ansible-doc --list\\\"\\n    32\\tabbr adlsf \\\"ansible-doc --list_files\\\"\\n    33\\t  abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n    34\\t\\n    35\\t# \\\"ag\\\" reserved for silver searcher\\n    36\\tabbr a-gc \\\"ansible-galaxy collection\\\"\\n    37\\tabbr a-gcls \\\"ansible-galaxy collection list\\\"\\n    38\\tabbr a-gci \\\"ansible-galaxy collection install\\\"\\n    39\\tabbr a-gcir \\\"ansible-galaxy collection install -r requirements.yml\\\"\\n    40\\tabbr a-gcd \\\"ansible-galaxy collection download\\\"\\n    41\\t# ? info, search, uninstall* (especially) sub commands\\n    42\\t\\n    43\\tabbr ac \\\"ansible-config\\\"\\n    44\\t  abbr acl \\\"ansible-config list\\\"\\n    45\\t    abbr acls \\\"ansible-config list\\\"\\n\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncd ~/repos/github/g0t4/dotfiles && sed -i '' '33a\\\n# list by plugin type\\\nabbr adlsi \"ansible-doc --list --type inventory\" # inventory plugins\\\nabbr adlst_become \"ansible-doc --list --type become\"\\\nabbr adlst_cache \"ansible-doc --list --type cache\"\\\nabbr adlst_callback \"ansible-doc --list --type callback\"\\\nabbr adlst_cliconf \"ansible-doc --list --type cliconf\"\\\nabbr adlst_connection \"ansible-doc --list --type connection\"\\\nabbr adlst_httpapi \"ansible-doc --list --type httpapi\"\\\nabbr adlst_lookup \"ansible-doc --list --type lookup\"\\\nabbr adlst_netconf \"ansible-doc --list --type netconf\"\\\nabbr adlst_shell \"ansible-doc --list --type shell\"\\\nabbr adlst_vars \"ansible-doc --list --type vars\"\\\nabbr adlst_module \"ansible-doc --list --type module\"\\\nabbr adlst_strategy \"ansible-doc --list --type strategy\"\\\nabbr adlst_test \"ansible-doc --list --type test\"\\\nabbr adlst_filter \"ansible-doc --list --type filter\"\\\nabbr adlst_role \"ansible-doc --list --type role\"\\\nabbr adlst_keyword \"ansible-doc --list --type keyword\"' fish/load_last_interactive_only/ansibles.fish\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncat -n ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish | sed -n '28,60p'\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"    28\\tabbr ad \\\"ansible-doc\\\"\\n    29\\t# abbr admdd \\\"ansible-doc --metadata-dump COLLECTION | jq\\\"\\n    30\\t#    i.e. ansible-doc --metadata-dump ansible.builtin | jq \\\".all | keys\\\"  #  all builtin plugin types\\n    31\\tabbr adls \\\"ansible-doc --list\\\"\\n    32\\tabbr adlsf \\\"ansible-doc --list_files\\\"\\n    33\\t  abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n    34\\t# list by plugin type\\n    35\\tabbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\n    36\\tabbr adlst_become \\\"ansible-doc --list --type become\\\"\\n    37\\tabbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\n    38\\tabbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\n    39\\tabbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\n    40\\tabbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\n    41\\tabbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\n    42\\tabbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\n    43\\tabbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\n    44\\tabbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\n    45\\tabbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\n    46\\tabbr adlst_module \\\"ansible-doc --list --type module\\\"\\n    47\\tabbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\n    48\\tabbr adlst_test \\\"ansible-doc --list --type test\\\"\\n    49\\tabbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\n    50\\tabbr adlst_role \\\"ansible-doc --list --type role\\\"\\n    51\\tabbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"\\n    52\\t\\n    53\\t# \\\"ag\\\" reserved for silver searcher\\n    54\\tabbr a-gc \\\"ansible-galaxy collection\\\"\\n    55\\tabbr a-gcls \\\"ansible-galaxy collection list\\\"\\n    56\\tabbr a-gci \\\"ansible-galaxy collection install\\\"\\n    57\\tabbr a-gcir \\\"ansible-galaxy collection install -r requirements.yml\\\"\\n    58\\tabbr a-gcd \\\"ansible-galaxy collection download\\\"\\n    59\\t# ? info, search, uninstall* (especially) sub commands\\n    60\\t\\n\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncd ~/repos/github/g0t4/dotfiles && git diff fish/load_last_interactive_only/ansibles.fish\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"diff --git a/fish/load_last_interactive_only/ansibles.fish b/fish/load_last_interactive_only/ansibles.fish\\nindex b8e91b40..2e47621d 100644\\n--- a/fish/load_last_interactive_only/ansibles.fish\\n+++ b/fish/load_last_interactive_only/ansibles.fish\\n@@ -31,6 +31,24 @@ abbr ad \\\"ansible-doc\\\"\\n abbr adls \\\"ansible-doc --list\\\"\\n abbr adlsf \\\"ansible-doc --list_files\\\"\\n   abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n+# list by plugin type\\n+abbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\n+abbr adlst_become \\\"ansible-doc --list --type become\\\"\\n+abbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\n+abbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\n+abbr adlst_cliconf \\\"ansible-doc --list --type cliconf\\\"\\n+abbr adlst_connection \\\"ansible-doc --list --type connection\\\"\\n+abbr adlst_httpapi \\\"ansible-doc --list --type httpapi\\\"\\n+abbr adlst_lookup \\\"ansible-doc --list --type lookup\\\"\\n+abbr adlst_netconf \\\"ansible-doc --list --type netconf\\\"\\n+abbr adlst_shell \\\"ansible-doc --list --type shell\\\"\\n+abbr adlst_vars \\\"ansible-doc --list --type vars\\\"\\n+abbr adlst_module \\\"ansible-doc --list --type module\\\"\\n+abbr adlst_strategy \\\"ansible-doc --list --type strategy\\\"\\n+abbr adlst_test \\\"ansible-doc --list --type test\\\"\\n+abbr adlst_filter \\\"ansible-doc --list --type filter\\\"\\n+abbr adlst_role \\\"ansible-doc --list --type role\\\"\\n+abbr adlst_keyword \\\"ansible-doc --list --type keyword\\\"\\n \\n # \\\"ag\\\" reserved for silver searcher\\n abbr a-gc \\\"ansible-galaxy collection\\\"\\n\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncd ~/repos/github/g0t4/dotfiles && git add fish/load_last_interactive_only/ansibles.fish && git commit --author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\" -m \"add ansible-doc plugin type list abbreviations\n\nAdd abbrs for all 17 ansible-doc plugin types:\n- adlsi: inventory (shortcut)\n- adlst_*: become, cache, callback, cliconf, connection, httpapi,\n  lookup, netconf, shell, vars, module, strategy, test, filter, role,\n  keyword\"\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"[master f820080a] add ansible-doc plugin type list abbreviations\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 1 file changed, 18 insertions(+)\\n\",\"name\":\"STDOUT\"},{\"type\":\"text\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\",\"name\":\"STDERR\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\nDone! Added 17 abbreviations for all ansible-doc plugin types from `ansible-doc --help`:\n\n| Abbrev | Command |\n|--------|---------|\n| `adlsi` | `ansible-doc --list --type inventory` |\n| `adlst_become` | `ansible-doc --list --type become` |\n| `adlst_cache` | `ansible-doc --list --type cache` |\n| `adlst_callback` | `ansible-doc --list --type callback` |\n| `adlst_cliconf` | `ansible-doc --list --type cliconf` |\n| `adlst_connection` | `ansible-doc --list --type connection` |\n| `adlst_httpapi` | `ansible-doc --list --type httpapi` |\n| `adlst_lookup` | `ansible-doc --list --type lookup` |\n| `adlst_netconf` | `ansible-doc --list --type netconf` |\n| `adlst_shell` | `ansible-doc --list --type shell` |\n| `adlst_vars` | `ansible-doc --list --type vars` |\n| `adlst_module` | `ansible-doc --list --type module` |\n| `adlst_strategy` | `ansible-doc --list --type strategy` |\n| `adlst_test` | `ansible-doc --list --type test` |\n| `adlst_filter` | `ansible-doc --list --type filter` |\n| `adlst_role` | `ansible-doc --list --type role` |\n| `adlst_keyword` | `ansible-doc --list --type keyword` |<|im_end|>\n<|im_start|>user\nok I like the _ can you change the adlsi to that too<|im_end|>\n<|im_start|>assistant\n<think>\nThe user wants me to rename `adlsi` to follow the same naming convention as the others, which is `adlst_inventory`.\nLet's update the abbreviation.\n\nCurrent line:\n`abbr adlsi \"ansible-doc --list --type inventory\" # inventory plugins`\n\nNew line:\n`abbr adlst_inventory \"ansible-doc --list --type inventory\"`\n\nI'll use `sed` to make this change and commit.\n</think>\n\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncd ~/repos/github/g0t4/dotfiles && sed -i '' 's/abbr adlsi \"ansible-doc --list --type inventory\" # inventory plugins/abbr adlst_inventory \"ansible-doc --list --type inventory\"/' fish/load_last_interactive_only/ansibles.fish\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nGood, let's verify the change and commit it.\n</think>\n\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncd ~/repos/github/g0t4/dotfiles && git diff fish/load_last_interactive_only/ansibles.fish\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"diff --git a/fish/load_last_interactive_only/ansibles.fish b/fish/load_last_interactive_only/ansibles.fish\\nindex 2e47621d..341081d1 100644\\n--- a/fish/load_last_interactive_only/ansibles.fish\\n+++ b/fish/load_last_interactive_only/ansibles.fish\\n@@ -32,7 +32,7 @@ abbr adls \\\"ansible-doc --list\\\"\\n abbr adlsf \\\"ansible-doc --list_files\\\"\\n   abbr ads \\\"ansible-doc --snippet\\\" # ads homebrew\\n # list by plugin type\\n-abbr adlsi \\\"ansible-doc --list --type inventory\\\" # inventory plugins\\n+abbr adlst_inventory \\\"ansible-doc --list --type inventory\\\"\\n abbr adlst_become \\\"ansible-doc --list --type become\\\"\\n abbr adlst_cache \\\"ansible-doc --list --type cache\\\"\\n abbr adlst_callback \\\"ansible-doc --list --type callback\\\"\\n\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nLooks good. Committing now.\n</think>\n\n<tool_call>\n<function=run_process>\n<parameter=command_line>\ncd ~/repos/github/g0t4/dotfiles && git add fish/load_last_interactive_only/ansibles.fish && git commit --author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\" -m \"rename adlsi to adlst_inventory for consistency\"\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"type\":\"text\",\"text\":\"0\",\"name\":\"EXIT_CODE\"},{\"type\":\"text\",\"text\":\"[master 59561d1e] rename adlsi to adlst_inventory for consistency\\n Author: qwen3.6-35b-a3b <wes.mcclure+qwen3.6-35b-a3b@gmail.com>\\n 1 file changed, 1 insertion(+), 1 deletion(-)\\n\",\"name\":\"STDOUT\"},{\"type\":\"text\",\"text\":\"hook \\n make tags\\nmake: `tags' is up to date.\\n rag_indexer\\n\",\"name\":\"STDERR\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n",
+      "stop_type":"eos",
+      "tokens_cached":8875,
+      "index":0,
+      "generation_settings":{
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":262144,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "n_predict":-1,
+        "ignore_eos":false,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "grammar_lazy":true,
+        "top_p":0.80000001192093,
+        "max_tokens":-1,
+        "stream":true,
+        "chat_format":"peg-native",
+        "reasoning_format":"deepseek",
+        "grammar":"char ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (\",\" space json-value)* space \"]\") space\njson-bool ::= (\"true\" | \"false\") space\njson-null ::= \"null\" space\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)? space\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\") space\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\" space\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)? space\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\" space\ntool-call ::= \"<tool_call>\\n\" space (tool-run-process | tool-run-in-neovim | tool-semantic-grep) space \"</tool_call>\" (space \"<tool_call>\\n\" space (tool-run-process | tool-run-in-neovim | tool-semantic-grep) space \"</tool_call>\")* space\ntool-run-in-neovim ::= (\"<function=\" \"run_in_neovim\" \">\\n\") space tool-run-in-neovim-arg-lua space \"</function>\\n\"\ntool-run-in-neovim-arg-lua ::= (\"<parameter=\" \"lua\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process ::= (\"<function=\" \"run_process\" \">\\n\") space (space (tool-run-process-arg-command-line | tool-run-process-arg-stdin-text | tool-run-process-arg-argv | tool-run-process-arg-cwd | tool-run-process-arg-timeout-ms))* space \"</function>\\n\"\ntool-run-process-arg-argv ::= (\"<parameter=\" \"argv\" \">\\n\") \"\" tool-run-process-arg-argv-schema space \"</parameter>\\n\"\ntool-run-process-arg-argv-schema ::= \"[\" space string (\",\" space string)* \"]\" space\ntool-run-process-arg-command-line ::= (\"<parameter=\" \"command_line\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-cwd ::= (\"<parameter=\" \"cwd\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-stdin-text ::= (\"<parameter=\" \"stdin_text\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-run-process-arg-timeout-ms ::= (\"<parameter=\" \"timeout_ms\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-semantic-grep ::= (\"<function=\" \"semantic_grep\" \">\\n\") space tool-semantic-grep-arg-query (space (tool-semantic-grep-arg-top-k | tool-semantic-grep-arg-embed-top-k | tool-semantic-grep-arg-filetype | tool-semantic-grep-arg-instruct))* space \"</function>\\n\"\ntool-semantic-grep-arg-embed-top-k ::= (\"<parameter=\" \"embed_top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\ntool-semantic-grep-arg-filetype ::= (\"<parameter=\" \"filetype\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-instruct ::= (\"<parameter=\" \"instruct\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-query ::= (\"<parameter=\" \"query\" \">\\n\") \"\" until-suffix \"</parameter>\\n\"\ntool-semantic-grep-arg-top-k ::= (\"<parameter=\" \"top_k\" \">\\n\") \"\" number space \"</parameter>\\n\"\nuntil-suffix ::= ([^<] | \"<\" [^/] | \"</\" [^p] | \"</p\" [^a] | \"</pa\" [^r] | \"</par\" [^a] | \"</para\" [^m] | \"</param\" [^e] | \"</parame\" [^t] | \"</paramet\" [^e] | \"</paramete\" [^r] | \"</parameter\" [^>] | \"</parameter>\" [^\\n])*\n",
+        "reasoning_in_content":false,
+        "generation_prompt":"<|im_start|>assistant\n<think>\n",
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "speculative.types":"none",
+        "timings_per_token":false,
+        "post_sampling_probs":false,
+        "backend_sampling":false,
+        "lora":[],
+        "stop":[],
+        "preserved_tokens":[29,248058,248059,248068,248069],
+        "grammar_triggers":[{
+            "type":1,
+            "value":"<tool_call>\n"
+          }],
+        "temperature":0.69999998807907,
+        "dynatemp_range":0,
+        "n_discard":0,
+        "repeat_penalty":1.0499999523163,
+        "n_keep":0,
+        "seed":4294967295,
+        "top_k":20,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0
+      },
+      "stop":true
+    },
+    "system_fingerprint":"b9593-a39fea115",
+    "object":"chat.completion.chunk",
+    "created":1781819705,
+    "model":"ggml-org/Qwen3.6-35B-A3B-GGUF:Q8_0",
+    "id":"chatcmpl-3V8eZh0yWGYHgJr6gBzlKkAzpHaWlYES",
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }]
+  }
+}
