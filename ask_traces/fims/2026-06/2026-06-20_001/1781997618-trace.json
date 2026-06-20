@@ -1,0 +1,54 @@
+{
+  "last_sse":{
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "timings":{
+      "prompt_n":2293,
+      "prompt_ms":291.324,
+      "prompt_per_token_ms":0.12704928041867,
+      "predicted_ms":234.359,
+      "predicted_per_token_ms":3.8419508196721,
+      "predicted_per_second":260.28443541746,
+      "predicted_n":61,
+      "prompt_per_second":7870.961541102,
+      "cache_n":0
+    },
+    "system_fingerprint":"b9593-a39fea115",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk",
+    "created":1781997522,
+    "id":"chatcmpl-g2SXCtRDoJPblNrDJBr4s7fVFYJMqSrD"
+  },
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "options":[],
+    "raw":false,
+    "stream":true,
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Fish Shell\n\n- Use snake_case for names\n- Use long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n\nTake advantage of fish-isms:\n```fish\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\nend\n\n# capture command output and react to its success/failure (exit status)\nif set some_output (some_command)\n    echo \"ok: $some_output\"\nelse\n    echo \"fail: $some_output\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use mulit-line strings:\necho \"foo\nbar\" | string join \",\"\n\n# blocks combine the output of multiple commands:\nbegin\n    echo -n \"Hello Wes, the time is: \"\n    date\nend > welcome.txt\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nstring match '*.lua' $files\nstring replace wrong right $in_this_text\nstring replace --regex '\\s+' ' ' $line\nset lines (string split '\\n' $text)\nstring join ',' $argv\nstring length $name\n\nstring escape $file_path\nstring unescape $escaped\n\npath change-extension mov ./foo.mp4 # ./foo.mov\npath sort 10-foo 2-bar # returns 2 before 10\n\nmath 10 / 5\nmath \"5 * 2\"\n\ncount *.txt\n\nif contains -- \"-q\" $argv\n    # ...\nend\n\nstatus filename # current script file\nstatus function # current function\n```\n\n\n## Recent yanks (copy to clipboard):\n```fish/install/completions.fish\nregister-python-argcomplete --shell fish ansible-playbook > ~/.config/fish/completions/ansible-playbook.fish\n```\n\n```fish/install/completions.fish\nregister-python-argcomplete --shell fish ansible-playbook > ~/.config/fish/completions/ansible-playbook.fish\n```\n\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/files-specific.fish:609-617\nfunction forr_abbr\n    set count (string replace \"forr\" \"\" $argv)\n    if test -z \"$count\"; or test $count -eq 30\n        echo 'echo LINES: $LINES'\n        echo 'echo COLUMNS: $COLUMNS'\n        return\n    end\n    echo \"seq 1 $count | xargs -I {} echo {}\"\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/misc-specific.fish:1530-1549\n        abbr lsverbose_q25spec14 $_spec14 $verbose\n\n        # * llama-server args for llama.[vim|vscode] FIM predictions\n        #   diff settings, keep more of presets given the presets were designed for llama.vim\n        set _spec7 \"llama-server --fim-qwen-7b-spec $host\"\n        set _spec14 \"llama-server --fim-qwen-14b-spec $host\"\n        set _default7 \"llama-server --fim-qwen-7b-default $host\"\n\n        # FYI 4k --context-size if not specified\n        set _qwen3coder_host \"--host 0.0.0.0 --port 8013\"\n        set _qwen3coder_shared \"llama-server $_qwen3coder_host --ctx-size 65536 --batch-size 2048 --ubatch-size 2048 --flash-attn on --n-gpu-layers 99\"\n        # IIUC both qwen2.5-coder and qwen3-coder models share the same vocab though I should double check\n        # set _draft_fimq25_05b \"--hf-repo-draft ggml-org/Qwen2.5-Coder-0.5B-Q8_0-GGUF\"\n        # TODO! try ncache reuse arg at 256? which is in llama-server repo's arg for this\n        # set qwen3coder_q4 \"$qwen3coder_shared -hf TODO make myself? $_qwen3coder_host\"\n        set qwen3coder_q8 \"$_qwen3coder_shared -hf ggml-org/Qwen3-Coder-30B-A3B-Instruct-Q8_0-GGUF\"\n        # set qwen3coder_q8_spec \"$_qwen3coder_shared $_draft_fimq25_05b -hf ggml-org/Qwen3-Coder-30B-A3B-Instruct-Q8_0-GGUF\"\n        # lol ok spec dec sometimes is fast, othertimes is terribly slow, qwen2.5coder must not be a good fit for this?\n        # abbr lsqwen3coderq4 $qwen3coder_q4\n        # abbr lsqwen3coderq4_verbose $qwen3coder_q4 $verbose\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/misc-specific.fish:1885-1891\nfunction _ffi_pass_middle_to_new_out\n    # w/e is passed is inlined in the middle of the command\n    set middle $argv\n    set input (_find_first_video_file_any_type; or echo _)\n    set output (path change-extension \".out.mp4\" $input)\n    echo -n \"ffmpeg -i $input $middle $output\"\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/misc-specific.fish:1902-1904\nfunction _ffi_af\n    _ffi_pass_middle_to_new_out \"-af '%'\"\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/misc-specific.fish:1907-1909\nfunction _ffi_vf\n    _ffi_pass_middle_to_new_out \"-vf '%'\"\nend\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```fish/install/completions.fish\nset argcomplete_commands \\\n    ansible-community \\\n    ansible-config \\\n    ansible-console \\\n    ansible-doc \\\n    ansible-galaxy \\\n    ansible-inventory \\\n    ansible-language-server \\\n    ansible-lint \\\n    ansible-playbook \\\n    ansible-pull \\\n    ansible-test \\\n    ansible-vault\n\nfor <|fim_middle|>\nregister-python-argcomplete --shell fish $cmd >~/.config/fish/completions/$cmd.fish\n```\n\n## Reminders about the cursor line:\nText before cursor: `for `"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"We need to fill loop variable: \"for cmd in $argcomplete_commands\". In fish syntax: for cmd in $argcomplete_commands. So replace <|fim_middle|> with \"cmd in $argcomplete_commands\".",
+        "role":"assistant",
+        "content":"cmd in $argcomplete_commands"
+      }],
+    "temperature":1,
+    "max_tokens":4096
+  }
+}
