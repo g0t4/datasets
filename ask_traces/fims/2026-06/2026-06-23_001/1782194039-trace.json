@@ -1,0 +1,54 @@
+{
+  "request_body":{
+    "raw":false,
+    "temperature":1,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: devtools.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n## Recent yanks (copy to clipboard):\n```lua/devtools/host.lua\nrawget(_G, \"hs\") and h\n```\n\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/diff/weslcs.tests.lua:187-206\n        --                     C                  C\n        local row9_C = { 1, 2, 3,   3, 3, 3,   3, 4, 4,   5 }\n\n        local expected_lcs_matrix = { row1_C, row2_F, row3_A, row4_D, row5_Z, row6_O, row7_H, row8_Z, row9_C }\n        should.be_same(expected_lcs_matrix, actual_lcs_matrix)\n\n        -- matches matrix:\n        --   before[i] == after[j]\n        --\n        --             { _  _  C    _  _  _    _  C  _    _ }\n        --             { F  _  _    F  _  _    _  _  _    _ }\n        --             { _  A  _    _  _  _    _  _  _    _ }\n        --             { _  _  _    _  _  _    D  _  _    _ }\n        --             { _  _  _    _  _  _    _  _  _    Z }\n        --             { _  _  _    _  _  _    _  _  O    _ }\n        --             { _  _  _    _  H  _    _  _  _    _ }\n        --             { _  _  _    _  _  _    _  _  _    Z }\n        --             { _  _  C    _  _  _    _  C  _    _ }\n        --\n        --  added _ to see cols/rows, b/c of sparsity\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/lua.lua:88-90\n                                                 function(k, _)\n            return k\n        end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/logs/logger.lua:293-297\n\n\nlocal DISABLED = false\n-- local DISABLED = true\nlocal cached_loggers = {}\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/diff/weslcs.tests.lua:172-191\n        local row3_A = { 1, 2, 2,   2, 2, 2,   2, 2, 2,   2 }\n\n\n        --                                     D\n        local row4_D = { 1, 2, 2,   2, 2, 2,   3, 3, 3,   3 }\n        --                                                Z\n        local row5_Z = { 1, 2, 2,   2, 2, 2,   3, 3, 3,   4 }\n        --                                           O\n        local row6_O = { 1, 2, 2,   2, 2, 2,   3, 3, 4,   4 }\n\n\n        --                             H\n        local row7_H = { 1, 2, 2,   2, 3, 3,   3, 3, 4,   4 }\n        --                                                Z\n        local row8_Z = { 1, 2, 2,   2, 3, 3,   3, 3, 4,   5 }\n        --                     C                  C\n        local row9_C = { 1, 2, 3,   3, 3, 3,   3, 4, 4,   5 }\n\n        local expected_lcs_matrix = { row1_C, row2_F, row3_A, row4_D, row5_Z, row6_O, row7_H, row8_Z, row9_C }\n        should.be_same(expected_lcs_matrix, actual_lcs_matrix)\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/diff/weslcs.lua:12-30\n              function(table, key)\n        -- only called if key/index doesn't already exist\n        --   or was set to nil\n        --\n        --  lazy == defaults to zero on first use\n        --  don't waste time/resources initializing table of zeros\n        --  also useful:\n        --    if don't know table size\n        --      infinite size\n        --    edge cases, when zero is a sufficient/desirable default\n        --      instead of extra boundary checks, in code\n        --      that said, magic is not free... YMMV\n        --      can easily be more confusing, i.e. if you gravitate toward single letter variable names\n        --\n        -- umm not reason to set zero actually! just return it until someone else sets it to specific value!\n        --   b/c setting it was fubaring prints too (added new row with sporadic set values ... yuck)\n        -- table[key] = 0\n        return 0\n    end\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/devtools/host.lua\n-- given I can (and do) emulate vim/hs globals/APIs between hs/vim then knowing about the global is not quite enough to decide when process I am embedded inside\n-- normally this wouldn't matter but when it does, then I need a way to decide\n-- sufficient IMO if it works for my use cases... I can leave something more precise too\nlocal M = {}\n\nlocal function if_needed_lookup_host()\n    ---@diagnostic disable-next-line: unused-function\n    local pid =\n        rawget(_G, \"vim\") and vim.uv.os_getpid()\n        or rawget(_G, \"hs\") and hs.processInfo.processID\n\n    if not pid then\n        _host = \"unknown\"\n        return _host\n    end\n\n    -- FYI I don't care about nvim on windows\n    local f = io.popen((\"ps -p %d -o comm=\"):format(pid))\n    local proc = f and f:read(\"*l\")\n    if f then f:close() end\n\n    proc = proc and proc:match(\"([^/]+)$\")\n\n    if proc == \"nvim\" then\n        return \"nvim\"\n    elseif proc == \"Hammerspoon\" then\n        return \"hammerspoon\"\n    end\n\n    return proc or \"unknown\"\nend\n\nlocal _cached = nil\n\nfunction M.get_lua_host()\n    -- my random formulat for deciding... not necessarily right/wrong\n    -- I know I don't emulate these APIs, hence a good enough test for my needs\n    if rawget(_G, \"vim\") and vim.uv and vim.uv.os_getpid then\n        _cached = \"nvim\"\n        return\n    end\n    if rawget(_G, \"hs\") and hs and hs.processInfo then\n        _cached = \"<|fim_middle|>\n    end\n\n    -- only lookup once\n    M.get_lua_host = function() return _cached end\n    return _cached\nend\n\nfunction M.is_nvim()\n    return M.get_lua_host() == \"nvim\"\nend\n\nfunction M.is_hammerspoon()\n    return M.get_lua_host() == \"hammerspoon\"\nend\n\nreturn M\n```\n\n## Reminders about the cursor line:\nText before cursor: `        _cached = \"`"
+      },{
+        "role":"assistant",
+        "content":"hammerspoon\"",
+        "finish_reason":"stop",
+        "reasoning_content":"We need to insert the rest of the string: likely \"hammerspoon\". So replace <|fim_middle|> with hammerspoon\". But note the line already has opening quote. The line: `_cached = \"<|fim_middle|>` and then end quote? Actually line shows: `_cached = \"<|fim_middle|>` missing closing quote. We need to complete with hammerspoon\"`.\n\nThus insertion: hammerspoon\"\n\n"
+      }],
+    "options":[],
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "top_p":1
+  },
+  "last_sse":{
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "timings":{
+      "prompt_ms":264.918,
+      "prompt_per_token_ms":0.10023382519864,
+      "prompt_n":2643,
+      "predicted_per_token_ms":3.8012427184466,
+      "cache_n":0,
+      "predicted_per_second":263.07186203796,
+      "predicted_n":103,
+      "prompt_per_second":9976.6720268158,
+      "predicted_ms":391.528
+    },
+    "id":"chatcmpl-v41rN1dpHK29IaWSGjgsYVEGGSUXyOFy",
+    "object":"chat.completion.chunk",
+    "created":1782193940,
+    "system_fingerprint":"b9749-d743edda9"
+  }
+}
