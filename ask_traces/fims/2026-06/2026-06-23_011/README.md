@@ -1,0 +1,1 @@
+ love this FIM... I am planning to use this in hammerspoon too... and so I will go a different direction in that case, to load it into the current nvim instance (focused iterm window)... assuming a keymap is invoked in hammerspoon to pull last traceback into quick fix list... love it though, for neovim alone this is a great start, especially for a FIM!

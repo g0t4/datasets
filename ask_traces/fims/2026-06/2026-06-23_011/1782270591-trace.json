@@ -1,0 +1,54 @@
+{
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "options":[],
+    "max_tokens":4096,
+    "temperature":1,
+    "raw":false,
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: devtools.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/nvim.lua:248-252\n\n\nfunction M.setup()\n    vim.keymap.set({ 'i', 'c' }, '<C-;>', M.dump_current_windows_and_buffers, { desc = \"Yank visible completion items\" })\n    vim.keymap.set({ 'i', 'c' }, '<C-.>', \n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/messages.lua:233-252\n\n\n-- use ctrl-y as backup... maybe I should have m-k as kill too?\nvim.keymap.set('c', '<C-y>', copy_cmdline)\nvim.keymap.set('c', '<M-k>', copy_cmdline)\n-- i use esc-k in my shells to \"kill_all_lines\" ... and i use alt+k in shells... so lets use that since esc-k won't work without delaying recognizing escape alone and i don't want that\n\nvim.api.nvim_create_user_command(\"Pbcopy\", pbcopy_command, {\n    range = true,\n    nargs = '*',\n    complete = \"lua\", -- completes like using :lua command!\n})\n\n-- abbreviated version of Dump, to be as easy as :=\nvim.api.nvim_create_user_command(\"D\", dump_command, {\n    nargs = '*',\n    complete = \"lua\", -- completes like using :lua command!\n})\n\nM.dump_bufnr = nil\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/messages.lua:230-233\nfunction copy_cmdline()\n    local line = vim.fn.getcmdline()\n    copy_to_clipboard(line)\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/inspect.lua:0-3\nlocal ansi = require(\"devtools.ansi\")\n\nlocal M = {}\n\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/humanize.lua:0-1\nlocal M = {}\n\n\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/devtools/logs/fails.lua\n-- module with past failures\n-- + the ability to copy traceback to clipboard\n-- + load into quickfix in neovim!\n\nlocal M = {} \n\n<|fim_middle|>\n\nreturn M\n```\n\n## Reminders about the cursor line:\n"
+      },{
+        "role":"assistant",
+        "content":"M.failures = {}\n\nfunction M.add_failure(bufnr, line, traceback)\n    table.insert(M.failures, { bufnr = bufnr, line = line, traceback = traceback })\nend\n\nfunction M.copy_traceback(idx)\n    local entry = M.failures[idx]\n    if not entry then\n        return\n    end\n    require(\"devtools.utils\").copy_to_clipboard(entry.traceback)\nend\n\nfunction M.load_to_quickfix()\n    local items = {}\n    for _, entry in ipairs(M.failures) do\n        table.insert(items, {\n            bufnr = entry.bufnr,\n            lnum = entry.line,\n            col = 0,\n            text = entry.traceback:match(\"[^\\n]*\") or \"\",\n        })\n    end\n    vim.fn.setqflist(items, 'r')\n    vim.cmd('copen')\nend",
+        "finish_reason":"stop",
+        "reasoning_content":"We need to insert code for module functionality. Likely define functions: add_failure, copy_traceback, load_to_quickfix, maybe table of failures. Simple.\n\nImplement M.failures = {} and functions.\n\nProvide code without extra comments at end lines.\n\nLet's output:\n\n```lua\nM.failures = {}\n\nfunction M.add_failure(bufnr, line, traceback)\n    table.insert(M.failures, { bufnr = bufnr, line = line, traceback = traceback })\nend\n\nfunction M.copy_traceback(index)\n    local f = M.failures[index]\n    if not f then return end\n    require(\"devtools.utils\").copy_to_clipboard(f.traceback)\nend\n\nfunction M.load_to_quickfix()\n    local items = {}\n    for _, f in ipairs(M.failures) do\n        table.insert(items, {\n            bufnr = f.bufnr,\n            lnum = f.line,\n            col = 0,\n            text = f.traceback:match(\"[^\\n]*\") or \"\",\n        })\n    end\n    vim.fn.setqflist(items, 'r')\n    vim.cmd('copen')\nend\n```\n\nMake sure no markdown."
+      }]
+  },
+  "last_sse":{
+    "timings":{
+      "predicted_per_second":266.4290185606,
+      "predicted_n":432,
+      "prompt_per_second":4941.7831345024,
+      "cache_n":1005,
+      "prompt_ms":97.738,
+      "prompt_n":483,
+      "predicted_ms":1621.445,
+      "predicted_per_token_ms":3.7533449074074,
+      "prompt_per_token_ms":0.20235610766046
+    },
+    "created":1782270493,
+    "system_fingerprint":"b9749-d743edda9",
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-eFTcbCiWA8xjZNuLgf7LXmNbVlnZiwoa",
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
