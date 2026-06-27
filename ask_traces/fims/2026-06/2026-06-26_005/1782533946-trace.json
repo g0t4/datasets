@@ -1,0 +1,51 @@
+{
+  "request_body":{
+    "stream":true,
+    "top_p":1,
+    "options":[],
+    "max_tokens":4096,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Recent yanks (copy to clipboard):\n```lua/ask-openai/tools/mcp/run_process/commits.md\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n```\n\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/ask-openai/tools/mcp/run_process/commits.md\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen-agentworld-35b-a3b<wes.mcclure+qwen<|fim_middle|>35b-a3b@gmail.com>\"`\n\n```\n\n## Reminders about the cursor line:\nText before cursor: `- Use `--author=\"qwen-agentworld-35b-a3b<wes.mcclure+qwen`\nText after cursor: `35b-a3b@gmail.com>\"``",
+        "role":"user"
+      },{
+        "reasoning_content":"We need to insert the missing part of email: after qwen<...> should be something like \"agentworld-\"? Actually original string: `--author=\"qwen-agentworld-35b-a3b<wes.mcclure+qwen<|fim_middle|>35b-a3b@gmail.com>\"`. The before cursor includes `- Use `--author=\"qwen-agentworld-35b-a3b<wes.mcclure+qwen` and after includes `35b-a3b@gmail.com>\"`. So we need to insert `-agentworld-`? Wait email part: `<wes.mcclure+qwen...35b-a3b@gmail.com>` probably should be `<wes.mcclure+qwen-agentworld-35b-a3b@gmail.com>`? The part before cursor ends with `+qwen`. After should be `-agentworld-35b-a3b`. Actually before: `+qwen` then missing part then `35b-a3b`. So insert `-agentworld-`. So final: `+qwen-agentworld-35b-a3b`. Thus middle = `-agentworld-`.",
+        "role":"assistant",
+        "content":"-agentworld-",
+        "finish_reason":"stop"
+      }],
+    "raw":false,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "temperature":1
+  },
+  "last_sse":{
+    "timings":{
+      "prompt_n":84,
+      "prompt_ms":37.347,
+      "prompt_per_token_ms":0.44460714285714,
+      "predicted_ms":935.841,
+      "predicted_per_token_ms":3.6699647058824,
+      "predicted_per_second":272.48218447364,
+      "predicted_n":255,
+      "prompt_per_second":2249.176640694,
+      "cache_n":931
+    },
+    "id":"chatcmpl-GKkLtvp7wmt37VhCSwh3MFOMTrNx9JGd",
+    "object":"chat.completion.chunk",
+    "created":1782533845,
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "system_fingerprint":"b9787-bb551a74d",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
