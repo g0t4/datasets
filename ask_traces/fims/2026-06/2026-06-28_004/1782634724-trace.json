@@ -1,0 +1,54 @@
+{
+  "last_sse":{
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-GIMwPFLo8Rwk70rJ2OoRJS17SCLj5sOQ",
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1782634620,
+    "timings":{
+      "prompt_ms":184.405,
+      "cache_n":658,
+      "predicted_ms":358.461,
+      "predicted_per_token_ms":3.73396875,
+      "prompt_n":1278,
+      "predicted_n":96,
+      "prompt_per_token_ms":0.14429186228482,
+      "prompt_per_second":6930.3977657873,
+      "predicted_per_second":267.81156109033
+    },
+    "system_fingerprint":"b9787-bb551a74d"
+  },
+  "request_body":{
+    "stream":true,
+    "top_p":1,
+    "raw":false,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "max_tokens":4096,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: hammerspoon\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/macros/screenpal/co.lua:0-3\nlocal log = require(\"config.logs\").hammerspoons()\n-- FYI! always check resume result for failure!!!\n--   else wind up swallowing errors!\n\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/macros/frontmost.lua:0-1\nlocal log = require(\"config.logs\").hammerspoons()\n\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/macros/lights/init.lua:0-1\nlocal log = require(\"config.logs\").hammerspoons()\n\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/perf.lua:0-1\nlocal log = require(\"config.logs\").hammerspoons()\n\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/macros/brave/init.lua:0-3\nlocal log = require(\"config.logs\").hammerspoons()\n\n-- *** ask-openai troubleshooting brave devtools randomly doesn't get selected text\n\n\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```config/macros/macos/preview.lua\nlocal inspect = require \"hs.inspect\"\nlocal log = re<|fim_middle|>\n\nlocal function get_preview_app()\n    return GetAppElement(\"com.apple.Preview\")\nend\n\nfunction _PreviewApp_LineWeight(button_text_to_click)\n    -- !!! DO NOT PASS STRINGS from streamdeck buttons for now\n    --  you broke it horribly for any quoting when you moved to your own streamdeck KM macro button\n\n    local app = get_preview_app()\n    if not app then return end\n\n    local win = app:axFocusedWindow()\n    if not win then return end\n\n    local toolbar = win:toolbar(1)\n    if not toolbar then return end\n\n    -- * ensure shape style popover open\n    local popover = toolbar:popover(1) -- app:window(1):toolbar(1):popover(1)\n    if not popover then\n        -- * shape style button\n        -- app:window(1):toolbar(1):button(12)\n        -- AXDescription: Shape Style<string>\n        -- AXHelp: Shape Style<string>\n        local line_weight_picker = toolbar:button_by_description(\"Shape Style\")\n        if not line_weight_picker then return end\n\n        line_weight_picker:axPress()\n        popover = toolbar:popover(1)\n    end\n    if not popover then return end\n\n    if button_text_to_click then\n        -- AXDescriptions:\n        --\n        -- Line thickness: hairline\n        -- Line thickness: 2\n        -- Line thickness: 3\n        -- Line thickness: 4\n        -- Line thickness: 5\n        -- Line thickness: 10\n        -- Line thickness: 15\n        --\n        -- Draw line dashed\n        -- Draw line with brush style\n        --\n        -- Draw with shadow\n\n        local button_on_popover = popover:button_by_description_matching(button_text_to_click)\n        if button_on_popover then\n            print(\"found button\")\n            button_on_popover:axPress()\n        end\n    end\nend\n\nfunction PreviewApp_LineWeight_Dashed()\n    _PreviewApp_LineWeight(\"Draw line dashed\")\nend\n\nfunction PreviewApp_LineWeight_BrushStyle()\n    _PreviewApp_LineWeight(\"Draw line with brush style\")\nend\n\nfunction PreviewApp_LineWeight_Hairline()\n    _PreviewApp_LineWeight(\"hairline\")\nend\n\nfunction PreviewApp_LineWeight_2()\n    _PreviewApp_LineWeight(\"Line thickness: 2\")\nend\n\nfunction PreviewApp_LineWeight_3()\n    _PreviewApp_LineWeight(\"Line thickness: 3\")\nend\n\nfunction PreviewApp_LineWeight_4()\n    _PreviewApp_LineWeight(\"Line thickness: 4\")\nend\n\nfunction PreviewApp_LineWeight_5()\n    _PreviewApp_LineWeight(\"Line thickness: 5\")\nend\n\nfunction PreviewApp_LineWeight_10()\n    _PreviewApp_LineWeight(\"Line thickness: 10\")\nend\n\nfunction PreviewApp_LineWeight_15()\n    _PreviewApp_LineWeight(\"Line thickness: 15\")\nend\n\nfunction PreviewApp_DrawWithShadow()\n    _PreviewApp_LineWeight(\"Draw with shadow\")\nend\n```\n\n## Reminders about the cursor line:\nText before cursor: `local log = re`",
+        "role":"user"
+      },{
+        "content":"quire(\"config.logs\").hammerspoons()",
+        "finish_reason":"stop",
+        "reasoning_content":"We need to replace after 're' likely require logs. In other files they use: local log = require(\"config.logs\").hammerspoons() . So here after re should be require(\"config.logs\").hammerspoons() . Cursor after 're', so need to complete 'quire(\"config.logs\").hammerspoons()'. Ensure no extra whitespace. So output: qui...",
+        "role":"assistant"
+      }],
+    "temperature":1,
+    "options":[]
+  }
+}
