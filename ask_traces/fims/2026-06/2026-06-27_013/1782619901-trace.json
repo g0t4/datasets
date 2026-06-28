@@ -1,0 +1,54 @@
+{
+  "request_body":{
+    "options":[],
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "temperature":1,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n## Recent yanks (copy to clipboard):\n```.config/hammerspoon/config/macros/screenpal/editor_window.lua\n    local Timer = require(\"config.macros.screenpal.experiments.timer\")\n```\n\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/perf.lua:11-19\nlocal function log_if_slower_than_x_ms(minimum_ms, message, start_time)\n    local elapsed_time_ms = get_elapsed_time_in_milliseconds(start_time)\n\n    if elapsed_time_ms > minimum_ms then\n        log:info(\"WARN \" .. elapsed_time_ms .. \" ms - \" .. message)\n    end\n\n    return elapsed_time_ms\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/ask/ask.lua:297-302\n    local function logMessage(message)\n        if chunkLog then\n            chunkLog:write(message)\n            chunkLog:flush()\n        end\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/werkspaces/semantic-client.lua:23-37\n    local function log_file(msg)\n        -- disable for now, can re-enable if needed\n        if true then\n            return\n        end\n\n        local path = os.getenv(\"HOME\") .. \"/.config/wes-iterm2/semantic-client.log\"\n        local file = io.open(path, \"a\")\n        if not file then\n            print(\"Error opening log file: \" .. path)\n            return\n        end\n        file:write(msg .. \"\\n\")\n        file:close()\n    end\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/perf.lua:0-1\nlocal log = require(\"config.logs\").hammerspoons()\n\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/perf.lua:45-48\nfunction log_took_in_nanoseconds(message, start_time)\n    local elapsed_time_nanoseconds = get_elapsed_time_in_nanoseconds(start_time)\n    log:info(message .. \" took \" .. elapsed_time_nanoseconds .. \" ns\")\nend\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```.config/hammerspoon/config/macros/screenpal/experiments/timer.lua\n\nlocal log<|fim_middle|>\n---@class Timer\n---@field _overall_start number\n---@field _last_start number\n---@field _logs {message:string, duration:number}[]\nlocal Timer = {}\nTimer.__index = Timer\n\nlocal function get_time()\n    return hs.timer.secondsSinceEpoch()\nend\n\n---Creates a new Timer instance.\n---@return Timer\nfunction Timer.new()\n    local now = get_time()\n    local obj = {\n        _overall_start = now,\n        _last_start = now,\n        _logs = {},\n    }\n    setmetatable(obj, Timer)\n    return obj\nend\n\n---@param message string\nfunction Timer:capture(message)\n    local now = get_time()\n    local duration = now - self._last_start\n    self._last_start = now\n    table.insert(self._logs, { message = message, duration = duration })\nend\n\n---@param elapsed_seconds number\n---@return string\nfunction format_elapsed_time(elapsed_seconds)\n    if elapsed_seconds >= 1 then\n        return string.format(\"** %.3f s **\", elapsed_seconds)\n    end\n    local ms = elapsed_seconds * 1e3\n    if ms >= 1 then\n        local time = string.format(\"%.2f ms\", ms)\n        if ms > 10 then\n            return \"* \" .. time .. \" *\"\n        end\n        return time\n    end\n    local us = elapsed_seconds * 1e6\n    if us >= 1 then\n        return string.format(\"%.0f µs\", us)\n    end\n    local ns = elapsed_seconds * 1e9\n    return string.format(\"%d ns\", math.floor(ns + 0.5))\nend\n\nfunction Timer:print_timing()\n    local overall = format_elapsed_time(get_time() - self._overall_start)\n    print(string.format(\"Overall time: %s\", overall))\n    for _, entry in ipairs(self._logs) do\n        print(string.format(\"  %s: %s\", entry.message, format_elapsed_time(entry.duration)))\n    end\nend\n\nfunction Timer:time_this(fn, description)\n    local timer = Timer.new()\n    local result = fn()\n    timer:print_timing()\n    return result\nend\n\nreturn Timer\n```\n\n## Reminders about the cursor line:\nText before cursor: `local log`",
+        "role":"user"
+      },{
+        "finish_reason":"stop",
+        "content":" = require(\"config.logs\").hammerspoons()",
+        "reasoning_content":"We need to complete after \"local log\". Likely require requiring log module: from earlier perf.lua they did `local log = require(\"config.logs\").hammerspoons()`. Here maybe similar. In this file, want log variable for timer. Probably `local log = require(\"config.logs\").hammerspoons()` or generic. Use same pattern. So replace <|fim_middle|> with ` = require(\"config.logs\").hammerspoons()`.\n\nThus output that text.",
+        "role":"assistant"
+      }],
+    "raw":false,
+    "stream":true,
+    "top_p":1
+  },
+  "last_sse":{
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b9787-bb551a74d",
+    "timings":{
+      "prompt_ms":139.978,
+      "prompt_n":930,
+      "predicted_ms":441.186,
+      "predicted_per_token_ms":3.7708205128205,
+      "cache_n":1049,
+      "predicted_per_second":265.19427180373,
+      "predicted_n":117,
+      "prompt_per_second":6643.9011844718,
+      "prompt_per_token_ms":0.15051397849462
+    },
+    "id":"chatcmpl-sanlqww2siqU8LIgxxAHjbEjbYR3qUT5",
+    "created":1782619798,
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
