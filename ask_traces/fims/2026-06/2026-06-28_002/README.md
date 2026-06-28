@@ -1,0 +1,1 @@
+I'm in the middle of changing prints => logs... and this seems to be the tipping point where gptoss finally suggests log:error when I just delete the print on an error message... yes!... prior to this FIM gptoss was still suggesting print after I deleted print b/c most errors are mapped to prints IIAC... and the tipping point of many log:error() on error messages seems to be hit
