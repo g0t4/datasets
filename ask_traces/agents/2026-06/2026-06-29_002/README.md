@@ -1,0 +1,16 @@
+these are the small wins that I don't even have to think about... don't have to really give direction, just describe what I want and qwen will figure it out...
+
+## RAG MATTERS TOO
+
+RAG is a huge part of this working (quickly)...
+  - qwen did not even have to search the (huge) repo
+  - I didn't have to tell qwen where
+  - RAG told qwen the _one file that mattered_ off of my prompt!
+    werkspaces.lua
+    ANDDD... RAG literally pulled the _one function to change_ (see chunk 5)
+
+### aside... not qwen related... interesting that RAG didn't match werkspaces on first 3 matches...
+- I suspect this is because my prompt was big enough that it touches on several distinct concepts in the codebase and so matches were somewhat heterogenous and thus the first match is less likely to be the one that I want...
+- this is a good reason why I shouldn't use long prompts if I want RAG to do the matching and I should tailer my prompt with RAG in mind if I need RAG to do the finding for Qwen
+  and maybe I should get in the habit of turning off RAG for _long_ prompts where it might be much less likely to find the chunks that matter...
+  food for thought!
