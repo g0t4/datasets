@@ -1,0 +1,3 @@
+stellar FIM... only gripe is duplicating prefix of cursor line but that's easy to fix...
+- incredible that gptoss can understand the pattern here... from the control attributes I pasted... and make both find+wait helpers... which I hate typing up because it's easy to make a mistake in which window title is targeted or use the wrong find function!
+  I really don't like my API for finding and waiting for axuielements... that's for another day to fix... probably syncify can help get logic into one spot that reads more script like
