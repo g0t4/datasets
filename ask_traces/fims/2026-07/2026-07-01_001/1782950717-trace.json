@@ -1,0 +1,54 @@
+{
+  "last_sse":{
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "timings":{
+      "cache_n":0,
+      "predicted_per_second":265.13657933022,
+      "predicted_n":78,
+      "prompt_per_second":5499.0615655295,
+      "prompt_per_token_ms":0.18184920973943,
+      "prompt_n":2341,
+      "predicted_per_token_ms":3.771641025641,
+      "prompt_ms":425.709,
+      "predicted_ms":294.188
+    },
+    "system_fingerprint":"b9787-bb551a74d",
+    "created":1782950610,
+    "id":"chatcmpl-vuPgt7KssNABselCQ6iKcCWGvnLxtO3N",
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  },
+  "request_body":{
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n## Recent yanks (copy to clipboard):\n```.config/hammerspoon/config/macros/screenpal/init.lua\n    [\"screenpal_cmd_alt_ctrl_1\"] = SPAL_Edit1,\n```\n\n```.config/hammerspoon/config/macros/screenpal/init.lua\n}\n```\n\n```.config/hammerspoon/config/hotkeys.lua\nhs.hotkey.bind({ \"cmd\", \"alt\", \"ctrl\" }, \"M\", function()\n```\n\n```AskAgent\nlocal function get_table_keys(input_table)\n    local keys_list = {}\n    for key in pairs(input_table) do\n        table.insert(keys_list, key)\n    end\n    return keys_list\nend\n```\n\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/shared.lua:209-226\n--- Return a list of all keys used in a table.\n--- However, the order of the return table of keys is not guaranteed.\n---\n---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua\n---\n---@generic T\n---@param t table<T, any> (table) Table\n---@return T[] : List of keys\nfunction vim.tbl_keys(t)\n  vim.validate('t', t, 'table')\n  --- @cast t table<any,any>\n\n  local keys = {}\n  for k in pairs(t) do\n    table.insert(keys, k)\n  end\n  return keys\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/underscore.lua:24-33\n--- returns array of keys (values are dropped)\n---@param t table\n---@return table<integer, string>\nfunction M.keys(t)\n    local result = {}\n    M.each(t, function(key, _value)\n        table.insert(result, key)\n    end)\n    return result\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/inspect.lua:157-173\nlocal function getKeys(t)\n  local seqLen = 1\n  while rawget(t, seqLen) ~= nil do\n    seqLen = seqLen + 1\n  end\n  seqLen = seqLen - 1\n\n  local keys, keysLen = {}, 0\n  for k in rawpairs(t) do\n    if not isSequenceKey(k, seqLen) then\n      keysLen = keysLen + 1\n      keys[keysLen] = k\n    end\n  end\n  table.sort(keys, sortKeys)\n  return keys, keysLen, seqLen\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/shared.lua:499-518\n---\n--- Note that this *modifies* the input.\n---@deprecated\n---@param o table Table to add the reverse to\n---@return table o\nfunction vim.tbl_add_reverse_lookup(o)\n  vim.deprecate('vim.tbl_add_reverse_lookup', nil, '0.12')\n\n  --- @cast o table<any,any>\n  --- @type any[]\n  local keys = vim.tbl_keys(o)\n  for _, k in ipairs(keys) do\n    local v = o[k]\n    if o[v] then\n      error(\n        string.format(\n          'The reverse lookup found an existing value for %q while processing key %q',\n          tostring(v),\n          tostring(k)\n        )\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/underscore.lua:101-120\n--- works on all tables, but does not guarantee order (uses pairs)\n--- usage:\n---\n---   M.each(hs.axuielement.observer.notifications, function(key, value)\n---       log:info(\" \" .. key .. \" => \" .. value)\n---   end)\n---\n---   M.each({ foo = \"bar\", baz = \"qux\" }, function(key, _)\n---       log:info(key)\n---   end)\n---\n---@generic TKey: string|integer\n---@generic TValue: any\n---@param t table<TKey, TValue>\n---@param fn fun(key: TKey, value: TValue)\nfunction M.each(t, fn)\n    for k, v in pairs(t) do\n        fn(k, v)\n    end\nend\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```.config/hammerspoon/config/hotkeys.lua\nlocal log = require('devtools.logs.logger').universal()\nlocal _ = require(\"config.helpers.underscore\")\n\nAPPS = {\n    ScreenPal = \"ScreenPal\",\n    iTerm2 = \"iTerm2\",\n}\n\n-- TODO allow disabling keys when I enter text boxes in SOM... then I can do single letter keymaps or short sequences\n--  just replay the chars if not supposed to intercept\n\n-- TODO move other keymaps here as you want to define more app specific handlers...\n--   AND register new keymaps here going forward...\n--  'hotkey.*cmd.*[\"\\']\\w[\"\\']'\n\nlocal spal_keys = require(\"config.macros.screenpal\").keys\n\nlocal global_keys = {\n    [\"cmd_alt_ctrl|m\"] = uielements_cmd_alt_ctrl_m\n}\n\nfunction handle_key(modifiers, key)\n    local key_key = table.concat(modifiers, \"_\") .. \"|\" .. key\n    hs.hotkey.bind(modifiers, key, function()\n        local app = hs.application.frontmostApplication()\n        if app:name() == APPS.ScreenPal then\n            spal_keys.keys[key_key]()\n            return\n        end\n        global_keys[key_key]()\n    end)\nend\n\n\nall_keys = _.<|fim_middle|>\nhandle_key({ \"cmd\", \"alt\", \"ctrl\" }, \"m\")\n\nhs.hotkey.bind({ \"cmd\", \"alt\", \"ctrl\" }, \"R\", function()\n    local app = hs.application.frontmostApplication()\n    if app:name() == APPS.ScreenPal then\n        screenpal_cmd_alt_ctrl_r()\n    end\nend)\n\nhs.hotkey.bind({ \"cmd\", \"alt\", \"ctrl\" }, \"L\", function()\n    local app = hs.application.frontmostApplication()\n    if app:name() == APPS.ScreenPal then\n        screenpal_cmd_alt_ctrl_l()\n    end\nend)\n```\n\n## Reminders about the cursor line:\nText before cursor: `all_keys = _.`"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"We need to complete _.<fim_middle> likely to get keys of table? In context, _. is underscore helper module. It has functions keys, each, etc. Want to get all keys from global_keys? Probably _.keys(global_keys). So code: all_keys = _.keys(global_keys) . Provide that.",
+        "role":"assistant",
+        "content":"keys(global_keys)"
+      }],
+    "raw":false,
+    "max_tokens":4096,
+    "options":[],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "temperature":1
+  }
+}
