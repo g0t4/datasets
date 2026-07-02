@@ -1,0 +1,221 @@
+{
+  "last_sse":{
+    "__verbose":{
+      "id_slot":1,
+      "prompt":"<|im_start|>system\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"run_process\", \"description\": \"Run a process on this darwin machine\", \"parameters\": {\"properties\": {\"cwd\": {\"description\": \"Optional to set working directory\", \"type\": \"string\"}, \"command_line\": {\"description\": \"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\", \"type\": \"string\"}, \"timeout_ms\": {\"description\": \"Optional timeout in milliseconds, defaults to 30,000ms\", \"type\": \"number\"}, \"stdin_text\": {\"description\": \"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\", \"type\": \"string\"}, \"argv\": {\"items\": {\"type\": \"string\"}, \"description\": \"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\", \"minItems\": 1, \"type\": \"array\"}}, \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"semantic_grep\", \"description\": \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\", \"parameters\": {\"required\": [\"query\"], \"properties\": {\"query\": {\"description\": \"query text, what you are looking for\", \"type\": \"string\"}, \"instruct\": {\"description\": \"instructions for the query, explain the type of query\", \"type\": \"string\"}, \"filetype\": {\"description\": \"limit matches to a vim compatible filetype. default includes all filetypes\", \"type\": \"string\"}, \"top_k\": {\"description\": \"number of matches, defaults to 5 which is usually plenty!\", \"type\": \"number\"}, \"embed_top_k\": {\"description\": \"number of embeddings matches to consider for reranking\", \"type\": \"number\"}}, \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"run_in_neovim\", \"description\": \"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()\", \"parameters\": {\"required\": [\"lua\"], \"properties\": {\"lua\": {\"description\": \"Lua code to execute. Should be a valid Lua chunk.\", \"type\": \"string\"}}, \"type\": \"object\"}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen-agentworld-35b-a3b<wes.mcclure+qwen-agentworld-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.<|im_end|>\n<|im_start|>user\n## Recent yanks (copy to clipboard):\n```.config/hammerspoon/config/macros/screenpal/init.lua\n    [\"screenpal_cmd_alt_ctrl_1\"] = SPAL_Edit1,\n```\n\n```.config/hammerspoon/config/macros/screenpal/init.lua\n}\n```\n\n```.config/hammerspoon/config/hotkeys.lua\nhs.hotkey.bind({ \"cmd\", \"alt\", \"ctrl\" }, \"M\", function()\n```\n\n```AskAgent\nlocal function get_table_keys(input_table)\n    local keys_list = {}\n    for key in pairs(input_table) do\n        table.insert(keys_list, key)\n    end\n    return keys_list\nend\n```<|im_end|>\n<|im_start|>user\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```<|im_end|>\n<|im_start|>user\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```<|im_end|>\n<|im_start|>user\n# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/underscore.lua:24-33\n--- returns array of keys (values are dropped)\n---@param t table\n---@return table<integer, string>\nfunction M.keys(t)\n    local result = {}\n    M.each(t, function(key, _value)\n        table.insert(result, key)\n    end)\n    return result\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/shared.lua:209-226\n--- Return a list of all keys used in a table.\n--- However, the order of the return table of keys is not guaranteed.\n---\n---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua\n---\n---@generic T\n---@param t table<T, any> (table) Table\n---@return T[] : List of keys\nfunction vim.tbl_keys(t)\n  vim.validate('t', t, 'table')\n  --- @cast t table<any,any>\n\n  local keys = {}\n  for k in pairs(t) do\n    table.insert(keys, k)\n  end\n  return keys\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/inspect.lua:157-173\nlocal function getKeys(t)\n  local seqLen = 1\n  while rawget(t, seqLen) ~= nil do\n    seqLen = seqLen + 1\n  end\n  seqLen = seqLen - 1\n\n  local keys, keysLen = {}, 0\n  for k in rawpairs(t) do\n    if not isSequenceKey(k, seqLen) then\n      keysLen = keysLen + 1\n      keys[keysLen] = k\n    end\n  end\n  table.sort(keys, sortKeys)\n  return keys, keysLen, seqLen\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/mouse_position.lua:0-19\nlocal log = require(\"config.logs\").hammerspoons()\nlocal M = {}\n\n---@type hs.hotkey[]\nM.bindings = {}\n---@type hs.canvas?\nM.canvas = nil\n---@type Subject?\nM.moves = nil\n---@type fun?\nM.stop_event_source = nil\n---@type Subscription?\nM.subscription = nil\n---@type boolean\nM.relative = false\n---@type hs.axuielement?\nM.relative_to = nil\n---@type hs.canvas?\nM.relative_border = nil\n\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/macros/keymaps/init.lua:0-19\n\n\n-- no idea this existed already!\n--\n-- I can improve upon paletro by making my own popup keymap\n--   can hard code what apps not to use it in ...\n--   can make it search the hotkey symbols too not just the name of the menu entries\n--   can IIAC use hotkeys not in menus too, right?\n--\n-- https://www.hammerspoon.org/docs/hs.hotkey.html#getHotkeys\n-- hs.hotkey.getHotkeys()\n--\n--\n-- https://www.hammerspoon.org/docs/hs.hotkey.html#showHotkeys\n--\n--\n--\n-- check if already used when making new hotkeys\n--   hs.hotkey.assignable(mods, key)\n--<|im_end|>\n<|im_start|>user\ncan you see if I have any function already for getting table keys in lua code to get alist of the keys<|im_end|>\n<|im_start|>assistant\n<think>\n",
+      "truncated":false,
+      "index":0,
+      "stopping_word":"",
+      "stop_type":"eos",
+      "content":"",
+      "tokens_cached":4077,
+      "tokens":[],
+      "has_new_line":true,
+      "timings":{
+        "cache_n":0,
+        "predicted_per_second":210.24518692407,
+        "predicted_n":1619,
+        "prompt_per_second":6603.7001130605,
+        "prompt_per_token_ms":0.15143025620171,
+        "prompt_n":2459,
+        "predicted_per_token_ms":4.7563514515133,
+        "prompt_ms":372.367,
+        "predicted_ms":7700.533
+      },
+      "stop":true,
+      "model":"g0t4/Qwen-AgentWorld-35B-A3B-GGUF:Q8_0",
+      "tokens_predicted":1619,
+      "tokens_evaluated":2459,
+      "generation_settings":{
+        "dynatemp_range":0,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "top_n_sigma":-1,
+        "xtc_probability":0,
+        "xtc_threshold":0.10000000149012,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "presence_penalty":0,
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":262144,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "mirostat_eta":0.10000000149012,
+        "n_predict":-1,
+        "ignore_eos":false,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "grammar_lazy":true,
+        "stop":[],
+        "repeat_penalty":1.0499999523163,
+        "chat_format":"peg-native",
+        "max_tokens":-1,
+        "n_discard":0,
+        "n_keep":0,
+        "generation_prompt":"<|im_start|>assistant\n<think>\n",
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "top_k":20,
+        "speculative.types":"none",
+        "timings_per_token":false,
+        "post_sampling_probs":false,
+        "backend_sampling":false,
+        "lora":[],
+        "reasoning_in_content":false,
+        "reasoning_format":"deepseek",
+        "preserved_tokens":[29,248058,248059,248068,248069],
+        "grammar_triggers":[{
+            "value":"<tool_call>\n",
+            "type":1
+          }],
+        "grammar":"ac-183 ::= [\\n] ac-183-01 | [^\\n] ac-183\nac-183-01 ::= [\\n] ac-183-01 | [<] ac-183-02 | [^\\n<] ac-183\nac-183-02 ::= [\\n] ac-183-01 | [/] ac-183-03 | [^\\n/] ac-183\nac-183-03 ::= [\\n] ac-183-01 | [p] ac-183-04 | [^\\np] ac-183\nac-183-04 ::= [\\n] ac-183-01 | [a] ac-183-05 | [^\\na] ac-183\nac-183-05 ::= [\\n] ac-183-01 | [r] ac-183-06 | [^\\nr] ac-183\nac-183-06 ::= [\\n] ac-183-01 | [a] ac-183-07 | [^\\na] ac-183\nac-183-07 ::= [\\n] ac-183-01 | [m] ac-183-08 | [^\\nm] ac-183\nac-183-08 ::= [\\n] ac-183-01 | [e] ac-183-09 | [^\\ne] ac-183\nac-183-09 ::= [\\n] ac-183-01 | [t] ac-183-10 | [^\\nt] ac-183\nac-183-10 ::= [\\n] ac-183-01 | [e] ac-183-11 | [^\\ne] ac-183\nac-183-11 ::= [\\n] ac-183-01 | [r] ac-183-12 | [^\\nr] ac-183\nac-183-12 ::= [\\n] ac-183-01 | [>] ac-183-13 | [^\\n>] ac-183\nac-183-13 ::= [\\n] | [^\\n] ac-183\nac-261 ::= [\\n] ac-261-01 | [^\\n] ac-261\nac-261-01 ::= [\\n] ac-261-01 | [<] ac-261-02 | [^\\n<] ac-261\nac-261-02 ::= [\\n] ac-261-01 | [/] ac-261-03 | [^\\n/] ac-261\nac-261-03 ::= [\\n] ac-261-01 | [p] ac-261-04 | [^\\np] ac-261\nac-261-04 ::= [\\n] ac-261-01 | [a] ac-261-05 | [^\\na] ac-261\nac-261-05 ::= [\\n] ac-261-01 | [r] ac-261-06 | [^\\nr] ac-261\nac-261-06 ::= [\\n] ac-261-01 | [a] ac-261-07 | [^\\na] ac-261\nac-261-07 ::= [\\n] ac-261-01 | [m] ac-261-08 | [^\\nm] ac-261\nac-261-08 ::= [\\n] ac-261-01 | [e] ac-261-09 | [^\\ne] ac-261\nac-261-09 ::= [\\n] ac-261-01 | [t] ac-261-10 | [^\\nt] ac-261\nac-261-10 ::= [\\n] ac-261-01 | [e] ac-261-11 | [^\\ne] ac-261\nac-261-11 ::= [\\n] ac-261-01 | [r] ac-261-12 | [^\\nr] ac-261\nac-261-12 ::= [\\n] ac-261-01 | [>] ac-261-13 | [^\\n>] ac-261\nac-261-13 ::= [\\n] | [^\\n] ac-261\nac-282 ::= [\\n] ac-282-01 | [^\\n] ac-282\nac-282-01 ::= [\\n] ac-282-01 | [<] ac-282-02 | [^\\n<] ac-282\nac-282-02 ::= [\\n] ac-282-01 | [/] ac-282-03 | [^\\n/] ac-282\nac-282-03 ::= [\\n] ac-282-01 | [p] ac-282-04 | [^\\np] ac-282\nac-282-04 ::= [\\n] ac-282-01 | [a] ac-282-05 | [^\\na] ac-282\nac-282-05 ::= [\\n] ac-282-01 | [r] ac-282-06 | [^\\nr] ac-282\nac-282-06 ::= [\\n] ac-282-01 | [a] ac-282-07 | [^\\na] ac-282\nac-282-07 ::= [\\n] ac-282-01 | [m] ac-282-08 | [^\\nm] ac-282\nac-282-08 ::= [\\n] ac-282-01 | [e] ac-282-09 | [^\\ne] ac-282\nac-282-09 ::= [\\n] ac-282-01 | [t] ac-282-10 | [^\\nt] ac-282\nac-282-10 ::= [\\n] ac-282-01 | [e] ac-282-11 | [^\\ne] ac-282\nac-282-11 ::= [\\n] ac-282-01 | [r] ac-282-12 | [^\\nr] ac-282\nac-282-12 ::= [\\n] ac-282-01 | [>] ac-282-13 | [^\\n>] ac-282\nac-282-13 ::= [\\n] | [^\\n] ac-282\nac-303 ::= [\\n] ac-303-01 | [^\\n] ac-303\nac-303-01 ::= [\\n] ac-303-01 | [<] ac-303-02 | [^\\n<] ac-303\nac-303-02 ::= [\\n] ac-303-01 | [/] ac-303-03 | [^\\n/] ac-303\nac-303-03 ::= [\\n] ac-303-01 | [p] ac-303-04 | [^\\np] ac-303\nac-303-04 ::= [\\n] ac-303-01 | [a] ac-303-05 | [^\\na] ac-303\nac-303-05 ::= [\\n] ac-303-01 | [r] ac-303-06 | [^\\nr] ac-303\nac-303-06 ::= [\\n] ac-303-01 | [a] ac-303-07 | [^\\na] ac-303\nac-303-07 ::= [\\n] ac-303-01 | [m] ac-303-08 | [^\\nm] ac-303\nac-303-08 ::= [\\n] ac-303-01 | [e] ac-303-09 | [^\\ne] ac-303\nac-303-09 ::= [\\n] ac-303-01 | [t] ac-303-10 | [^\\nt] ac-303\nac-303-10 ::= [\\n] ac-303-01 | [e] ac-303-11 | [^\\ne] ac-303\nac-303-11 ::= [\\n] ac-303-01 | [r] ac-303-12 | [^\\nr] ac-303\nac-303-12 ::= [\\n] ac-303-01 | [>] ac-303-13 | [^\\n>] ac-303\nac-303-13 ::= [\\n] | [^\\n] ac-303\nac-34 ::= [\\n] ac-34-01 | [^\\n] ac-34\nac-34-01 ::= [\\n] ac-34-01 | [<] ac-34-02 | [^\\n<] ac-34\nac-34-02 ::= [\\n] ac-34-01 | [/] ac-34-03 | [^\\n/] ac-34\nac-34-03 ::= [\\n] ac-34-01 | [p] ac-34-04 | [^\\np] ac-34\nac-34-04 ::= [\\n] ac-34-01 | [a] ac-34-05 | [^\\na] ac-34\nac-34-05 ::= [\\n] ac-34-01 | [r] ac-34-06 | [^\\nr] ac-34\nac-34-06 ::= [\\n] ac-34-01 | [a] ac-34-07 | [^\\na] ac-34\nac-34-07 ::= [\\n] ac-34-01 | [m] ac-34-08 | [^\\nm] ac-34\nac-34-08 ::= [\\n] ac-34-01 | [e] ac-34-09 | [^\\ne] ac-34\nac-34-09 ::= [\\n] ac-34-01 | [t] ac-34-10 | [^\\nt] ac-34\nac-34-10 ::= [\\n] ac-34-01 | [e] ac-34-11 | [^\\ne] ac-34\nac-34-11 ::= [\\n] ac-34-01 | [r] ac-34-12 | [^\\nr] ac-34\nac-34-12 ::= [\\n] ac-34-01 | [>] ac-34-13 | [^\\n>] ac-34\nac-34-13 ::= [\\n] | [^\\n] ac-34\nac-405 ::= [\\n] ac-405-01 | [^\\n] ac-405\nac-405-01 ::= [\\n] ac-405-01 | [<] ac-405-02 | [^\\n<] ac-405\nac-405-02 ::= [\\n] ac-405-01 | [/] ac-405-03 | [^\\n/] ac-405\nac-405-03 ::= [\\n] ac-405-01 | [p] ac-405-04 | [^\\np] ac-405\nac-405-04 ::= [\\n] ac-405-01 | [a] ac-405-05 | [^\\na] ac-405\nac-405-05 ::= [\\n] ac-405-01 | [r] ac-405-06 | [^\\nr] ac-405\nac-405-06 ::= [\\n] ac-405-01 | [a] ac-405-07 | [^\\na] ac-405\nac-405-07 ::= [\\n] ac-405-01 | [m] ac-405-08 | [^\\nm] ac-405\nac-405-08 ::= [\\n] ac-405-01 | [e] ac-405-09 | [^\\ne] ac-405\nac-405-09 ::= [\\n] ac-405-01 | [t] ac-405-10 | [^\\nt] ac-405\nac-405-10 ::= [\\n] ac-405-01 | [e] ac-405-11 | [^\\ne] ac-405\nac-405-11 ::= [\\n] ac-405-01 | [r] ac-405-12 | [^\\nr] ac-405\nac-405-12 ::= [\\n] ac-405-01 | [>] ac-405-13 | [^\\n>] ac-405\nac-405-13 ::= [\\n] | [^\\n] ac-405\nac-55 ::= [\\n] ac-55-01 | [^\\n] ac-55\nac-55-01 ::= [\\n] ac-55-01 | [<] ac-55-02 | [^\\n<] ac-55\nac-55-02 ::= [\\n] ac-55-01 | [/] ac-55-03 | [^\\n/] ac-55\nac-55-03 ::= [\\n] ac-55-01 | [p] ac-55-04 | [^\\np] ac-55\nac-55-04 ::= [\\n] ac-55-01 | [a] ac-55-05 | [^\\na] ac-55\nac-55-05 ::= [\\n] ac-55-01 | [r] ac-55-06 | [^\\nr] ac-55\nac-55-06 ::= [\\n] ac-55-01 | [a] ac-55-07 | [^\\na] ac-55\nac-55-07 ::= [\\n] ac-55-01 | [m] ac-55-08 | [^\\nm] ac-55\nac-55-08 ::= [\\n] ac-55-01 | [e] ac-55-09 | [^\\ne] ac-55\nac-55-09 ::= [\\n] ac-55-01 | [t] ac-55-10 | [^\\nt] ac-55\nac-55-10 ::= [\\n] ac-55-01 | [e] ac-55-11 | [^\\ne] ac-55\nac-55-11 ::= [\\n] ac-55-01 | [r] ac-55-12 | [^\\nr] ac-55\nac-55-12 ::= [\\n] ac-55-01 | [>] ac-55-13 | [^\\n>] ac-55\nac-55-13 ::= [\\n] | [^\\n] ac-55\nchar ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (space \",\" space json-value)* space \"]\")\njson-bool ::= \"true\" | \"false\"\njson-null ::= \"null\"\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)?\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\")\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\"\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)?\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\"\ntool-call ::= \"<tool_call>\\n\" space (tool-run-process | tool-semantic-grep | tool-run-in-neovim) space \"</tool_call>\" (space \"<tool_call>\\n\" space (tool-run-process | tool-semantic-grep | tool-run-in-neovim) space \"</tool_call>\")* space\ntool-run-in-neovim ::= (\"<function=\" \"run_in_neovim\" \">\\n\") space tool-run-in-neovim-arg-lua space \"</function>\\n\"\ntool-run-in-neovim-arg-lua ::= (\"<parameter=\" \"lua\" \">\\n\") \"\" ac-405\ntool-run-process ::= (\"<function=\" \"run_process\" \">\\n\") space (space (tool-run-process-arg-cwd | tool-run-process-arg-command-line | tool-run-process-arg-timeout-ms | tool-run-process-arg-stdin-text | tool-run-process-arg-argv))* space \"</function>\\n\"\ntool-run-process-arg-argv ::= (\"<parameter=\" \"argv\" \">\\n\") \"\" tool-run-process-arg-argv-schema \"\\n</parameter>\\n\"\ntool-run-process-arg-argv-schema ::= \"[\" space string (\",\" space string)* space \"]\"\ntool-run-process-arg-command-line ::= (\"<parameter=\" \"command_line\" \">\\n\") \"\" ac-55\ntool-run-process-arg-cwd ::= (\"<parameter=\" \"cwd\" \">\\n\") \"\" ac-34\ntool-run-process-arg-stdin-text ::= (\"<parameter=\" \"stdin_text\" \">\\n\") \"\" ac-183\ntool-run-process-arg-timeout-ms ::= (\"<parameter=\" \"timeout_ms\" \">\\n\") \"\" number \"\\n</parameter>\\n\"\ntool-semantic-grep ::= (\"<function=\" \"semantic_grep\" \">\\n\") space tool-semantic-grep-arg-query (space (tool-semantic-grep-arg-instruct | tool-semantic-grep-arg-filetype | tool-semantic-grep-arg-top-k | tool-semantic-grep-arg-embed-top-k))* space \"</function>\\n\"\ntool-semantic-grep-arg-embed-top-k ::= (\"<parameter=\" \"embed_top_k\" \">\\n\") \"\" number \"\\n</parameter>\\n\"\ntool-semantic-grep-arg-filetype ::= (\"<parameter=\" \"filetype\" \">\\n\") \"\" ac-303\ntool-semantic-grep-arg-instruct ::= (\"<parameter=\" \"instruct\" \">\\n\") \"\" ac-282\ntool-semantic-grep-arg-query ::= (\"<parameter=\" \"query\" \">\\n\") \"\" ac-261\ntool-semantic-grep-arg-top-k ::= (\"<parameter=\" \"top_k\" \">\\n\") \"\" number \"\\n</parameter>\\n\"\nuntil-25 ::= | [\\n] until-25-01 | [^\\n] until-25\nuntil-25-01 ::= | [\\n] until-25-01 | [<] until-25-02 | [^\\n<] until-25\nuntil-25-02 ::= | [\\n] until-25-01 | [/] until-25-03 | [^\\n/] until-25\nuntil-25-03 ::= | [\\n] until-25-01 | [p] until-25-04 | [^\\np] until-25\nuntil-25-04 ::= | [\\n] until-25-01 | [a] until-25-05 | [^\\na] until-25\nuntil-25-05 ::= | [\\n] until-25-01 | [r] until-25-06 | [^\\nr] until-25\nuntil-25-06 ::= | [\\n] until-25-01 | [a] until-25-07 | [^\\na] until-25\nuntil-25-07 ::= | [\\n] until-25-01 | [m] until-25-08 | [^\\nm] until-25\nuntil-25-08 ::= | [\\n] until-25-01 | [e] until-25-09 | [^\\ne] until-25\nuntil-25-09 ::= | [\\n] until-25-01 | [t] until-25-10 | [^\\nt] until-25\nuntil-25-10 ::= | [\\n] until-25-01 | [e] until-25-11 | [^\\ne] until-25\nuntil-25-11 ::= | [\\n] until-25-01 | [r] until-25-12 | [^\\nr] until-25\nuntil-25-12 ::= | [\\n] until-25-01 | [>] until-25-13 | [^\\n>] until-25\nuntil-25-13 ::= | [^\\n] until-25\nuntil-suffix ::= until-25\n",
+        "seed":4294967295,
+        "top_p":0.80000001192093,
+        "stream":true,
+        "temperature":0.69999998807907
+      }
+    },
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "timings":{
+      "cache_n":0,
+      "predicted_per_second":210.24518692407,
+      "predicted_n":1619,
+      "prompt_per_second":6603.7001130605,
+      "prompt_per_token_ms":0.15143025620171,
+      "prompt_n":2459,
+      "predicted_per_token_ms":4.7563514515133,
+      "prompt_ms":372.367,
+      "predicted_ms":7700.533
+    },
+    "system_fingerprint":"b9787-bb551a74d",
+    "created":1782950531,
+    "id":"chatcmpl-M5goqAnFSFP8JajCBcj3sDvHM4DL5v4b",
+    "object":"chat.completion.chunk",
+    "model":"g0t4/Qwen-AgentWorld-35B-A3B-GGUF:Q8_0"
+  },
+  "request_body":{
+    "top_p":0.8,
+    "messages":[{
+        "role":"system",
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen-agentworld-35b-a3b<wes.mcclure+qwen-agentworld-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n"
+      },{
+        "role":"user",
+        "content":"## Recent yanks (copy to clipboard):\n```.config/hammerspoon/config/macros/screenpal/init.lua\n    [\"screenpal_cmd_alt_ctrl_1\"] = SPAL_Edit1,\n```\n\n```.config/hammerspoon/config/macros/screenpal/init.lua\n}\n```\n\n```.config/hammerspoon/config/hotkeys.lua\nhs.hotkey.bind({ \"cmd\", \"alt\", \"ctrl\" }, \"M\", function()\n```\n\n```AskAgent\nlocal function get_table_keys(input_table)\n    local keys_list = {}\n    for key in pairs(input_table) do\n        table.insert(keys_list, key)\n    end\n    return keys_list\nend\n```\n\n"
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/underscore.lua:24-33\n--- returns array of keys (values are dropped)\n---@param t table\n---@return table<integer, string>\nfunction M.keys(t)\n    local result = {}\n    M.each(t, function(key, _value)\n        table.insert(result, key)\n    end)\n    return result\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/shared.lua:209-226\n--- Return a list of all keys used in a table.\n--- However, the order of the return table of keys is not guaranteed.\n---\n---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua\n---\n---@generic T\n---@param t table<T, any> (table) Table\n---@return T[] : List of keys\nfunction vim.tbl_keys(t)\n  vim.validate('t', t, 'table')\n  --- @cast t table<any,any>\n\n  local keys = {}\n  for k in pairs(t) do\n    table.insert(keys, k)\n  end\n  return keys\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/inspect.lua:157-173\nlocal function getKeys(t)\n  local seqLen = 1\n  while rawget(t, seqLen) ~= nil do\n    seqLen = seqLen + 1\n  end\n  seqLen = seqLen - 1\n\n  local keys, keysLen = {}, 0\n  for k in rawpairs(t) do\n    if not isSequenceKey(k, seqLen) then\n      keysLen = keysLen + 1\n      keys[keysLen] = k\n    end\n  end\n  table.sort(keys, sortKeys)\n  return keys, keysLen, seqLen\nend\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/mouse_position.lua:0-19\nlocal log = require(\"config.logs\").hammerspoons()\nlocal M = {}\n\n---@type hs.hotkey[]\nM.bindings = {}\n---@type hs.canvas?\nM.canvas = nil\n---@type Subject?\nM.moves = nil\n---@type fun?\nM.stop_event_source = nil\n---@type Subscription?\nM.subscription = nil\n---@type boolean\nM.relative = false\n---@type hs.axuielement?\nM.relative_to = nil\n---@type hs.canvas?\nM.relative_border = nil\n\n\n\n## ~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/macros/keymaps/init.lua:0-19\n\n\n-- no idea this existed already!\n--\n-- I can improve upon paletro by making my own popup keymap\n--   can hard code what apps not to use it in ...\n--   can make it search the hotkey symbols too not just the name of the menu entries\n--   can IIAC use hotkeys not in menus too, right?\n--\n-- https://www.hammerspoon.org/docs/hs.hotkey.html#getHotkeys\n-- hs.hotkey.getHotkeys()\n--\n--\n-- https://www.hammerspoon.org/docs/hs.hotkey.html#showHotkeys\n--\n--\n--\n-- check if already used when making new hotkeys\n--   hs.hotkey.assignable(mods, key)\n--\n\n"
+      },{
+        "role":"user",
+        "content":"can you see if I have any function already for getting table keys in lua code to get alist of the keys"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"Thinking Process:\n\n1.  **Analyze the Request:** The user is asking if they have an existing function for getting table keys in Lua code to get a list of the keys. They provided some recent yanks and semantic grep matches.\n\n2.  **Analyze the Semantic Grep Matches & Recent Yanks:**\n    *   Match 1: `~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/helpers/underscore.lua:24-33`\n        ```lua\n        --- returns array of keys (values are dropped)\n        ---@param t table\n        ---@return table<integer, string>\n        function M.keys(t)\n            local result = {}\n            M.each(t, function(key, _value)\n                table.insert(result, key)\n            end)\n            return result\n        end\n        ```\n    *   Match 2: `~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/shared.lua:209-226`\n        ```lua\n        --- Return a list of all keys used in a table.\n        --- However, the order of the return table of keys is not guaranteed.\n        ---\n        ---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua\n        ---\n        ---generic T\n        ---@param t table<T, any> (table) Table\n        ---@return T[] : List of keys\n        function vim.tbl_keys(t)\n          vim.validate('t', t, 'table')\n          --- @cast t table<any,any>\n\n          local keys = {}\n          for k in pairs(t) do\n            table.insert(keys, k)\n          end\n          return keys\n        end\n        ```\n    *   Match 3: `~/repos/github/g0t4/dotfiles/.config/hammerspoon/config/libs/vim/inspect.lua:157-173` (This is `getKeys` but it's for inspecting, more complex with sequence keys).\n\n3.  **Formulate the Answer:**\n    The user already has a function for getting table keys in `.config/hammerspoon/config/helpers/underscore.lua`:\n\n    ```lua\n    --- returns array of keys (values are dropped)\n    ---@param t table\n    ---@return table<integer, string>\n    function M.keys(t)\n        local result = {}\n        M.each(t, function(key, _value)\n            table.insert(result, key)\n        end)\n        return result\n    end\n    ```\n\n    They also have `vim.tbl_keys(t)` in `.config/hammerspoon/config/libs/vim/shared.lua`:\n\n    ```lua\n    --- Return a list of all keys used in a table.\n    --- However, the order of the return table of keys is not guaranteed.\n    ---\n    ---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua\n    ---\n    ---@generic T\n    ---@param t table<T, any> (table) Table\n    ---@return T[] : List of keys\n    function vim.tbl_keys(t)\n      vim.validate('t', t, 'table')\n      --- @cast t table<any,any>\n\n      local keys = {}\n      for k in pairs(t) do\n        table.insert(keys, k)\n      end\n      return keys\n    end\n    ```\n\n    And in their recent yanks they had:\n    ```lua\n    local function get_table_keys(input_table)\n        local keys_list = {}\n        for key in pairs(input_table) do\n            table.insert(keys_list, key)\n        end\n        return keys_list\n    end\n    ```\n\n    I should point out the existing `M.keys(t)` in `helpers/underscore.lua` and `vim.tbl_keys(t)` in `libs/vim/shared.lua`.\n\n4.  **Format the Output:**\n    The user's ground rules: \"Do not explain answers, just give me code.\" But this is a question \"can you see if I have any function already for getting table keys in lua code to get alist of the keys\". So I should answer directly with the existing functions found.\n\n    Let's present the existing functions clearly:\n\n    1. `M.keys(t)` in `.config/hammerspoon/config/helpers/underscore.lua`\n    2. `vim.tbl_keys(t)` in `.config/hammerspoon/config/libs/vim/shared.lua`\n\n    Let's format the response to show these existing functions.\n\n    Wait, the ground rules say:\n    \"- Do not explain answers, just give me code.\"\n    But the user asked a yes/no + informational question: \"can you see if I have any function already for getting table keys in lua code to get alist of the keys\"\n\n    I will provide the existing functions found.\n\n    Let's look at `underscore.lua`:\n    ```lua\n    --- returns array of keys (values are dropped)\n    ---@param t table\n    ---@return table<integer, string>\n    function M.keys(t)\n        local result = {}\n        M.each(t, function(key, _value)\n            table.insert(result, key)\n        end)\n        return result\n    end\n    ```\n\n    And `vim/shared.lua`:\n    ```lua\n    --- Return a list of all keys used in a table.\n    --- However, the order of the return table of keys is not guaranteed.\n    ---\n    ---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua\n    ---\n    ---@generic T\n    ---@param t table<T, any> (table) Table\n    ---@return T[] : List of keys\n    function vim.tbl_keys(t)\n      vim.validate('t', t, 'table')\n      --- @cast t table<any,any>\n\n      local keys = {}\n      for k in pairs(t) do\n        table.insert(keys, k)\n      end\n      return keys\n    end\n    ```\n\n    I'll just list these two existing functions.\n",
+        "role":"assistant",
+        "content":"Yes, you have two existing functions for getting table keys:\n\n**1. `M.keys(t)` in `.config/hammerspoon/config/helpers/underscore.lua`:**\n```lua\n--- returns array of keys (values are dropped)\n---@param t table\n---@return table<integer, string>\nfunction M.keys(t)\n    local result = {}\n    M.each(t, function(key, _value)\n        table.insert(result, key)\n    end)\n    return result\nend\n```\n\n**2. `vim.tbl_keys(t)` in `.config/hammerspoon/config/libs/vim/shared.lua`:**\n```lua\n--- Return a list of all keys used in a table.\n--- However, the order of the return table of keys is not guaranteed.\n---\n---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua\n---\n---@generic T\n---@param t table<T, any> (table) Table\n---@return T[] : List of keys\nfunction vim.tbl_keys(t)\n  vim.validate('t', t, 'table')\n  --- @cast t table<any,any>\n\n  local keys = {}\n  for k in pairs(t) do\n    table.insert(keys, k)\n  end\n  return keys\nend\n```"
+      }],
+    "verbose":true,
+    "tools":[{
+        "function":{
+          "description":"Run a process on this darwin machine",
+          "parameters":{
+            "properties":{
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              },
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "argv":{
+                "items":{
+                  "type":"string"
+                },
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "minItems":1,
+                "type":"array"
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_process"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "parameters":{
+            "required":["query"],
+            "properties":{
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "top_k":{
+                "description":"number of matches, defaults to 5 which is usually plenty!",
+                "type":"number"
+              },
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              }
+            },
+            "type":"object"
+          },
+          "name":"semantic_grep"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "parameters":{
+            "required":["lua"],
+            "properties":{
+              "lua":{
+                "description":"Lua code to execute. Should be a valid Lua chunk.",
+                "type":"string"
+              }
+            },
+            "type":"object"
+          },
+          "name":"run_in_neovim"
+        },
+        "type":"function"
+      }],
+    "top_k":20,
+    "repeat_penalty":1.05,
+    "model":"",
+    "stream":true,
+    "temperature":0.7
+  }
+}
