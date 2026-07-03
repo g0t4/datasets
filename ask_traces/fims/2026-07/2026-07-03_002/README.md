@@ -18,3 +18,11 @@ Redo test w/o the space before `m` ... so this starts to contradict other scenar
 
 This particular FIM followed the assertions to decide the output format (no space before units)... other FIMs before this gptoss went with the space like other scenarios in the code
 - note in this FIM that it explicitly calls out the test format!
+
+## 1783100264-counter-example-trace.json
+
+This FIM redo... without space before `m`... in this case gptoss went with the space like the other scenarios... so it ignored the test case assertions
+- it still had the RAG matches... so no excuse there
+- adding this as a counter example, not necessarily "bad" but not desireable in terms of paying attention to test assertions from RAG matches!
+- NOTE the `thinking` never mentions the test case format, instead gptoss focused on extrapolating based on other nearby cases which is 100% fair TBH
+- I call this `counter-example` because it contradicts what I wanted to emphasize in other FIM traces above... using the test case assertions (via RAG matches) to implement the test case production code
