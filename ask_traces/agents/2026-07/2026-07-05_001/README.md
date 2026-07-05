@@ -1,0 +1,3 @@
+sometimes I can't recall where all I have code to do a task.. i.e. get current time (hard to RAG match as time is involved in many parts of my code)
+... so let the AI agent run the semantic_grep for me (repeatedly and with diff queries and/or just cat out code files)...
+saves me time running semantic_grep and stepping through results!
