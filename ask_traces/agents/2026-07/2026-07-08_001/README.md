@@ -1,0 +1,9 @@
+have Qwen AgentWorld make me a screencap tool, nailed it! I followed up asking to make a fish test script like the others in `stdio`... also nailed it! worked first try!
+
+small complaint (during trace review) but daaaaaang qwen had trouble with pathing within the subdir I was inside of... with respect to adding/committing in git and looking at logs...
+- NBD too cuz Qwen figured it out but still! yikes such a simple thing
+- TODO I should probably stick with being in a repo root only? I tell models about directories lol and yet they struggle...
+- IIAC most models are trained on datasets with only the full repo and sitting inside of repo root dir?
+   gptoss struggled here too...
+
+otherwise no complaints!
