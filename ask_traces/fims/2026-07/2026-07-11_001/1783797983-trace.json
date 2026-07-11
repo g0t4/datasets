@@ -1,0 +1,51 @@
+{
+  "last_sse":{
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "system_fingerprint":"b9950-b849e5bb5",
+    "created":1783797865,
+    "id":"chatcmpl-GawWYvu7the9iomavqxIUWgI643bZSjD",
+    "timings":{
+      "prompt_n":610,
+      "prompt_per_token_ms":0.12764754098361,
+      "predicted_ms":454.683,
+      "cache_n":1187,
+      "predicted_per_second":263.92013776631,
+      "predicted_n":120,
+      "prompt_per_second":7834.0717909202,
+      "prompt_ms":77.865,
+      "predicted_per_token_ms":3.789025
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk"
+  },
+  "request_body":{
+    "stream":true,
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "options":[],
+    "raw":false,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: poc-edit-model\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Python Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```track.py\nfrom ranges import FrameRange\nfrom clips import Clip, SourceFrame\n\n\nclass PositionedClip:\n    \"\"\"A Clip paired with its resolved position on a Track.\"\"\"\n\n    def __init__(self, clip: Clip, output_range: FrameRange):\n        self.clip: Clip = clip\n        self.output_range: FrameRange = output_range\n\n    def source_frame_at(self, output_frame: int) -> SourceFrame:\n        if output_frame not in self.output_range:\n            raise ValueError(f\"output_frame {output_frame} not within {self.output_range}\")\n        local_frame = output_frame - self.output_range.start_frame\n        return self.clip.source_frame_at(local_frame)\n\n    def __repr__(self):\n        return f\"{self.output_range} {self.clip}\"\n\n\nclass Track:\n    \"\"\"\n    An ordered sequence of Clips, laid end-to-end. This is the 'backbone'\n    from DESIGN.md -- the only thing that determines total duration and the\n    output<->source mapping. Structural ops (split, remove, insert_at) live\n    here as Track operations, not scattered clip-type-specific logic: they\n    only ever call Clip's contract (duration_frames/source_frame_at/split).\n    \"\"\"\n\n    def __init__(self, clips: list[Clip] | None = None):\n        self.clips: list[Clip] = clips or []\n\n    def duration_frames(self) -> int:\n        return sum(c.duration_frames() for c in self.clips)\n\n    def layout(self) -> G<|fim_middle|>: \n        track_end_frame = 0\n        for clip in self.clips:\n            start_frame = track_end_frame\n            end_frame = start_frame + clip.duration_frames()\n            yield PositionedClip(clip, FrameRange(start_frame, end_frame))\n            track_end_frame = end_frame\n\n    def source_frame_at(self, output_frame: int) -> SourceFrame:\n        for positioned_clip in self.layout():\n            if output_frame in positioned_clip.output_range:\n                return positioned_clip.source_frame_at(output_frame)\n        raise ValueError(f\"output_frame {output_frame} out of range (track duration={self.duration_frames()})\")\n\n    def split(self, at_frame: int) -> \"Track\":\n        \"\"\"Split whichever clip covers at_frame into two. A no-op for this\n        track if at_frame lands exactly on an existing boundary or outside\n        the track entirely -- tracks are split independently of one\n        another, no shared clip identity required across tracks.\"\"\"\n        new_clips = []\n        for positioned_clip in self.layout():\n            if positioned_clip.output_range.can_split_at(at_frame):\n                local_frame = at_frame - positioned_clip.output_range.start_frame\n                left, right = positioned_clip.clip.split(local_frame)\n                new_clips.append(left)\n                new_clips.append(right)\n            else:\n                new_clips.append(positioned_clip.clip)\n        return Track(new_clips)\n\n    def remove(self, to_remove: FrameRange) -> \"Track\":\n        \"\"\"Split at both edges of to_remove, then drop whatever now falls\n        entirely inside it. What's on either side reknits automatically.\n        This is what a 'Cut' tool is: split + split + remove.\"\"\"\n        split_at_both_edges = self.split(to_remove.start_frame).split(to_remove.end_frame)\n        kept = [\n            positioned_clip.clip\n            for positioned_clip in split_at_both_edges.layout()\n            if not (\n                to_remove.start_frame <= positioned_clip.output_range.start_frame\n                and positioned_clip.output_range.end_frame <= to_remove.end_frame\n            )\n        ]\n        return Track(kept)\n\n    def insert_at(self, at_frame: int, clip: Clip) -> \"Track\":\n        \"\"\"Split at at_frame (a no-op if it's already a boundary), then\n        splice clip in at that point.\"\"\"\n        split_track = self.split(at_frame)\n        positioned = list(split_track.layout())\n        insert_index = next(\n            (i for i, pc in enumerate(positioned) if pc.output_range.start_frame == at_frame),\n            len(positioned),\n        )\n        new_clips = (\n            [pc.clip for pc in positioned[:insert_index]]\n            + [clip]\n            + [pc.clip for pc in positioned[insert_index:]]\n        )\n        return Track(new_clips)\n```\n\n## Reminders about the cursor line:\nText before cursor: `    def layout(self) -> G`\nText after cursor: `: `"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"We need to fill return type hint. Likely Iterator[PositionedClip] or Generator[PositionedClip, None, None]. So after \"def layout(self) -> G\" need \"enerator[PositionedClip]\"? Actually want \"Generator[PositionedClip, None, None]\". So complete: \"enerator[PositionedClip, None, None]\" making full \"Generator\". So replace <|fim_middle|> with \"enerator[PositionedClip, None, None]\".",
+        "role":"assistant",
+        "content":"enerator[PositionedClip, None, None]"
+      }],
+    "temperature":1,
+    "top_p":1
+  }
+}
