@@ -1,0 +1,1 @@
+dammmmmmnnn Qwen fucking nailed this... NOT TRIVIAL... granted part of what I wanted to do is not doable (modify commandline in an abbr, it did correctly detect the scenario for me so I could just not expand the ending quote around the quoted neovim command
