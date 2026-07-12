@@ -1,0 +1,21 @@
+commits: "git log --patch  3b14403f4b..ccfd2c1fc8",
+repo: ~/repos/github/g0t4/private-videos,
+notes: |
+    small, incremental refactorings as I learn what layout() does
+    - layout() was added by Claude Sonnet 5 in response to past discussions about video editing
+    - goal is to make layout() more intuitive at first glance
+    - i.e. rename away from abbreviations
+    - make sure every variable has a meaningful name (i.e. `lo` and `hi` are hell no names)
+    - qualifed names when useful (i.e. output_)
+    - move range calculation logic out of layout() and into an alernate `ctor` for FrameRange
+---
+commits: "git log --patch bbddf07f64..5b64138aa4"
+repo: ~/repos/github/g0t4/private-videos,
+notes: |
+    refactoring as I read the code Claude came up with for video editing POC
+    - later prompted Claude to get logic for hi/lo out of consumers and into a FrameRange class (this might've been earlier commits before the range here)
+    - ultimately I got frustrated and dumped my random thoughts onto Claude and went to bed
+    - and then the next day I was pleasantly surprised to find some really good changes
+      - Claude took stock of names, got rid of abbreviations
+      - adopted my frame based timing and FrameRange and other new classes to abstract away concepts and keep logic from bleeding out everywhere
+
