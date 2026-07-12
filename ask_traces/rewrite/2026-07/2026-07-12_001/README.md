@@ -9,3 +9,8 @@ I was gonna say Qwen also renamed some variables in the existing code which I ca
 - the new name choices were stellar improvements over generic names I had before
 
 and I can always rename the variables and do a diff back to HEAD~1 to make sure the original code is preserved (no other changes)
+
+ok after further review also:
+- Qwen did as I asked in my instruction prompts => use --argument-names !!! and renamed this variable too from original to abbreviation! yesss good choice
+
+ONE GRIPE => Qwen got rid of some of my comments!!! RUDE... I wanted those that explained the code's behavior in a few spots
