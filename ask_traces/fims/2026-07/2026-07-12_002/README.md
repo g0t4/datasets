@@ -1,0 +1,1 @@
+yesssssssss! Qwen3.6 just did the entire line!! (I had to repeatedly prompt to get to this so I could capture it as a prime example of what I want to see, well worth adding to my collection of awesome FIMs)
