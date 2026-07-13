@@ -1,0 +1,1 @@
+Qwen nailed it again adding tests I want to have but that I don't want to write (along with the __eq__ operation itself)... I can just check its work quickly in a fraction of the time... this is awesome
