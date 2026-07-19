@@ -1,0 +1,52 @@
+{
+  "last_sse":{
+    "model":"google/gemma-4-26B-A4B-it-qat-q4_0-gguf",
+    "id":"chatcmpl-uwzWjAFjuunp4FILfMbNcLTDbwtM8GSf",
+    "timings":{
+      "prompt_ms":70.774,
+      "cache_n":1040,
+      "predicted_ms":3429.978,
+      "predicted_per_token_ms":3.8238327759197,
+      "prompt_n":81,
+      "prompt_per_token_ms":0.87375308641975,
+      "predicted_per_second":261.5177123585,
+      "predicted_n":897,
+      "prompt_per_second":1144.4880888462
+    },
+    "created":1784432017,
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b10056-bb7ddc210"
+  },
+  "request_body":{
+    "top_p":1,
+    "temperature":1,
+    "max_tokens":4096,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: kimi-audio-7b-instruct\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Recent yanks (copy to clipboard):\n```convert.bash\nKimi-Audio-7B-Instruct\n\n```\n\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```convert.bash\n#!/usr/bin/env fish\n\nset TARGET ~/repos/github/g0t4/examples/gguf/qwen3.5-base\nset MODEL_NAME Kimi-Audio-7B-Instruct\nset HF_REPO moonshotai/Kimi-Audio-7B-Instruct\nset MODEL \"$TARGET/models/$MODEL_NAME\"\n\ncd ~/repos/github/ggml-org/llama.cpp\n\nhf download \\\n    \"$HF_REPO\" \\\n    --local-dir \"$TARGET/models/$MODEL_NAME\"\n\npython convert_hf_to_gguf.py \\\n    \"$MODEL\" \\\n    --outtype bf16 \\\n    --outfile \"$TARGET/$MODEL_NAME-BF16.gguf\"\n\n./build/bin/llama-quantize \\\n    \"$TARGET/$MODEL_NAME-BF16.gguf\" \\\n    \"$TARGET/<|fim_middle|>Q8_0.gguf\" \\\n    Q8_0\n```\n\n## Reminders about the cursor line:\nText before cursor: `    \"$TARGET/`\nText after cursor: `Q8_0.gguf\" \\`",
+        "role":"user"
+      },{
+        "content":"$MODEL_NAME-",
+        "finish_reason":"stop",
+        "reasoning_content":"The user wants to complete a line in a `convert.bash` (which is actually a `fish` script) file.\n\nContext:\n```fish\n./build/bin/llama-quantize \\\n    \"$TARGET/$MODEL_NAME-BF16.gguf\" \\\n    \"$TARGET/<|fim_middle|>Q8_0.gguf\" \\\n    Q8_0\n```\n\nThe cursor is at: `\"$TARGET/<|fim_middle|>Q8_0.gguf\" \\`\nThe text before the cursor is: `\"$TARGET/`\nThe text after the cursor is: `Q8_0.gguf\" \\`\n\nThe goal is to complete the filename for the quantized model.\nLooking at the previous lines:\n`set MODEL_NAME Kimi-Audio-7B-Instruct`\n`\"$TARGET/$MODEL_NAME-BF16.gguf\"`\n\nThe quantization target usually follows the pattern: `$MODEL_NAME-QUANTIZED_TYPE.gguf`\nThe suffix is `Q8_0.gguf\" \\`\nThe prefix is `\"$TARGET/`\n\nIf we look at the command:\n`./build/bin/llama-quantize \\`\n    `\"$TARGET/$MODEL_NAME-BF16.gguf\" \\` (Input)\n    `\"$TARGET/<|fim_middle|>Q8_0.gguf\" \\` (Output)\n    `Q8_0` (Quantization type)\n\nThe input is `$MODEL_NAME-BF16.gguf`.\nThe output should be `$MODEL_NAME-Q8_0.gguf`.\n\nSo ` <|fim_middle|>` should be `$MODEL_NAME-`\n\nWait, let's check the cursor position again.\nText before cursor: `    \"$TARGET/`\nText after cursor: `Q8_0.gguf\" \\`\n\nTarget line should be: `    \"$TARGET/$MODEL_NAME-Q8_0.gguf\" \\`\n\nThe cursor is between `\"$TARGET/` and `Q8_0.gguf\" \\`.\nThe part to insert is `$MODEL_NAME-`.\n\nLet's check the variables:\n`set MODEL_NAME Kimi-Audio-7B-Instruct`\n\nThe output file is often named using the model name and the quantization format.\nThe `llama-quantize` command syntax is: `llama-quantize <input> <output> <type>`.\nThe input is `\"$TARGET/$MODEL_NAME-BF16.gguf\"`.\nThe output is `\"$TARGET/$MODEL_NAME-Q8_0.gguf\"`.\nThe type is `Q8_0`.\n\nSo I need to provide `$MODEL_NAME-`.\n\nLet's verify the indentation and whitespace.\nThe line is: `    \"$TARGET/<|fim_middle|>Q8_0.gguf\" \\`\nThe prefix is `    \"$TARGET/` (4 spaces, then double quote, then dollar, then curly, then MODEL_NAME, then close curly, then dash? No, the prompt says `\"$TARGET/`).\nWait, the prompt says:\nText before cursor: `    \"$TARGET/`\nText after cursor: `Q8_0.gguf\" \\`\n\nIf I insert `$MODEL_NAME-`:\n`    \"$TARGET/$MODEL_NAME-Q8_0.gguf\" \\`\nThis looks correct.\n\nOne detail: `MODEL_NAME` in the script is `Kimi-Audio-7B-Instruct`.\nThe line before is `\"$TARGET/$MODEL_NAME-BF16.gguf\"`.\nSo the quantization target filename is likely `$MODEL_NAME-Q8_0.gguf`.\n\nLet's re-read.\n`    \"$TARGET/<|fim_middle|>Q8_0.gguf\" \\`\nIf I insert `$MODEL_NAME-`:\n`    \"$TARGET/$MODEL_NAME-Q8_0.gguf\" \\`\n\nThis matches the pattern of the previous line.",
+        "role":"assistant"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "prompt":"<|repo_name|>kimi-audio-7b-instruct\n<|file_sep|>instructions.txt\nGeneral project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n<|file_sep|>nvim-recent-yanks.txt\n## Recent yanks (copy to clipboard):\n```convert.bash\nKimi-Audio-7B-Instruct\n\n```\n\n<|file_sep|>tags\n<|file_sep|>global.md\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n<|file_sep|>convert.bash\n<|fim_prefix|>#!/usr/bin/env fish\n\nset TARGET ~/repos/github/g0t4/examples/gguf/qwen3.5-base\nset MODEL_NAME Kimi-Audio-7B-Instruct\nset HF_REPO moonshotai/Kimi-Audio-7B-Instruct\nset MODEL \"$TARGET/models/$MODEL_NAME\"\n\ncd ~/repos/github/ggml-org/llama.cpp\n\nhf download \\\n    \"$HF_REPO\" \\\n    --local-dir \"$TARGET/models/$MODEL_NAME\"\n\npython convert_hf_to_gguf.py \\\n    \"$MODEL\" \\\n    --outtype bf16 \\\n    --outfile \"$TARGET/$MODEL_NAME-BF16.gguf\"\n\n./build/bin/llama-quantize \\\n    \"$TARGET/<|fim_suffix|>BF16.gguf\" \\\n    \"$TARGET/Qwen3.5-35B-A3B-Base-Q8_0.gguf\" \\\n    Q8_0<|fim_middle|>",
+    "options":[],
+    "raw":false,
+    "stream":true
+  }
+}
