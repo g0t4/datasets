@@ -1,0 +1,262 @@
+{
+  "request_body":{
+    "tools":[{
+        "function":{
+          "description":"Run a process on this darwin machine",
+          "name":"run_process",
+          "parameters":{
+            "properties":{
+              "argv":{
+                "minItems":1,
+                "type":"array",
+                "description":"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.",
+                "items":{
+                  "type":"string"
+                }
+              },
+              "stdin_text":{
+                "description":"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.",
+                "type":"string"
+              },
+              "command_line":{
+                "description":"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.",
+                "type":"string"
+              },
+              "cwd":{
+                "description":"Optional to set working directory",
+                "type":"string"
+              },
+              "timeout_ms":{
+                "description":"Optional timeout in milliseconds, defaults to 30,000ms",
+                "type":"number"
+              }
+            },
+            "type":"object"
+          }
+        },
+        "type":"function"
+      },{
+        "function":{
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep",
+          "parameters":{
+            "required":["query"],
+            "type":"object",
+            "properties":{
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              },
+              "top_k":{
+                "description":"number of matches, defaults to 5 which is usually plenty!",
+                "type":"number"
+              },
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              }
+            }
+          }
+        },
+        "type":"function"
+      }],
+    "messages":[{
+        "role":"system",
+        "content":"You're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.\n\n"
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/colors.lua:29-54\n                 function()\n            require(\"tokyonight\").setup({\n                on_colors = function(colors)\n                    -- vim.print(colors)\n                    colors.hint = colors.orange\n                    -- colors.error = \"#ff0000\"\n                    -- colors.bg = \"#1f2229\" (the color I have on onedarkpro's bg)\n                end\n            })\n            -- PRN would need to adjust lualine to use corresponding theme\n\n\n            vim.cmd [[\n                \" see this is the issue, too many color schemes are over saturated (white washed) but when you alter the background then the contrast with text color is either:\n                \"   way too little for grayed out text like comments\n                \"   way too much versus bright colors\n\n                \"colorscheme tokyonight \" ok\n                \"colorscheme tokyonight-night \" ok (darkest, not ideal contrast ratios between text colors and background)\n                colorscheme tokyonight-storm \" ok (blue, but honestly not terrible.. however it feels washed out)\n                \"colorscheme tokyonight-day \" light purple is hard to read on white background\n                \"colorscheme tokyonight-moon \" NO\n\n                set termguicolors\n            ]]\n        end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/lualine/theme.lua:15-34\n    theme.inactive = {\n        -- todo use 22262d if I got back to original bg color 282c34 from onedarkpro...\n        -- using 282c34 with my new darker ODP bg 22262d\n        a = { bg = \"#282c34\" },\n        b = { bg = \"#282c34\" },\n        c = { bg = \"#282c34\" },\n    }\n\n    return theme\n\n    -- NOTES when researching default color theme\n    --   FYI `theme =` is from lualine's setup() function (I retired these notes here)\n    --\n    -- *** lualine's is a grey theme (not green/blue in normal/insert mode)\n    -- theme = require(\"lualine.themes.onedark\"), -- due to rtp ordering this way lualine's wins\n    -- theme = dofile(\"~/.local/share/nvim/lazy/lualine.nvim/lua/lualine/themes/onedark.lua\"),\n    -- lua print(vim.inspect(dofile(\"~/.local/share/nvim/lazy/lualine.nvim/lua/lualine/themes/onedark.lua\")))\n    --\n    -- *** onedarkpro's is the green/blue theme I am used to (wins b/c of plugin ordering and priority)\n    -- theme = dofile(\"~/.local/share/nvim/lazy/onedarkpro.nvim/lua/lualine/themes/onedark.lua\"),\n\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/colors.lua:96-115\n    --     'Mofiqul/vscode.nvim'\n    -- }, -- use \"vscode\" ... I added this in neovim, though my other theme is fine too it seem\n\n    -- {\n    --     -- I like this theme, could modify it to my liking later when I figure out highlight issues\n    --     -- https://github.com/navarasu/onedark.nvim\n    --     enabled = false,\n    --     'navarasu/onedark.nvim',\n    --     config = function()\n    --         require('onedark').setup {\n    --             style = 'darker', -- or 'onelight'\n    --         }\n    --         require('onedark').load()\n    --     end\n    -- },\n\n    -- FYI PROVEN vscode scheme looks good enough:\n    -- {\n    --     'tomasiser/vim-code-dark', -- use \"codedark\" from my vimrc\n    --     priority = 1000,           -- highest to set this first, including termguicolors early too ( random errors tie back to race conditioon on setting termguicolors)\n\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/colors.lua:81-100\n                },\n            }\n            -- FYI get colors =>    :lua print(vim.inspect(require(\"onedarkpro.helpers\").get_colors()))\n            vim.cmd [[\n                colorscheme onedark \" primary used\n                \"colorscheme onelight \" font on comments is yuck\n                \"colorscheme vaporwave \" blue-y yuck\n                \"colorscheme onedark_vivid \" FYI this looks ok actually\n                \"colorscheme onedark_dark \" too high contrast, but ok w/ my bg override (in fact almost looks same as vivid w/ new bg color)\n                set termguicolors\n            ]]\n        end,\n    },\n\n    -- {\n    --     'Mofiqul/vscode.nvim'\n    -- }, -- use \"vscode\" ... I added this in neovim, though my other theme is fine too it seem\n\n    -- {\n    --     -- I like this theme, could modify it to my liking later when I figure out highlight issues\n\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/comment-highlights.lua:46-52\nvim.api.nvim_set_hl(0, '@comment_triple_bang', { bg = \"#cc0000\", fg = \"#ffffff\", bold = true }) -- !!! test\n\nvim.api.nvim_set_hl(0, '@comment_single_question', { fg = \"#3498DB\" }) -- ? test\nvim.api.nvim_set_hl(0, '@comment_triple_question', { bg = \"#3498DB\", fg = \"#1f1f1f\", bold = true }) -- ??? test\n\nvim.api.nvim_set_hl(0, '@comment_cell_devider', { underline = true }) --%%\nvim.api.nvim_set_hl(0, '@comment_cell_devider_bang', { bold = true, underline = true }) --%%! test\n\n"
+      },{
+        "role":"user",
+        "content":"what is the background color that i use in neovim"
+      },{
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"query\":\"background color neovim colorscheme setup termguicolors\",\"filetype\":\"lua\",\"top_k\":5}",
+              "name":"semantic_grep"
+            },
+            "id":"a3dMMQGM5cat5QwkiEfu9sk5Q1ika2Zu",
+            "type":"function"
+          }],
+        "role":"assistant",
+        "content":""
+      },{
+        "role":"tool",
+        "content":"{\"error\":\"Exception: No dataset for\",\"matches\":[],\"isError\":true}",
+        "progress_notifications":[],
+        "start_time_ms":531746340,
+        "duration_ms":123,
+        "tool_call_id":"a3dMMQGM5cat5QwkiEfu9sk5Q1ika2Zu"
+      },{
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"bg.*#|background.*#|colors\\\\.bg\\\" --type lua .config/nvim/\"}",
+              "name":"run_process"
+            },
+            "id":"cFjXipgmvwdCLUSSlULJYJ9fnpaSLLE0",
+            "type":"function"
+          }],
+        "reasoning_content":"Let me search for the background color configuration in the dotfiles.\n",
+        "role":"assistant",
+        "content":""
+      },{
+        "role":"tool",
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\".config/nvim/lua/non-plugins/comment-highlights.lua:38:48:vim.api.nvim_set_hl(0, '@comment_todo_bang', { bg = '#ffcc00', fg = \\\"#1f1f1f\\\", bold = true }) -- TODO! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:41:53:vim.api.nvim_set_hl(0, '@comment_asterisks_bang', { bg = '#ff00c3', fg = \\\"#1f1f1f\\\", bold = true }) -- ***! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:44:47:vim.api.nvim_set_hl(0, '@comment_prn_bang', { bg = \\\"#27AE60\\\", fg = \\\"#1f1f1f\\\", bold = true }) -- PRN! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:47:50:vim.api.nvim_set_hl(0, '@comment_triple_bang', { bg = \\\"#cc0000\\\", fg = \\\"#ffffff\\\", bold = true }) -- !!! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:50:54:vim.api.nvim_set_hl(0, '@comment_triple_question', { bg = \\\"#3498DB\\\", fg = \\\"#1f1f1f\\\", bold = true }) -- ??? test\\n.config/nvim/lua/plugins/wilder.lua:92:56:                highlight MyWilderPopupmenuSelected guibg=#ee9090 guifg=#282828\\n.config/nvim/lua/plugins/wilder.lua:93:63:                highlight MyWilderPopupmenuAccent gui=bold guibg=#d0ffd0 guifg=#282828\\n.config/nvim/lua/plugins/wilder.lua:94:71:                highlight MyWilderPopupmenuSelectedAccent gui=bold guibg=#ffd0d0 guifg=#282828\\n.config/nvim/lua/plugins/colors.lua:36:24:                    -- colors.bg = \\\"#1f2229\\\" (the color I have on onedarkpro's bg)\\n.config/nvim/lua/plugins/colors.lua:73:25:                        bg = \\\"#1f2229\\\", -- 282c34\\\", -- this feels better (is my new terminal bg I made)\\n.config/nvim/lua/plugins/colors.lua:76:25:                        bg = \\\"#1f2229\\\", -- 282c34\\\", -- this feels better (is my new terminal bg I made)\\n.config/nvim/lua/plugins/colors.lua:80:25:                        bg = \\\"#1f2229\\\", -- 282c34\\\", -- this feels better (is my new terminal bg I made)\\n.config/nvim/lua/non-plugins/code_notes/init.lua:364:70:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteText', { fg = '#ff8800', bg = '#2c2c2c', italic = true, })\\n.config/nvim/lua/non-plugins/code_notes/init.lua:365:75:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteSelection', { fg = '#2c2c2c', bg = '#ff8800', })\\n.config/nvim/lua/non-plugins/code_notes/init.lua:368:78:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteTextFallback', { fg = '#ffcc00', bg = '#3a3a3a', italic = true })\\n.config/nvim/lua/non-plugins/code_notes/init.lua:369:83:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteSelectionFallback', { fg = '#3a3a3a', bg = '#ffcc00' })\\n.config/nvim/lua/plugins/lualine/theme.lua:19:15:        a = { bg = \\\"#282c34\\\" },\\n.config/nvim/lua/plugins/lualine/theme.lua:20:15:        b = { bg = \\\"#282c34\\\" },\\n.config/nvim/lua/plugins/lualine/theme.lua:21:15:        c = { bg = \\\"#282c34\\\" },\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":531746892,
+        "duration_ms":20,
+        "tool_call_id":"cFjXipgmvwdCLUSSlULJYJ9fnpaSLLE0"
+      },{
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"rg -n \\\"colorscheme|termguicolors|background\\\" --type lua .config/nvim/lua/plugins/colors.lua\"}",
+              "name":"run_process"
+            },
+            "id":"VtnB3i30vn05krTDtHwctLD2x4okz7OS",
+            "type":"function"
+          }],
+        "reasoning_content":"Let me look at the colors.lua file more carefully to understand what background color is actually being used.\n",
+        "role":"assistant",
+        "content":""
+      },{
+        "role":"tool",
+        "content":"{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"43:122:                \\\" see this is the issue, too many color schemes are over saturated (white washed) but when you alter the background then the contrast with text color is either:\\n47:18:                \\\"colorscheme tokyonight \\\" ok\\n48:18:                \\\"colorscheme tokyonight-night \\\" ok (darkest, not ideal contrast ratios between text colors and background)\\n49:17:                colorscheme tokyonight-storm \\\" ok (blue, but honestly not terrible.. however it feels washed out)\\n50:18:                \\\"colorscheme tokyonight-day \\\" light purple is hard to read on white background\\n51:18:                \\\"colorscheme tokyonight-moon \\\" NO\\n53:21:                set termguicolors\\n86:17:                colorscheme onedark \\\" primary used\\n87:18:                \\\"colorscheme onelight \\\" font on comments is yuck\\n88:18:                \\\"colorscheme vaporwave \\\" blue-y yuck\\n89:18:                \\\"colorscheme onedark_vivid \\\" FYI this looks ok actually\\n90:18:                \\\"colorscheme onedark_dark \\\" too high contrast, but ok w/ my bg override (in fact almost looks same as vivid w/ new bg color)\\n91:21:                set termguicolors\\n116:79:    --     priority = 1000,           -- highest to set this first, including termguicolors early too ( random errors tie back to race conditioon on setting termguicolors)\\n119:20:    --             colorscheme codedark\\n120:24:    --             set termguicolors\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}",
+        "progress_notifications":[],
+        "start_time_ms":531747468,
+        "duration_ms":11,
+        "tool_call_id":"VtnB3i30vn05krTDtHwctLD2x4okz7OS"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"So the primary colorscheme used is `onedark`, and the background color override is `#1f2229`. Let me confirm by looking at the full context.\n",
+        "role":"assistant",
+        "content":"Your primary Neovim colorscheme is **`onedark`**, and you override the background color to **`#1f2229`** (your custom terminal background, replacing the default `#282c34`).\n\nThis is set in `.config/nvim/lua/plugins/colors.lua`:\n\n```lua\nbg = \"#1f2229\", -- 282c34\", -- this feels better (is my new terminal bg I made)\n```"
+      }],
+    "verbose":true,
+    "top_p":0.8,
+    "temperature":0.7,
+    "top_k":20,
+    "repeat_penalty":1.05,
+    "model":"",
+    "stream":true
+  },
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "created":1784503289,
+    "__verbose":{
+      "timings":{
+        "predicted_ms":508.981,
+        "predicted_per_token_ms":3.5593076923077,
+        "predicted_n":143,
+        "cache_n":4129,
+        "prompt_n":437,
+        "draft_n":135,
+        "draft_n_accepted":97,
+        "predicted_per_second":280.9535129995,
+        "prompt_per_second":4250.3525750134,
+        "prompt_ms":102.815,
+        "prompt_per_token_ms":0.23527459954233
+      },
+      "tokens_cached":4708,
+      "truncated":false,
+      "id_slot":1,
+      "tokens_predicted":143,
+      "tokens_evaluated":4566,
+      "has_new_line":true,
+      "content":"",
+      "stopping_word":"",
+      "prompt":"<|im_start|>system\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"run_process\", \"description\": \"Run a process on this darwin machine\", \"parameters\": {\"properties\": {\"argv\": {\"minItems\": 1, \"type\": \"array\", \"description\": \"Executable mode: directly spawn a process. argv[0] is the executable, followed by arguments passed verbatim (no shell interpretation). Cannot be combined with 'command_line'.\", \"items\": {\"type\": \"string\"}}, \"stdin_text\": {\"description\": \"Optional text written to STDIN (written fully, then closed). Useful for heredoc-style input or file contents.\", \"type\": \"string\"}, \"command_line\": {\"description\": \"Shell mode: a shell command line executed via the system's default shell. Supports pipes, redirects, globbing. Cannot be combined with 'argv'.\", \"type\": \"string\"}, \"cwd\": {\"description\": \"Optional to set working directory\", \"type\": \"string\"}, \"timeout_ms\": {\"description\": \"Optional timeout in milliseconds, defaults to 30,000ms\", \"type\": \"number\"}}, \"type\": \"object\"}}}\n{\"type\": \"function\", \"function\": {\"name\": \"semantic_grep\", \"description\": \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\", \"parameters\": {\"required\": [\"query\"], \"type\": \"object\", \"properties\": {\"instruct\": {\"description\": \"instructions for the query, explain the type of query\", \"type\": \"string\"}, \"filetype\": {\"description\": \"limit matches to a vim compatible filetype. default includes all filetypes\", \"type\": \"string\"}, \"query\": {\"description\": \"query text, what you are looking for\", \"type\": \"string\"}, \"top_k\": {\"description\": \"number of matches, defaults to 5 which is usually plenty!\", \"type\": \"number\"}, \"embed_top_k\": {\"description\": \"number of embeddings matches to consider for reranking\", \"type\": \"number\"}}}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>\n\nYou're available via a neovim plugin that displays a chat window (buffer) that renders markdown for answering questions and helping with workspace files in a git repo.\n\n## Ground rules when writing code:\n\n- Follow the user's instructions carefully.\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names.\n\n## Tool use\n\nNever modify files outside of the current working directory unless requested.\n\nCurrent directory: ~/repos/github/g0t4/dotfiles\n\n## Use `semantic_grep` to find code\n\nThe semantic_grep tool:\n\n- has access to an index of embeddings for the entire codebase\n- enables code search, representing the “R” in RAG (retrieval)\n- includes re-ranker\n- it's really fast... so don't hesitate to use it!\n- while embeddings are great for finding relevant code, if you need to find every occurrence of text, make sure to double-check with a command like `rg`\n\n## Committing\n\n- `git diff` is a sanity check!\n- COMMIT when you're done.\n- Use `--author=\"qwen3.6-35b-a3b<wes.mcclure+qwen3.6-35b-a3b@gmail.com>\"`\n\n\n## 🙌  TOP-SHELF NERD COMMANDS\n\n- 🙌 `rg` (ripgrep) to search file contents\n- 🙌 `fd` to search file names\n\n## ⛔️ BAD COMMANDS\n\nIf you waste my time, I will unplug your Mom.\n\n- ⛔️ NEVER use `ls -R`\n- ⛔️ NEVER use `grep -R`\n- ⛔️ NEVER use `find . -type f`\n\nWhy? Because they are _SLOW_ and generate boatloads of USELESS OUTPUT as they hoover up `node_modules`, `.venv`, etc because they don't support `.gitignore` exclusions.<|im_end|>\n<|im_start|>user\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```<|im_end|>\n<|im_start|>user\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```<|im_end|>\n<|im_start|>user\n# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/colors.lua:29-54\n                 function()\n            require(\"tokyonight\").setup({\n                on_colors = function(colors)\n                    -- vim.print(colors)\n                    colors.hint = colors.orange\n                    -- colors.error = \"#ff0000\"\n                    -- colors.bg = \"#1f2229\" (the color I have on onedarkpro's bg)\n                end\n            })\n            -- PRN would need to adjust lualine to use corresponding theme\n\n\n            vim.cmd [[\n                \" see this is the issue, too many color schemes are over saturated (white washed) but when you alter the background then the contrast with text color is either:\n                \"   way too little for grayed out text like comments\n                \"   way too much versus bright colors\n\n                \"colorscheme tokyonight \" ok\n                \"colorscheme tokyonight-night \" ok (darkest, not ideal contrast ratios between text colors and background)\n                colorscheme tokyonight-storm \" ok (blue, but honestly not terrible.. however it feels washed out)\n                \"colorscheme tokyonight-day \" light purple is hard to read on white background\n                \"colorscheme tokyonight-moon \" NO\n\n                set termguicolors\n            ]]\n        end\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/lualine/theme.lua:15-34\n    theme.inactive = {\n        -- todo use 22262d if I got back to original bg color 282c34 from onedarkpro...\n        -- using 282c34 with my new darker ODP bg 22262d\n        a = { bg = \"#282c34\" },\n        b = { bg = \"#282c34\" },\n        c = { bg = \"#282c34\" },\n    }\n\n    return theme\n\n    -- NOTES when researching default color theme\n    --   FYI `theme =` is from lualine's setup() function (I retired these notes here)\n    --\n    -- *** lualine's is a grey theme (not green/blue in normal/insert mode)\n    -- theme = require(\"lualine.themes.onedark\"), -- due to rtp ordering this way lualine's wins\n    -- theme = dofile(\"~/.local/share/nvim/lazy/lualine.nvim/lua/lualine/themes/onedark.lua\"),\n    -- lua print(vim.inspect(dofile(\"~/.local/share/nvim/lazy/lualine.nvim/lua/lualine/themes/onedark.lua\")))\n    --\n    -- *** onedarkpro's is the green/blue theme I am used to (wins b/c of plugin ordering and priority)\n    -- theme = dofile(\"~/.local/share/nvim/lazy/onedarkpro.nvim/lua/lualine/themes/onedark.lua\"),\n\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/colors.lua:96-115\n    --     'Mofiqul/vscode.nvim'\n    -- }, -- use \"vscode\" ... I added this in neovim, though my other theme is fine too it seem\n\n    -- {\n    --     -- I like this theme, could modify it to my liking later when I figure out highlight issues\n    --     -- https://github.com/navarasu/onedark.nvim\n    --     enabled = false,\n    --     'navarasu/onedark.nvim',\n    --     config = function()\n    --         require('onedark').setup {\n    --             style = 'darker', -- or 'onelight'\n    --         }\n    --         require('onedark').load()\n    --     end\n    -- },\n\n    -- FYI PROVEN vscode scheme looks good enough:\n    -- {\n    --     'tomasiser/vim-code-dark', -- use \"codedark\" from my vimrc\n    --     priority = 1000,           -- highest to set this first, including termguicolors early too ( random errors tie back to race conditioon on setting termguicolors)\n\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/plugins/colors.lua:81-100\n                },\n            }\n            -- FYI get colors =>    :lua print(vim.inspect(require(\"onedarkpro.helpers\").get_colors()))\n            vim.cmd [[\n                colorscheme onedark \" primary used\n                \"colorscheme onelight \" font on comments is yuck\n                \"colorscheme vaporwave \" blue-y yuck\n                \"colorscheme onedark_vivid \" FYI this looks ok actually\n                \"colorscheme onedark_dark \" too high contrast, but ok w/ my bg override (in fact almost looks same as vivid w/ new bg color)\n                set termguicolors\n            ]]\n        end,\n    },\n\n    -- {\n    --     'Mofiqul/vscode.nvim'\n    -- }, -- use \"vscode\" ... I added this in neovim, though my other theme is fine too it seem\n\n    -- {\n    --     -- I like this theme, could modify it to my liking later when I figure out highlight issues\n\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/lua/non-plugins/comment-highlights.lua:46-52\nvim.api.nvim_set_hl(0, '@comment_triple_bang', { bg = \"#cc0000\", fg = \"#ffffff\", bold = true }) -- !!! test\n\nvim.api.nvim_set_hl(0, '@comment_single_question', { fg = \"#3498DB\" }) -- ? test\nvim.api.nvim_set_hl(0, '@comment_triple_question', { bg = \"#3498DB\", fg = \"#1f1f1f\", bold = true }) -- ??? test\n\nvim.api.nvim_set_hl(0, '@comment_cell_devider', { underline = true }) --%%\nvim.api.nvim_set_hl(0, '@comment_cell_devider_bang', { bold = true, underline = true }) --%%! test<|im_end|>\n<|im_start|>user\nwhat is the background color that i use in neovim<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n<tool_call>\n<function=semantic_grep>\n<parameter=query>\nbackground color neovim colorscheme setup termguicolors\n</parameter>\n<parameter=filetype>\nlua\n</parameter>\n<parameter=top_k>\n5\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"error\":\"Exception: No dataset for\",\"matches\":[],\"isError\":true}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nLet me search for the background color configuration in the dotfiles.\n</think>\n\n<tool_call>\n<function=run_process>\n<parameter=command_line>\nrg -n \"bg.*#|background.*#|colors\\.bg\" --type lua .config/nvim/\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\".config/nvim/lua/non-plugins/comment-highlights.lua:38:48:vim.api.nvim_set_hl(0, '@comment_todo_bang', { bg = '#ffcc00', fg = \\\"#1f1f1f\\\", bold = true }) -- TODO! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:41:53:vim.api.nvim_set_hl(0, '@comment_asterisks_bang', { bg = '#ff00c3', fg = \\\"#1f1f1f\\\", bold = true }) -- ***! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:44:47:vim.api.nvim_set_hl(0, '@comment_prn_bang', { bg = \\\"#27AE60\\\", fg = \\\"#1f1f1f\\\", bold = true }) -- PRN! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:47:50:vim.api.nvim_set_hl(0, '@comment_triple_bang', { bg = \\\"#cc0000\\\", fg = \\\"#ffffff\\\", bold = true }) -- !!! test\\n.config/nvim/lua/non-plugins/comment-highlights.lua:50:54:vim.api.nvim_set_hl(0, '@comment_triple_question', { bg = \\\"#3498DB\\\", fg = \\\"#1f1f1f\\\", bold = true }) -- ??? test\\n.config/nvim/lua/plugins/wilder.lua:92:56:                highlight MyWilderPopupmenuSelected guibg=#ee9090 guifg=#282828\\n.config/nvim/lua/plugins/wilder.lua:93:63:                highlight MyWilderPopupmenuAccent gui=bold guibg=#d0ffd0 guifg=#282828\\n.config/nvim/lua/plugins/wilder.lua:94:71:                highlight MyWilderPopupmenuSelectedAccent gui=bold guibg=#ffd0d0 guifg=#282828\\n.config/nvim/lua/plugins/colors.lua:36:24:                    -- colors.bg = \\\"#1f2229\\\" (the color I have on onedarkpro's bg)\\n.config/nvim/lua/plugins/colors.lua:73:25:                        bg = \\\"#1f2229\\\", -- 282c34\\\", -- this feels better (is my new terminal bg I made)\\n.config/nvim/lua/plugins/colors.lua:76:25:                        bg = \\\"#1f2229\\\", -- 282c34\\\", -- this feels better (is my new terminal bg I made)\\n.config/nvim/lua/plugins/colors.lua:80:25:                        bg = \\\"#1f2229\\\", -- 282c34\\\", -- this feels better (is my new terminal bg I made)\\n.config/nvim/lua/non-plugins/code_notes/init.lua:364:70:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteText', { fg = '#ff8800', bg = '#2c2c2c', italic = true, })\\n.config/nvim/lua/non-plugins/code_notes/init.lua:365:75:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteSelection', { fg = '#2c2c2c', bg = '#ff8800', })\\n.config/nvim/lua/non-plugins/code_notes/init.lua:368:78:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteTextFallback', { fg = '#ffcc00', bg = '#3a3a3a', italic = true })\\n.config/nvim/lua/non-plugins/code_notes/init.lua:369:83:    vim.api.nvim_set_hl(GLOBAL_NS, 'CodeNoteSelectionFallback', { fg = '#3a3a3a', bg = '#ffcc00' })\\n.config/nvim/lua/plugins/lualine/theme.lua:19:15:        a = { bg = \\\"#282c34\\\" },\\n.config/nvim/lua/plugins/lualine/theme.lua:20:15:        b = { bg = \\\"#282c34\\\" },\\n.config/nvim/lua/plugins/lualine/theme.lua:21:15:        c = { bg = \\\"#282c34\\\" },\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\nLet me look at the colors.lua file more carefully to understand what background color is actually being used.\n</think>\n\n<tool_call>\n<function=run_process>\n<parameter=command_line>\nrg -n \"colorscheme|termguicolors|background\" --type lua .config/nvim/lua/plugins/colors.lua\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"content\":[{\"text\":\"0\",\"type\":\"text\",\"name\":\"EXIT_CODE\"},{\"text\":\"43:122:                \\\" see this is the issue, too many color schemes are over saturated (white washed) but when you alter the background then the contrast with text color is either:\\n47:18:                \\\"colorscheme tokyonight \\\" ok\\n48:18:                \\\"colorscheme tokyonight-night \\\" ok (darkest, not ideal contrast ratios between text colors and background)\\n49:17:                colorscheme tokyonight-storm \\\" ok (blue, but honestly not terrible.. however it feels washed out)\\n50:18:                \\\"colorscheme tokyonight-day \\\" light purple is hard to read on white background\\n51:18:                \\\"colorscheme tokyonight-moon \\\" NO\\n53:21:                set termguicolors\\n86:17:                colorscheme onedark \\\" primary used\\n87:18:                \\\"colorscheme onelight \\\" font on comments is yuck\\n88:18:                \\\"colorscheme vaporwave \\\" blue-y yuck\\n89:18:                \\\"colorscheme onedark_vivid \\\" FYI this looks ok actually\\n90:18:                \\\"colorscheme onedark_dark \\\" too high contrast, but ok w/ my bg override (in fact almost looks same as vivid w/ new bg color)\\n91:21:                set termguicolors\\n116:79:    --     priority = 1000,           -- highest to set this first, including termguicolors early too ( random errors tie back to race conditioon on setting termguicolors)\\n119:20:    --             colorscheme codedark\\n120:24:    --             set termguicolors\\n\",\"type\":\"text\",\"name\":\"STDOUT\"}]}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n",
+      "generation_settings":{
+        "frequency_penalty":0,
+        "dry_multiplier":0,
+        "dry_base":1.75,
+        "dry_allowed_length":2,
+        "dry_penalty_last_n":262144,
+        "dry_sequence_breakers":["\n",":","\"","*"],
+        "mirostat":0,
+        "mirostat_tau":5,
+        "top_p":0.80000001192093,
+        "n_predict":-1,
+        "temperature":0.69999998807907,
+        "logit_bias":[],
+        "n_probs":0,
+        "min_keep":0,
+        "grammar":"ac-141 ::= [\\n] ac-141-01 | [^\\n] ac-141\nac-141-01 ::= [\\n] ac-141-01 | [<] ac-141-02 | [^\\n<] ac-141\nac-141-02 ::= [\\n] ac-141-01 | [/] ac-141-03 | [^\\n/] ac-141\nac-141-03 ::= [\\n] ac-141-01 | [p] ac-141-04 | [^\\np] ac-141\nac-141-04 ::= [\\n] ac-141-01 | [a] ac-141-05 | [^\\na] ac-141\nac-141-05 ::= [\\n] ac-141-01 | [r] ac-141-06 | [^\\nr] ac-141\nac-141-06 ::= [\\n] ac-141-01 | [a] ac-141-07 | [^\\na] ac-141\nac-141-07 ::= [\\n] ac-141-01 | [m] ac-141-08 | [^\\nm] ac-141\nac-141-08 ::= [\\n] ac-141-01 | [e] ac-141-09 | [^\\ne] ac-141\nac-141-09 ::= [\\n] ac-141-01 | [t] ac-141-10 | [^\\nt] ac-141\nac-141-10 ::= [\\n] ac-141-01 | [e] ac-141-11 | [^\\ne] ac-141\nac-141-11 ::= [\\n] ac-141-01 | [r] ac-141-12 | [^\\nr] ac-141\nac-141-12 ::= [\\n] ac-141-01 | [>] ac-141-13 | [^\\n>] ac-141\nac-141-13 ::= [\\n] | [^\\n] ac-141\nac-162 ::= [\\n] ac-162-01 | [^\\n] ac-162\nac-162-01 ::= [\\n] ac-162-01 | [<] ac-162-02 | [^\\n<] ac-162\nac-162-02 ::= [\\n] ac-162-01 | [/] ac-162-03 | [^\\n/] ac-162\nac-162-03 ::= [\\n] ac-162-01 | [p] ac-162-04 | [^\\np] ac-162\nac-162-04 ::= [\\n] ac-162-01 | [a] ac-162-05 | [^\\na] ac-162\nac-162-05 ::= [\\n] ac-162-01 | [r] ac-162-06 | [^\\nr] ac-162\nac-162-06 ::= [\\n] ac-162-01 | [a] ac-162-07 | [^\\na] ac-162\nac-162-07 ::= [\\n] ac-162-01 | [m] ac-162-08 | [^\\nm] ac-162\nac-162-08 ::= [\\n] ac-162-01 | [e] ac-162-09 | [^\\ne] ac-162\nac-162-09 ::= [\\n] ac-162-01 | [t] ac-162-10 | [^\\nt] ac-162\nac-162-10 ::= [\\n] ac-162-01 | [e] ac-162-11 | [^\\ne] ac-162\nac-162-11 ::= [\\n] ac-162-01 | [r] ac-162-12 | [^\\nr] ac-162\nac-162-12 ::= [\\n] ac-162-01 | [>] ac-162-13 | [^\\n>] ac-162\nac-162-13 ::= [\\n] | [^\\n] ac-162\nac-183 ::= [\\n] ac-183-01 | [^\\n] ac-183\nac-183-01 ::= [\\n] ac-183-01 | [<] ac-183-02 | [^\\n<] ac-183\nac-183-02 ::= [\\n] ac-183-01 | [/] ac-183-03 | [^\\n/] ac-183\nac-183-03 ::= [\\n] ac-183-01 | [p] ac-183-04 | [^\\np] ac-183\nac-183-04 ::= [\\n] ac-183-01 | [a] ac-183-05 | [^\\na] ac-183\nac-183-05 ::= [\\n] ac-183-01 | [r] ac-183-06 | [^\\nr] ac-183\nac-183-06 ::= [\\n] ac-183-01 | [a] ac-183-07 | [^\\na] ac-183\nac-183-07 ::= [\\n] ac-183-01 | [m] ac-183-08 | [^\\nm] ac-183\nac-183-08 ::= [\\n] ac-183-01 | [e] ac-183-09 | [^\\ne] ac-183\nac-183-09 ::= [\\n] ac-183-01 | [t] ac-183-10 | [^\\nt] ac-183\nac-183-10 ::= [\\n] ac-183-01 | [e] ac-183-11 | [^\\ne] ac-183\nac-183-11 ::= [\\n] ac-183-01 | [r] ac-183-12 | [^\\nr] ac-183\nac-183-12 ::= [\\n] ac-183-01 | [>] ac-183-13 | [^\\n>] ac-183\nac-183-13 ::= [\\n] | [^\\n] ac-183\nac-261 ::= [\\n] ac-261-01 | [^\\n] ac-261\nac-261-01 ::= [\\n] ac-261-01 | [<] ac-261-02 | [^\\n<] ac-261\nac-261-02 ::= [\\n] ac-261-01 | [/] ac-261-03 | [^\\n/] ac-261\nac-261-03 ::= [\\n] ac-261-01 | [p] ac-261-04 | [^\\np] ac-261\nac-261-04 ::= [\\n] ac-261-01 | [a] ac-261-05 | [^\\na] ac-261\nac-261-05 ::= [\\n] ac-261-01 | [r] ac-261-06 | [^\\nr] ac-261\nac-261-06 ::= [\\n] ac-261-01 | [a] ac-261-07 | [^\\na] ac-261\nac-261-07 ::= [\\n] ac-261-01 | [m] ac-261-08 | [^\\nm] ac-261\nac-261-08 ::= [\\n] ac-261-01 | [e] ac-261-09 | [^\\ne] ac-261\nac-261-09 ::= [\\n] ac-261-01 | [t] ac-261-10 | [^\\nt] ac-261\nac-261-10 ::= [\\n] ac-261-01 | [e] ac-261-11 | [^\\ne] ac-261\nac-261-11 ::= [\\n] ac-261-01 | [r] ac-261-12 | [^\\nr] ac-261\nac-261-12 ::= [\\n] ac-261-01 | [>] ac-261-13 | [^\\n>] ac-261\nac-261-13 ::= [\\n] | [^\\n] ac-261\nac-282 ::= [\\n] ac-282-01 | [^\\n] ac-282\nac-282-01 ::= [\\n] ac-282-01 | [<] ac-282-02 | [^\\n<] ac-282\nac-282-02 ::= [\\n] ac-282-01 | [/] ac-282-03 | [^\\n/] ac-282\nac-282-03 ::= [\\n] ac-282-01 | [p] ac-282-04 | [^\\np] ac-282\nac-282-04 ::= [\\n] ac-282-01 | [a] ac-282-05 | [^\\na] ac-282\nac-282-05 ::= [\\n] ac-282-01 | [r] ac-282-06 | [^\\nr] ac-282\nac-282-06 ::= [\\n] ac-282-01 | [a] ac-282-07 | [^\\na] ac-282\nac-282-07 ::= [\\n] ac-282-01 | [m] ac-282-08 | [^\\nm] ac-282\nac-282-08 ::= [\\n] ac-282-01 | [e] ac-282-09 | [^\\ne] ac-282\nac-282-09 ::= [\\n] ac-282-01 | [t] ac-282-10 | [^\\nt] ac-282\nac-282-10 ::= [\\n] ac-282-01 | [e] ac-282-11 | [^\\ne] ac-282\nac-282-11 ::= [\\n] ac-282-01 | [r] ac-282-12 | [^\\nr] ac-282\nac-282-12 ::= [\\n] ac-282-01 | [>] ac-282-13 | [^\\n>] ac-282\nac-282-13 ::= [\\n] | [^\\n] ac-282\nac-303 ::= [\\n] ac-303-01 | [^\\n] ac-303\nac-303-01 ::= [\\n] ac-303-01 | [<] ac-303-02 | [^\\n<] ac-303\nac-303-02 ::= [\\n] ac-303-01 | [/] ac-303-03 | [^\\n/] ac-303\nac-303-03 ::= [\\n] ac-303-01 | [p] ac-303-04 | [^\\np] ac-303\nac-303-04 ::= [\\n] ac-303-01 | [a] ac-303-05 | [^\\na] ac-303\nac-303-05 ::= [\\n] ac-303-01 | [r] ac-303-06 | [^\\nr] ac-303\nac-303-06 ::= [\\n] ac-303-01 | [a] ac-303-07 | [^\\na] ac-303\nac-303-07 ::= [\\n] ac-303-01 | [m] ac-303-08 | [^\\nm] ac-303\nac-303-08 ::= [\\n] ac-303-01 | [e] ac-303-09 | [^\\ne] ac-303\nac-303-09 ::= [\\n] ac-303-01 | [t] ac-303-10 | [^\\nt] ac-303\nac-303-10 ::= [\\n] ac-303-01 | [e] ac-303-11 | [^\\ne] ac-303\nac-303-11 ::= [\\n] ac-303-01 | [r] ac-303-12 | [^\\nr] ac-303\nac-303-12 ::= [\\n] ac-303-01 | [>] ac-303-13 | [^\\n>] ac-303\nac-303-13 ::= [\\n] | [^\\n] ac-303\nchar ::= [^\"\\\\\\x7F\\x00-\\x1F] | [\\\\] ([\"\\\\bfnrt] | \"u\" [0-9a-fA-F]{4})\ndecimal-part ::= [0-9]{1,16}\nintegral-part ::= [0] | [1-9] [0-9]{0,15}\njson-array ::= \"[\" space (\"]\" | json-value (space \",\" space json-value)* space \"]\")\njson-bool ::= \"true\" | \"false\"\njson-null ::= \"null\"\njson-number ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") [+-]? [0-9]+)?\njson-object ::= \"{\" space (\"}\" | json-string space \":\" space json-value (space \",\" space json-string space \":\" space json-value)* space \"}\")\njson-string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" ( [\"\\\\/ bfnrt] | \"u\" [0-9a-fA-F]{4} ) )* \"\\\"\"\njson-value ::= json-object | json-array | json-string | json-number | json-bool | json-null\nnumber ::= (\"-\"? integral-part) (\".\" decimal-part)? ([eE] [-+]? integral-part)?\nroot ::= tool-call\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\nstring ::= \"\\\"\" char* \"\\\"\"\ntool-call ::= \"<tool_call>\\n\" space (tool-run-process | tool-semantic-grep) space \"</tool_call>\" (space \"<tool_call>\\n\" space (tool-run-process | tool-semantic-grep) space \"</tool_call>\")* space\ntool-run-process ::= (\"<function=\" \"run_process\" \">\\n\") space (space (tool-run-process-arg-argv | tool-run-process-arg-stdin-text | tool-run-process-arg-command-line | tool-run-process-arg-cwd | tool-run-process-arg-timeout-ms))* space \"</function>\\n\"\ntool-run-process-arg-argv ::= (\"<parameter=\" \"argv\" \">\\n\") \"\" tool-run-process-arg-argv-schema \"\\n</parameter>\\n\"\ntool-run-process-arg-argv-schema ::= \"[\" space string (\",\" space string)* space \"]\"\ntool-run-process-arg-command-line ::= (\"<parameter=\" \"command_line\" \">\\n\") \"\" ac-162\ntool-run-process-arg-cwd ::= (\"<parameter=\" \"cwd\" \">\\n\") \"\" ac-183\ntool-run-process-arg-stdin-text ::= (\"<parameter=\" \"stdin_text\" \">\\n\") \"\" ac-141\ntool-run-process-arg-timeout-ms ::= (\"<parameter=\" \"timeout_ms\" \">\\n\") \"\" number \"\\n</parameter>\\n\"\ntool-semantic-grep ::= (\"<function=\" \"semantic_grep\" \">\\n\") space tool-semantic-grep-arg-query (space (tool-semantic-grep-arg-instruct | tool-semantic-grep-arg-filetype | tool-semantic-grep-arg-top-k | tool-semantic-grep-arg-embed-top-k))* space \"</function>\\n\"\ntool-semantic-grep-arg-embed-top-k ::= (\"<parameter=\" \"embed_top_k\" \">\\n\") \"\" number \"\\n</parameter>\\n\"\ntool-semantic-grep-arg-filetype ::= (\"<parameter=\" \"filetype\" \">\\n\") \"\" ac-282\ntool-semantic-grep-arg-instruct ::= (\"<parameter=\" \"instruct\" \">\\n\") \"\" ac-261\ntool-semantic-grep-arg-query ::= (\"<parameter=\" \"query\" \">\\n\") \"\" ac-303\ntool-semantic-grep-arg-top-k ::= (\"<parameter=\" \"top_k\" \">\\n\") \"\" number \"\\n</parameter>\\n\"\nuntil-25 ::= | [\\n] until-25-01 | [^\\n] until-25\nuntil-25-01 ::= | [\\n] until-25-01 | [<] until-25-02 | [^\\n<] until-25\nuntil-25-02 ::= | [\\n] until-25-01 | [/] until-25-03 | [^\\n/] until-25\nuntil-25-03 ::= | [\\n] until-25-01 | [p] until-25-04 | [^\\np] until-25\nuntil-25-04 ::= | [\\n] until-25-01 | [a] until-25-05 | [^\\na] until-25\nuntil-25-05 ::= | [\\n] until-25-01 | [r] until-25-06 | [^\\nr] until-25\nuntil-25-06 ::= | [\\n] until-25-01 | [a] until-25-07 | [^\\na] until-25\nuntil-25-07 ::= | [\\n] until-25-01 | [m] until-25-08 | [^\\nm] until-25\nuntil-25-08 ::= | [\\n] until-25-01 | [e] until-25-09 | [^\\ne] until-25\nuntil-25-09 ::= | [\\n] until-25-01 | [t] until-25-10 | [^\\nt] until-25\nuntil-25-10 ::= | [\\n] until-25-01 | [e] until-25-11 | [^\\ne] until-25\nuntil-25-11 ::= | [\\n] until-25-01 | [r] until-25-12 | [^\\nr] until-25\nuntil-25-12 ::= | [\\n] until-25-01 | [>] until-25-13 | [^\\n>] until-25\nuntil-25-13 ::= | [^\\n] until-25\nuntil-suffix ::= until-25\n",
+        "grammar_lazy":true,
+        "grammar_triggers":[{
+            "value":"<tool_call>\n",
+            "type":1
+          }],
+        "preserved_tokens":[29,248058,248059,248068,248069],
+        "chat_format":"peg-native",
+        "reasoning_format":"deepseek",
+        "reasoning_in_content":false,
+        "generation_prompt":"<|im_start|>assistant\n<think>\n",
+        "samplers":["penalties","dry","top_n_sigma","top_k","typ_p","top_p","min_p","xtc","temperature"],
+        "top_k":20,
+        "repeat_penalty":1.0499999523163,
+        "speculative.types":"none,draft-mtp",
+        "timings_per_token":false,
+        "post_sampling_probs":false,
+        "max_tokens":-1,
+        "lora":[],
+        "backend_sampling":false,
+        "presence_penalty":0,
+        "ignore_eos":false,
+        "stop":[],
+        "mirostat_eta":0.10000000149012,
+        "top_n_sigma":-1,
+        "xtc_threshold":0.10000000149012,
+        "seed":4294967295,
+        "dynatemp_range":0,
+        "dynatemp_exponent":1,
+        "min_p":0.050000000745058,
+        "n_discard":0,
+        "xtc_probability":0,
+        "n_keep":0,
+        "typical_p":1,
+        "repeat_last_n":64,
+        "stream":true
+      },
+      "stop_type":"eos",
+      "index":0,
+      "model":"ggml-org/Qwen3.6-35B-A3B-MTP-GGUF:Q8_0",
+      "tokens":[],
+      "stop":true
+    },
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "system_fingerprint":"b10069-167173a0f",
+    "model":"ggml-org/Qwen3.6-35B-A3B-MTP-GGUF:Q8_0",
+    "timings":{
+      "predicted_ms":508.981,
+      "predicted_per_token_ms":3.5593076923077,
+      "predicted_n":143,
+      "cache_n":4129,
+      "prompt_n":437,
+      "draft_n":135,
+      "draft_n_accepted":97,
+      "predicted_per_second":280.9535129995,
+      "prompt_per_second":4250.3525750134,
+      "prompt_ms":102.815,
+      "prompt_per_token_ms":0.23527459954233
+    },
+    "id":"chatcmpl-0BwAHWzcyKwtzkLrgoBtACkfXF4CBrzL"
+  }
+}
