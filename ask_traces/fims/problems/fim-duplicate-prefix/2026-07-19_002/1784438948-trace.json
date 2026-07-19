@@ -1,0 +1,54 @@
+{
+  "request_body":{
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: install\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Fish Shell\n\n- Use snake_case for names\n- Use long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n\nTake advantage of fish-isms:\n```fish\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\nend\n\n# capture command output and react to its success/failure (exit status)\nif set some_output (some_command)\n    echo \"ok: $some_output\"\nelse\n    echo \"fail: $some_output\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use mulit-line strings:\necho \"foo\nbar\" | string join \",\"\n\n# blocks combine the output of multiple commands:\nbegin\n    echo -n \"Hello Wes, the time is: \"\n    date\nend > welcome.txt\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nstring match '*.lua' $files\nstring replace wrong right $in_this_text\nstring replace --regex '\\s+' ' ' $line\nset lines (string split '\\n' $text)\nstring join ',' $argv\nstring length $name\n\nstring escape $file_path\nstring unescape $escaped\n\npath change-extension mov ./foo.mp4 # ./foo.mov\npath sort 10-foo 2-bar # returns 2 before 10\n\nmath 10 / 5\nmath \"5 * 2\"\n\ncount *.txt\n\nif contains -- \"-q\" $argv\n    # ...\nend\n\nstatus filename # current script file\nstatus function # current function\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/fish/completions/ansible-lint.fish:1-15\nfunction __fish_ansible-lint_complete\n    set -lx _ARGCOMPLETE 1\n    set -lx _ARGCOMPLETE_DFS \\t\n    set -lx _ARGCOMPLETE_IFS \\n\n    set -lx _ARGCOMPLETE_SUPPRESS_SPACE 1\n    set -lx _ARGCOMPLETE_SHELL fish\n    set -lx COMP_LINE (commandline -p)\n    set -lx COMP_POINT (string length (commandline -cp))\n    set -lx COMP_TYPE\n    if set -q _ARC_DEBUG\n        ansible-lint 8>&1 9>&2 1>&9 2>&1\n    else\n        ansible-lint 8>&1 9>&2 1>/dev/null 2>&1\n    end\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/completions/ansible-lint.fish:0-16\n\nfunction __fish_ansible-lint_complete\n    set -lx _ARGCOMPLETE 1\n    set -lx _ARGCOMPLETE_DFS \\t\n    set -lx _ARGCOMPLETE_IFS \\n\n    set -lx _ARGCOMPLETE_SUPPRESS_SPACE 1\n    set -lx _ARGCOMPLETE_SHELL fish\n    set -lx COMP_LINE (commandline -p)\n    set -lx COMP_POINT (string length (commandline -cp))\n    set -lx COMP_TYPE\n    if set -q _ARC_DEBUG\n        ansible-lint 8>&1 9>&2 1>&9 2>&1\n    else\n        ansible-lint 8>&1 9>&2 1>/dev/null 2>&1\n    end\nend\ncomplete --command ansible-lint -f -a '(__fish_ansible-lint_complete)'\n\n\n## ~/repos/github/g0t4/dotfiles/fish/completions/ansible-config.fish:1-15\nfunction __fish_ansible-config_complete\n    set -lx _ARGCOMPLETE 1\n    set -lx _ARGCOMPLETE_DFS \\t\n    set -lx _ARGCOMPLETE_IFS \\n\n    set -lx _ARGCOMPLETE_SUPPRESS_SPACE 1\n    set -lx _ARGCOMPLETE_SHELL fish\n    set -lx COMP_LINE (commandline -p)\n    set -lx COMP_POINT (string length (commandline -cp))\n    set -lx COMP_TYPE\n    if set -q _ARC_DEBUG\n        ansible-config 8>&1 9>&2 1>&9 2>&1\n    else\n        ansible-config 8>&1 9>&2 1>/dev/null 2>&1\n    end\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/completions/ansible-inventory.fish:1-15\nfunction __fish_ansible-inventory_complete\n    set -lx _ARGCOMPLETE 1\n    set -lx _ARGCOMPLETE_DFS \\t\n    set -lx _ARGCOMPLETE_IFS \\n\n    set -lx _ARGCOMPLETE_SUPPRESS_SPACE 1\n    set -lx _ARGCOMPLETE_SHELL fish\n    set -lx COMP_LINE (commandline -p)\n    set -lx COMP_POINT (string length (commandline -cp))\n    set -lx COMP_TYPE\n    if set -q _ARC_DEBUG\n        ansible-inventory 8>&1 9>&2 1>&9 2>&1\n    else\n        ansible-inventory 8>&1 9>&2 1>/dev/null 2>&1\n    end\nend\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/ansibles.fish:0-19\n# pass an option (key) filter => 0 or more matching option names and details of each!\nabbr aclsn \"_ansible-config_options_name_contains\"\nfunction _ansible-config_options_name_contains\n    set -l filter $argv\n    command ansible-config list | yq \"with_entries(select(.key | test(\\\"(?i).*$filter.*\\\")))\"\nend\nabbr aclsd \"_ansible-config_option_details_contains\"\nfunction _ansible-config_option_details_contains\n    # TODO verify works in fish\n    set -l key $1\n    command ansible-config list | yq \"with_entries(select(.. | has(\\\"$key\\\")))\"\nend\n\nabbr ap \"ansible-playbook\"\n  abbr apv \"ansible-playbook -v\"\n  abbr apvv \"ansible-playbook -vv\"\n  abbr apvvv \"ansible-playbook -vvv\"\nabbr aps \"ansible-playbook --syntax-check\"\n  abbr apc \"ansible-playbook --check\"\n  abbr apcd \"ansible-playbook --check --diff\"\n\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```pipx.installs.fish\n# ansible\npipx install --include-deps ansible\npipx inject ansible ansible-lint argc<|fim_middle|>\n\n```\n\n## Reminders about the cursor line:\nText before cursor: `pipx inject ansible ansible-lint argc`"
+      },{
+        "role":"assistant",
+        "content":"argcomplete",
+        "finish_reason":"stop",
+        "reasoning_content":"We need to complete line after argc. Probably add more packages like \"ansible-lint\" already, so inject ansible ansible-lint argc ... maybe \"ansible-lint\" already, want to add \"ansible-lint\" and \"ansible\" and \"argcomplete\"? Actually command: pipx inject ansible ansible-lint argparse? The prefix \"argc\" maybe start of \"argcomplete\". So complete to \"argcomplete\"."
+      }],
+    "raw":false,
+    "top_p":1,
+    "max_tokens":4096,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "options":[],
+    "temperature":1
+  },
+  "last_sse":{
+    "system_fingerprint":"b10056-bb7ddc210",
+    "created":1784438823,
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "timings":{
+      "prompt_per_second":185.18518518519,
+      "prompt_n":1,
+      "cache_n":2355,
+      "predicted_per_second":261.73530507263,
+      "prompt_ms":5.4,
+      "prompt_per_token_ms":5.4,
+      "predicted_ms":397.348,
+      "predicted_per_token_ms":3.8206538461538,
+      "predicted_n":104
+    },
+    "id":"chatcmpl-y8J8TQ7SMjyyxkGDQ3MDZxSPjzuYt7M7",
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}

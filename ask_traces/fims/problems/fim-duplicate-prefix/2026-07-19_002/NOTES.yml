@@ -1,0 +1,15 @@
+problems: |
+    correct completion, but completion duplicated `argc` from cursor line prefix (also in the current word!)
+todos: |
+    consider adding current word duplication detection to FIM code too? right now we expect full match on cursor line prefix only...
+    maybe add partial match too... could see if any matches anywhere in cursor line prefix and if so then buffer that until completion no longer matches any of cursor line prefix!
+      and when no match => then strip off partial match (if any)... so if I get back `arg` as a first token (hypotheically)... that has a match in prefix so I wait
+      => then `complete` arrives
+      => now there's no match of the full completion in the prefix, so we can activate showing the FIM prediction
+      => which means we first look for a partial match of end of prefix => in this case we get `argc` match on en of prefix... so we show `omplete` in extmarks an that's what we complete on accept
+         BTW if no match of start of completion with end of prefix, then we don't dedupe anything and show full FIM completion
+         this would be so fast with streaming tokens that I would never really notice the speed hit... most deduples would be small is my guess < 5 tokens so 5*4ms => 20ms hit in worse case... not even noticeable
+         and I could even have an indicator to mark that a partial match has been detected if it were to grow large and take time (i.e. in the case where I get duplication of more than just cursor line)
+    THIS IS JUST AN IDEA... might be terrible too.. arguably I could improve my FIM prompot or fine tune models too!
+
+
