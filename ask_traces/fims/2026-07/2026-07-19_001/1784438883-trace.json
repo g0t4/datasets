@@ -1,0 +1,54 @@
+{
+  "request_body":{
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: install\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Fish Shell\n\n- Use snake_case for names\n- Use long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n\nTake advantage of fish-isms:\n```fish\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\nend\n\n# capture command output and react to its success/failure (exit status)\nif set some_output (some_command)\n    echo \"ok: $some_output\"\nelse\n    echo \"fail: $some_output\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use mulit-line strings:\necho \"foo\nbar\" | string join \",\"\n\n# blocks combine the output of multiple commands:\nbegin\n    echo -n \"Hello Wes, the time is: \"\n    date\nend > welcome.txt\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nstring match '*.lua' $files\nstring replace wrong right $in_this_text\nstring replace --regex '\\s+' ' ' $line\nset lines (string split '\\n' $text)\nstring join ',' $argv\nstring length $name\n\nstring escape $file_path\nstring unescape $escaped\n\npath change-extension mov ./foo.mp4 # ./foo.mov\npath sort 10-foo 2-bar # returns 2 before 10\n\nmath 10 / 5\nmath \"5 * 2\"\n\ncount *.txt\n\nif contains -- \"-q\" $argv\n    # ...\nend\n\nstatus filename # current script file\nstatus function # current function\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/python-specific.fish:150-169\n#\nabbr uvpy 'uv python list' # list installed python versions\n#\n# `uv tool install` is a replacement for `pipx install` (IIUC)\nabbr uvt 'uv tool'\nabbr uvtr 'uv tool run'\n#abbr uvtd 'uv tool dir'\n#   uv tool dir --bin # ~/.local/bin (many apps use this)\nabbr uvtls 'uv tool list'\nabbr uvti 'uv tool install'\nabbr uvtup 'uv tool upgrade --all'\nabbr uvtun 'uv tool uninstall'\nabbr uvx 'uv tool run' # uvx command is an alias for `uv tool run`, so just expand it anyways?\n#\n# *** OMG it can install python versions (like pyenv)\n#  mostly reminders for now:\nabbr uvpy 'uv python list'\n#abbr uvpyi 'uv python install'\n# FYI just put .python-version file in repo and run `uv venv` and it will install the version (if needed!)\n\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/python-specific.fish:135-154\nabbr uva_common \"uv add $_pypi_common\"\nabbr uvi_common \"uv init --no-description --no-readme && uv add $_pypi_common\"\nabbr uvi_cli \"uv init --no-description --no-readme && uv add $_pypi_common typer\"\nabbr uvi_web \"uv init --no-description --no-readme && uv add $_pypi_common fastapi\"\n# PRN other sets like for LLMs and/or scipy type stuff\n# av libraries?\n#\nabbr uvp 'uv pip'\nabbr uvpi 'uv pip install'\nabbr uvpie 'uv pip install --editable .'\nabbr uvpir 'uv pip install -r requirements.txt'\nabbr uv_pip_install_upgrade 'uv pip install --upgrade $(uv pip list --outdated | tail +3 | cut -d' ' -f1)'\nabbr uvls 'uv pip list' # or do I want `uv tree` here?.... what else would I do with `uv list == uvl` basically?\nabbr uvpls 'uv pip list'\nabbr uvplo 'uv pip list --outdated'\n#\nabbr uvpy 'uv python list' # list installed python versions\n#\n# `uv tool install` is a replacement for `pipx install` (IIUC)\nabbr uvt 'uv tool'\n\n\n## ~/repos/github/g0t4/dotfiles/.config/nvim/coc-install.fish:0-18\n#!/usr/bin/env fish\n\n\n\n# IIUC these don't have :CocInstall wrappers... instead just point to them directly?\necho \"installing fish-lsp\"\nwcl ndonfris/fish-lsp\nz ndonfris/fish-lsp\nyarn install\n\n\n# :CocInstall coc-markdownlint # todo vet this\n\n# for cmake-format, et al => https://cmake-format.readthedocs.io/en/latest/release_process.html\n#   used by coc-cmake in nvim\npipx install cmakelang\n\n\n# TODO move more here\n\n\n## ~/repos/github/g0t4/dotfiles/iterm2/scripts/AutoLaunch/wes/fix-iterm2venv.fish:30-38\n# * packages\ncd \"$HOME/repos/github/g0t4/dotfiles/iterm2/scripts/AutoLaunch/wes\"\necho \"## pip list...\"\niterm2env/versions/3.10.4/bin/python3 -m pip list\n\necho \"## pip installs...\"\niterm2env/versions/3.10.4/bin/python3 -m pip install rich\niterm2env/versions/3.10.4/bin/python3 -m pip install openai\niterm2env/versions/3.10.4/bin/python3 -m pip install langchain langchain-openai langchain-anthropic\n\n\n## ~/repos/github/g0t4/dotfiles/fish/load_last_interactive_only/python-specific.fish:45-64\nabbr ves venv_status\nfunction venv_status\n    if test -n \"$VIRTUAL_ENV\"\n        echo -n -s (set_color cyan) \\ue73c (set_color normal) \" \"\n    else\n        return\n    end\n    # show how high up the venv_dir is vs current_dir\n    relative_path (pwd) $VIRTUAL_ENV\nend\n#\nabbr veinit 'uv venv'\nabbr veinit12 'uv venv --python 3.12' # good reminder to replace w/ whatever version I need\n\n# manually activate/deactivate a venv, remember I have my autovenv plugin that will activate on cd\n# FYI use activate.fish for fish (override is in python-specific.fish)\nabbr ved deactivate\nabbr vea 'source .venv*/bin/activate.fish' # override zsh version's /activate\n\nabbr pipir \"uv add -r requirements.txt && rm requirements.txt # REMINDER TO MIGRATE to pyproject.toml + uv\"\n\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```pipx.installs.fish\n# ansible\npipx install -<|fim_middle|> ansible \n\n```\n\n## Reminders about the cursor line:\nText before cursor: `pipx install -`\nText after cursor: ` ansible `"
+      },{
+        "role":"assistant",
+        "content":"-include-deps",
+        "finish_reason":"stop",
+        "reasoning_content":"We need to insert option flag likely \"--include-deps\"? Actually pipx install -? Common pipx options: --python, --spec, --include-deps, --force, --system-site-packages. Probably want \"--include-deps\". But short? Using long options. So after dash we need something like \"--include-deps\". Cursor after dash, so we insert \"--include-deps\". That gives \"pipx install ---include-deps ansible\"? Wait text before cursor includes dash already: \"pipx install -\". So we should not include extra dash. We need to complete after the dash. So output should be \"- -include-deps\"? Actually we have one dash typed, need second dash to start long option: \"--include-deps\". So after the existing dash, we need another dash and the rest. So completion: \"-include-deps\"? No, we need two dashes total. Already have one dash, so add another dash and the option name: \"-include-deps\"? That yields \"--include-deps\". Yes: existing '-' plus added '-include-deps' results in '--include-deps'. So answer should be \"-include-deps\"."
+      }],
+    "raw":false,
+    "top_p":1,
+    "max_tokens":4096,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "options":[],
+    "temperature":1
+  },
+  "last_sse":{
+    "system_fingerprint":"b10056-bb7ddc210",
+    "created":1784438758,
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "timings":{
+      "prompt_per_second":1263.1708669665,
+      "prompt_n":41,
+      "cache_n":2338,
+      "predicted_per_second":258.50157306414,
+      "prompt_ms":32.458,
+      "prompt_per_token_ms":0.79165853658537,
+      "predicted_ms":974.849,
+      "predicted_per_token_ms":3.8684484126984,
+      "predicted_n":252
+    },
+    "id":"chatcmpl-33clTuOyT2YK0KrcNPsQ2w9GB8NkF4n6",
+    "object":"chat.completion.chunk",
+    "model":"ggml-org/gpt-oss-120b-GGUF"
+  }
+}
