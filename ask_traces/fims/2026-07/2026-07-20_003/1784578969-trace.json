@@ -1,0 +1,52 @@
+{
+  "request_body":{
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "options":[],
+    "raw":false,
+    "top_p":1,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```lua/ask-openai/performance/registry.lua\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal perf = require(\"devtools.performance\")\n\n--- Registry for tracking performance objects across all frontends\n--- and determining the most recently used frontend\nlocal M = {}\n\n--- All registered performance objects\n---@type table<string, any>[]\nM.all_performances = {}\n\n--- The type of the most recently used frontend\n---@type string|nil\nM.last_used_type = nil\n\n--- The most recent performance object by type\n---@type table<string, any>\nM.latest_by_type = {}\n\n--- Register a performance object with a type identifier\n--- @param type string - The frontend type (e.g., \"fim\", \"rewrite\", \"agents\")\n--- @param perf any - The performance object to register\nfunction M.register(type, perf)\n    if not type or not perf then\n        error(\"register requires type and perf arguments\")\n    end\n\n    -- Add type field to performance object for identification\n    perf.type = type\n\n    -- Store in all performances array\n    table.insert(M.all_performances, perf)\n\n    -- Update latest by type (most recent wins)\n    M.latest_by_type[type] = perf\n\n    -- Update last used type\n    M.last_used_type = type\n\n    log:trace(\"PerformanceRegistry registered type=\" .. type)\nend\n\n--- Get the most recent performance object for a specific type\n--- @param type string\n---@return any|nil\nfunction M.get_latest(type)\n    return M.latest_by_type[type]\nend\n\n--- Get the most recently used performance object (across all types)\n---@return any|nil\nfunction M.get_most_recent()\n    if not M.last_used_type then\n        return nil\n    end\n    return M.latest_by_type[M.last_used_type]\nend\n\n--- Format performance stats for display in lualine\n--- @param perf any - The performance object\n---@return string\nfunction M.format_stats_for_lualine(perf)\n    if not perf then\n        return \"\"\n    end\n\n    local parts = {}\n\n    -- Get tokens per second if available\n    local tok_sec = nil\n    if type(perf.tokens_per_second) == \"function\" then\n        -- For RewritePerformance and AgentTurnPerformance\n        if perf.num_deltas_content ~= nil then\n            tok_sec = perf:tokens_per_second(perf.num_deltas_content, perf.num_deltas_reasoning or 0)\n        elseif perf.tokens_this_turn ~= nil then\n            tok_sec = perf:tokens_per_second()\n        end\n    elseif perf.tokens_per_second ~= nil then\n        -- For AgentPerformance (overall)\n        tok_sec = perf:overall_tokens_per_second()\n    end\n\n    if tok_sec and tok_sec > 0 then\n        table.insert(parts, string.format(\"%.0f tok/s\", tok_sec))\n    end\n\n    -- Add RAG time if available\n    if perf.rag_duration_ms ~= nil and perf.rag_duration_ms > 0 then\n        table.insert(parts, string.format(\"RAG: %.0fms\", perf.rag_duration_ms))\n    end\n\n    -- Add TTFT if available\n    if perf.time_to_first_token_ms ~= nil and perf.time_to_first_token_ms > 0 then\n        table.insert(parts, string.format(\"TTFT: %.0fms\", perf.time_to_first_token_ms))\n    end\n\n    -- Add total time if available\n    if perf.total_duration_ms ~= nil and perf.total_duration_ms > 0 then\n        table.insert(parts, string.format(\"%.0fms\", perf.total_duration_ms))\n    end\n\n    return table.concat(parts, \" \")\nend\n\n--- Format the most recent stats for lualine display\n---@return string\nfunction M.get_recent_stats()\n    local perf = M.get_most_recent()\n    if not perf then\n        return \"\"\n    end\n\n    local type_label = perf.type or \"unknown\"\n    local formatted = M.format_stats_for_lualine(perf)\n\n    if not formatted or formatted == \"\" then\n        return \"\"\n    end\n\n    -- Return with type prefix for clarity\n    return string.format(\"[%s] %s\", type_label, formatted)\nend\n\nM.<|fim_middle|>perf.get_time_in_ns\n\nreturn M\n```\n\n## Reminders about the cursor line:\nText before cursor: `M.`\nText after cursor: `perf.get_time_in_ns`",
+        "role":"user"
+      },{
+        "finish_reason":"stop",
+        "content":"get_time_in_ns = ",
+        "reasoning_content":"We need to complete code after M. likely expose function? The line: M.<|fim_middle|>perf.get_time_in_ns. Probably should be M.perf = perf? Actually they want to assign perf module? Probably set M.perf = perf? but after that they call perf.get_time_in_ns maybe they want to expose perf module functions. Should be M.perf = perf? Actually 'perf' is required earlier: local perf = require(\"devtools.performance\"). So they want to expose perf functions through M, like M.get_time_in_ns = perf.get_time_in_ns. So completion should be \"get_time_in_ns = perf.get_time_in_ns\". The cursor before: M. then after: perf.get_time_in_ns. So fill: \"get_time_in_ns = \" . That yields M.get_time_in_ns = perf.get_time_in_ns. Yes.",
+        "role":"assistant"
+      }],
+    "temperature":1
+  },
+  "flags":[],
+  "last_sse":{
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "id":"chatcmpl-NC0vxqOkYgN4RC4T6HXPaCIBkUHCaY0r",
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b10069-167173a0f",
+    "timings":{
+      "prompt_per_second":1400.4784968197,
+      "prompt_ms":34.274,
+      "cache_n":1846,
+      "predicted_ms":736.017,
+      "predicted_per_token_ms":3.7939020618557,
+      "prompt_per_token_ms":0.71404166666667,
+      "prompt_n":48,
+      "predicted_per_second":263.58086837668,
+      "predicted_n":194
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1784578842
+  }
+}

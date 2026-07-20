@@ -1,0 +1,10 @@
+bad: |
+  - fim_middle is clearly indented... but the model's response does not include any indentation for lines 2+
+  - first line should not have any indent since it already has the indent in the cursor line prefix
+  - TODO is this a symptom of the model assuming lines 2+ will get indented to match line 1?
+    FYI the model did not wrap in markdown code block...
+    hrmm.. is it possible (for gptoss only)
+        if the cursor line (prefix) is indented
+        + all completion lines are NOT indented at all (first and 2+)
+        that we want to add indent from cursorline?
+        perhaps only when nothing but indent whitespace on cursorline in prefix?
