@@ -1,0 +1,9 @@
+reference:
+    - partial duplicate found in ask_traces/fims/problems/fim-duplicate-prefix/2026-07-19_009/1784513600-trace.json
+      difference vs this completion (that one had a space after variable name... this one I deleted that space and FIM'd from end of word
+good:
+    - did not duplicate the cursor line prefix!
+    - interestingly if I add space and then wait for FIM then gptoss tends to duplicate the prefix!
+      ?? perhaps something to do with current word FIM vs next word after space?
+         watch for more examples, find partial duplicates and then try add/remove spacing to see how it responds (consider deleteing into prior word too)
+         IF ANYTHING, I can use this as a heuristic to trigger the proper completion myself! (even if I don't automate detecting all these duplicates)
