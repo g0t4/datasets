@@ -1,0 +1,54 @@
+{
+  "flags":{
+    "fim_duplicate_prefix":"        "
+  },
+  "request_body":{
+    "max_tokens":4096,
+    "top_p":1,
+    "raw":false,
+    "options":[],
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: private-videos-wes\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Python Code Preferences\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n\n### I like pytest\n\npytest has stellar failure diffs (introspection):\n- projections just work (tuples, lists, sets, dicts, etc) especially for complex comparisons\n- use `assert`\n- just say no to `self.assert*`\n\n```python\n# 🥰 (complex compare by projecting a list of tuples)\nexpected = [(\"c1\", Range(0, 6)), (\"c3\", Range(6, 9))]\nassert [(c.id, c.range) for c in removed.clips()] == expected\n\n# 🤮 (repetitive assertions)\nclips = list(removed.clips())\nassert clips[0].id == \"c1\"\nassert clips[0].range == Range(0, 6)\nassert clips[1].id == \"c3\"\nassert clips[1].range == Range(6, 9)\n```\n\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```poc-edit-model/ranges.py\nclass FrameRange:\n    \"\"\"\n    A range of frames [start_frame, end_frame), end exclusive.\n    \"\"\"\n\n    def __init__(self, start_frame: int, end_frame: int):\n        self.start_frame: int = start_frame\n        self.end_frame: int = end_frame\n\n    @staticmethod\n    def from_duration(start_frame: int, duration_frames: int) -> \"FrameRange\":\n        return FrameRange(start_frame, start_frame + duration_frames)\n\n    def duration_frames(self) -> int:\n        return self.end_frame - self.start_frame\n\n    def __len__(self):\n        return self.duration_frames()\n\n    def __repr__(self):\n        return self.__str__()\n\n    def __str__(self):\n        return f\"Frames{self.frame_interval()}\"\n\n    def frame_interval(self):\n        return f\"[{self.start_frame}➜{self.end_frame})\"\n\n    def __eq__(self, other):\n        return isinstance(other, FrameRange) and self.start_frame == other.start_frame and self.end_frame == other.end_frame\n\n    def __hash__(self):\n        return hash((self.start_frame, self.end_frame))\n\n    def __contains__(self, frame: int) -> bool:\n        return self.start_frame <= frame < self.end_frame\n\n    def __iter__(self):\n        return iter(range(self.start_frame, self.end_frame))\n\n    def would_split_into_two_ranges(self, frame: int) -> bool:\n        \"\"\"True if frame is strictly inside this range (not equal to its\n        start), i.e. a valid point to split at.\"\"\"\n        return self.start_frame < frame < self.end_frame\n\n    def overlaps(self, your: \"FrameRange\") -> bool:\n        not_entirely_before_you = not self.end_frame <= your.start_frame\n        not_entirely_after_you = not your.end_frame <= self.start_frame\n        return not_entirely_before_you and not_entirely_after_you\n\n    def contains_range(self, other: \"FrameRange\") -> bool:\n        \"\"\"True if `other` falls entirely inside this range.\n\n        A zero-width `other` (e.g. a ResultOfCutOp marker) needs its own\n        rule: touching one of this range's edges isn't \"inside\" -- a\n        marker sitting exactly at frame 10 isn't inside [0,10) OR [10,20),\n        it's the boundary BETWEEN them, so a remove() targeting either\n        side must leave it alone. It only counts as contained when it's\n        strictly between this range's edges (same \"strictly inside\" rule\n        would_split_into_two_ranges uses), UNLESS `self` is itself that\n        same zero-width point -- the one legitimate way to target a\n        marker for removal is a zero-width range at its exact position\n        (see tools/remove_result._delete_clip_id).\"\"\"\n        both_are_zero_width = self.is_zero_width() and other.is_zero_width()\n        if both_are_zero_width:\n            at_same_frame = self.start_frame == other.start_frame\n            return at_same_frame\n\n        <|fim_middle|>\n        if other.is_zero_width():\n            return self.start_frame < other.start_frame < self.end_frame\n\n        # other range has non‑zero width:\n        return self.start_frame <= other.start_frame and other.end_frame <= self.end_frame\n\n    def intersection(self, other: \"FrameRange\") -> \"FrameRange | None\":\n        start = max(self.start_frame, other.start_frame)\n        end = min(self.end_frame, other.end_frame)\n        return FrameRange(start, end) if start < end else None\n\n    def split_at(self, frame: int) -> tuple[\"FrameRange\", \"FrameRange\"]:\n        if not self.would_split_into_two_ranges(frame):\n            raise ValueError(f\"cannot split {self} at frame {frame}: not strictly inside range\")\n        return FrameRange(self.start_frame, frame), FrameRange(frame, self.end_frame)\n\n    def is_zero_width(self):\n        return self.start_frame == self.end_frame\n```\n\n## Reminders about the cursor line:\nText before cursor: `        `\nText before cursor is all whitespace (do not ignore this)"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"We need to fill middle: after checking both_are_zero_width, then before if other.is_zero_width(). Need logic for when other is not zero width and self maybe zero? Actually earlier handled both zero. Now need case when self zero width? If self zero width and other not zero, should return False because zero-width cannot contain non-zero. So implement:\n\nif self.is_zero_width():\n    return False\n\nThen continue.\n\nThus code:\n\nif self.is_zero_width():\n    return False\n\nInsert before if other.is_zero_width(). Ensure indentation same (8 spaces). Provide that line.",
+        "role":"assistant",
+        "content":"        if self.is_zero_width():\n            return False"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "stream":true,
+    "temperature":1
+  },
+  "last_sse":{
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "object":"chat.completion.chunk",
+    "created":1784598346,
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "id":"chatcmpl-Zg7TSRWOsDTy4XRK7OXh1ljRZEZiVIgA",
+    "system_fingerprint":"b10069-167173a0f",
+    "timings":{
+      "prompt_ms":160.1,
+      "prompt_per_token_ms":0.12527386541471,
+      "predicted_ms":520.282,
+      "predicted_per_token_ms":3.7976788321168,
+      "predicted_per_second":263.31873868402,
+      "predicted_n":137,
+      "prompt_per_second":7982.5109306683,
+      "cache_n":658,
+      "prompt_n":1278
+    }
+  }
+}
