@@ -1,0 +1,52 @@
+{
+  "flags":[],
+  "request_body":{
+    "stream":true,
+    "raw":false,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "max_tokens":4096,
+    "temperature":1,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|fim_middle|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|fim_middle|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|fim_middle|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|fim_middle|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|fim_middle|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: 2026-07-22_001\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## YAML Preferences\n\n### ansible playbooks\n\n- use `true`/`false` for boolean values\n- always use FQCN for module names\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|fim_middle|>:\n\n```NOTES.yml\nminor_complaint:\n    - completion is 100% valid (works), but it is overly verbose\n    - instead of `vim.fn.fnamemodify(vim.fn.expand('%:p'), ':.')`\n    - simplify with `vim.fn.expand('%:p:.')`\n       or better yet: <|fim_middle|>\n\n```\n\n## Reminders about the cursor line:\nText before cursor: `       or better yet: `",
+        "role":"user"
+      },{
+        "finish_reason":"stop",
+        "content":"vim.fn.expand('%:.')",
+        "role":"assistant",
+        "reasoning_content":"We need to suggest replacement text, likely a shorter Vim function. Better: `vim.fn.expand('%:p:.')` already mentioned. Maybe `%:p:h`? Actually want simplify further: `vim.fn.expand('%:p:.')` can be `vim.fn.expand('%:p')`? The goal is get relative path? The original was `vim.fn.fnamemodify(vim.fn.expand('%:p'), ':.')` which makes path relative to cwd. Simplify with `vim.fn.expand('%:p:.')`. Better yet: `vim.fn.expand('%:.:p')`? Actually Vim's expand supports modifiers: `%:p:h` etc. To get relative path: `vim.fn.expand('%:.')`? That gives file name relative to cwd. So better: `vim.fn.expand('%:.')`. So suggestion: `vim.fn.expand('%:.')`."
+      }],
+    "options":[],
+    "top_p":1
+  },
+  "last_sse":{
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b10069-167173a0f",
+    "timings":{
+      "prompt_ms":29.119,
+      "prompt_per_token_ms":0.93932258064516,
+      "predicted_ms":753.602,
+      "predicted_per_token_ms":3.76801,
+      "predicted_per_second":265.39207698493,
+      "predicted_n":200,
+      "prompt_per_second":1064.5969985233,
+      "cache_n":924,
+      "prompt_n":31
+    },
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "created":1784776776,
+    "id":"chatcmpl-FWWmVJSVhBM5LjI8KVkahGNQv5f3894i"
+  }
+}
