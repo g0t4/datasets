@@ -1,9 +1,27 @@
-good:
-    - nailed it! I was showing a progression of simplifications
-    - gptoss picked up on exactly what I wanted to show!
-minor_complaints:
-    - gptoss should've wrapped the expression in `` backticks to match prior lines, but that's not the end of the world
-      note I am not saying it should always wrap code in backticks in markdown (inline code)... just that in this case
-      the prior lines all wrapped the example in `` backticks and given this is a progression of changes, it makes sense to do that on the last line too
-      if I didn't have backticks on prior lines then I'd expect that it does NOT wrap the last line in backticks either
-      in fact, watch out for another example of that in a moment
+1784776904-trace.json:
+    good:
+        - nailed it! I was showing a progression of simplifications
+        - gptoss picked up on exactly what I wanted to show!
+    minor_complaints:
+        - gptoss should've wrapped the expression in `` backticks to match prior lines, but that's not the end of the world
+          note I am not saying it should always wrap code in backticks in markdown (inline code)... just that in this case
+          the prior lines all wrapped the example in `` backticks and given this is a progression of changes, it makes sense to do that on the last line too
+          if I didn't have backticks on prior lines then I'd expect that it does NOT wrap the last line in backticks either
+          in fact, watch out for another example of that in a moment
+    evals:
+        - assert expression matches with backticks for full credit
+        - partial credit for expression w/o backticks
+          or spacing differences around the expression
+          can even give less credit if expression is there but there are other minor differences in layout besides spaces/backticks... i.e. using dash or colon to separate sections
+
+1784778355-trace.json:
+    notes: redo same FIM as above but drop `` backticks around inline code examples
+    good:
+        - in this case gptoss does not wrap last example in `` which is what I would expect, given the pattern of previous lines
+        - that said, it is hard to know if this was "intentional" given that gptoss did not generate backticks when previous lines had them :)...
+        - still this serves as an example of EXPECTED suggestion
+    evals:
+        - simple eval to assert an exact match w/o backticks
+        - maybe add partial credit if additional spacing and/or backticks are suggested
+          not that these are inherently wrong, just slightly less desirable
+
