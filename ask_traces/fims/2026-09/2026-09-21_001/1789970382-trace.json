@@ -1,0 +1,65 @@
+{
+  "request_body":{
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_effort":"low"
+    },
+    "top_logprobs":5,
+    "post_sampling_probs":true,
+    "logprobs":true,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|CURSOR_IS_HERE|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|CURSOR_IS_HERE|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|CURSOR_IS_HERE|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|CURSOR_IS_HERE|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|CURSOR_IS_HERE|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```.config/xonsh/rc.d/keybindings.xsh\n\"\"\"Custom interactive keybindings for Xonsh's Prompt Toolkit shell.\"\"\"\n\nfrom xonsh.built_ins import XSH\n\nimport os\n\nfrom prompt_toolkit.filters import vi_insert_mode, vi_navigation_mode\nfrom prompt_toolkit.key_binding.bindings.named_commands import get_by_name\nfrom xonsh.dirstack import cd as _xonsh_cd\nfrom xonsh.tools import print_above_prompt\nfrom xonsh.events import events\nfrom prompt_toolkit.key_binding.key_processor import KeyPressEvent\n<|CURSOR_IS_HERE|>\nfrom prompt_toolkit.application import run_in_terminal\n\nfrom wes_directory_history import DirectoryHistory\n\n# Terminal input contract:\n# In iTerm2 Profiles > Keys, configure each Option key as Esc+, not Meta.\n# Raw 8-bit Meta turns Alt-Shift-F into byte 0xC6, which Python's incremental\n# UTF-8 decoder buffers as the start of a character until another key arrives.\n# Esc+ produces the portable Escape then F sequence expected by Prompt Toolkit.\n# This setting was verified with these Xonsh bindings, Fish, and Neovim.\n\n\n_wes_directory_history = DirectoryHistory()\n\n\n@events.on_chdir\ndef _wes_record_directory_change(olddir, newdir, **_):\n    _wes_directory_history.record(olddir, newdir)\n\n\ndef _wes_refresh_prompt(event):\n    \"\"\"Repaint changed prompt fields without adding a prompt to history.\"\"\"\n    shell = XSH.shell.shell\n    prompter = getattr(shell, \"prompter\", None)\n    if prompter is not None:\n        $PROMPT_FIELDS.reset()\n        prompter.message = shell.prompt_tokens()\n    event.app.invalidate()\n\n\ndef _wes_navigate_directory_history_intra_prompt(event, *, forward):\n    navigate = (\n        _wes_directory_history.forward if forward else _wes_directory_history.back\n    )\n    def change_directory(target):\n        _stdout, stderr, returncode = _xonsh_cd([target])\n        if returncode:\n            raise OSError(stderr.strip())\n\n    try:\n        changed = navigate(os.getcwd(), change_directory)\n    except OSError as error:\n        print_above_prompt(f\"directory history: {error}\")\n        return\n    if changed:\n        _wes_refresh_prompt(event)\n\n\n@events.on_ptk_create\ndef _wes_keybindings(bindings: KeyBindings, prompter, **_):\n\n    # Match Fish prevd-or-backward-word/nextd-or-forward-word\n    # On an _Empty Command Line_ Alt-Left/Right navigate cwd history in place\n    # With input present they retain punctuation-aware word movement.\n    @bindings.add(\"escape\", \"left\", eager=True, save_before=lambda event: False)\n    def _previous_directory_or_backward_word(event):\n        has_input = bool(event.current_buffer.text)\n        if has_input:\n            get_by_name(\"backward-word\").handler(event)\n        else:\n            _wes_navigate_directory_history_intra_prompt(event, forward=False)\n\n    @bindings.add(\"escape\", \"right\", eager=True, save_before=lambda event: False)\n    def _next_directory_or_forward_word(event):\n        has_input = bool(event.current_buffer.text)\n        if has_input:\n            get_by_name(\"forward-word\").handler(event)\n        else:\n            _wes_navigate_directory_history_intra_prompt(event, forward=True)\n\n    # Prompt Toolkit already binds Ctrl+/ (reported as Ctrl+_) to undo.\n    # Add the conventional Ctrl+Z spelling without replacing that binding.\n    @bindings.add(\"c-z\", save_before=lambda event: False)\n    def _undo(event):\n        event.current_buffer.undo()\n\n    # Esc+K remains the yank binding, freeing the conventional Ctrl+Y chord\n    # for redo.\n    @bindings.add(\"c-y\", save_before=lambda event: False)\n    def _redo(event):\n        event.current_buffer.redo()\n\n    @bindings.add(\"escape\", \"I\", save_before=lambda event: False)\n    def _test(event: KeyPressEvent):\n        # wrap command line with rich inspect\n        event.current_buffer.text = f\"rich.inspect({event.current_buffer.text})\"\n        event.current_buffer.cursor_position = len(event.current_buffer.text) # cursor to end of buffer\n\n    @bindings.add(\"escape\", \"I\", save_before=lambda event: False)\n    def _test(event: KeyPressEvent):\n        # wrap command line with rich inspect\n        event.current_buffer.text = f\"rich.inspect({event.current_buffer.text})\"\n        event.current_buffer.cursor_position = len(event.current_buffer.text) # cursor to end of buffer\n        # import rich\n        # rich.inspect(event)\n        # event.current_buffer.text = \"FUCK\" event.current_buffer.cursor_position\n        # event.current_buffer.insert_text(\"FUCK\") # moves cursor\n        # rich.inspect(event.current_buffer.history.get_strings())\n        # run_in_terminal(event.current_buffer.text)\n\n    # Prompt Toolkit provides this as Alt+. only in its Emacs bindings. Make\n    # the same history argument cycling available while Xonsh is in Vi mode.\n    @bindings.add(\"escape\", \".\", save_before=lambda event: False)\n    @bindings.add(\"escape\", \"up\", save_before=lambda event: False)\n    def _yank_last_argument(event: KeyPressEvent):\n        event.current_buffer.yank_last_arg()\n\n    # Prompt Toolkit's default Ctrl-W uses whitespace-delimited WORDs even in\n    # Vi insert mode. Match Vim's small-word behavior so punctuation such as\n    # dots and @ signs forms its own deletion boundary.\n    @bindings.add(\n        \"c-w\",\n        filter=vi_insert_mode,\n        eager=True,\n        save_before=lambda event: False,\n    )\n    def _backward_kill_small_word(event):\n        get_by_name(\"backward-kill-word\").handler(event)\n\n    @bindings.add(\"c-c\", save_before=lambda event: False)\n    def _clear_buffer_without_new_prompt(event):\n        # Xonsh's default raises KeyboardInterrupt, which finishes this prompt\n        # and draws another. Reset only the editor buffer so the existing\n        # prompt stays in place. Foreground processes still receive SIGINT\n        # directly from the terminal because Prompt Toolkit is not reading then.\n        event.current_buffer.reset()\n        event.app.invalidate()\n\n    # Vim-mode additions -------------------------------------------------\n    # Match Vim/Neovim: Ctrl-R redoes the most recently undone change in\n    # normal mode. This intentionally replaces reverse history search there.\n    @bindings.add(\n        \"c-r\",\n        filter=vi_navigation_mode,\n        eager=True,\n        save_before=lambda event: False,\n    )\n    def _vim_redo(event):\n        event.current_buffer.redo()\n\n    # * set propmt_toolkit's timeout keychord intervals\n    # FYI same settings as in vim!\n    # *** https://python-prompt-toolkit.readthedocs.io/en/master/pages/advanced_topics/key_bindings.html#timeouts\n    #\n    # import rich\n    # rich.inspect(prompter.app)\n    # rich.print(f\"{prompter.app.timeoutlen=} {prompter.app.ttimeoutlen=}\")\n    #\n```\n\n## Reminders about the cursor line:\n"
+      },{
+        "finish_reason":"stop",
+        "content":"from prompt_toolkit.key_binding import KeyBindings",
+        "timings":{
+          "prompt_per_second":153.44483658125,
+          "prompt_n":1,
+          "predicted_per_second":232.58615032541,
+          "prompt_ms":6.517,
+          "prompt_per_token_ms":6.517,
+          "predicted_ms":240.771,
+          "predicted_per_token_ms":4.2994821428571,
+          "cache_n":2336,
+          "predicted_n":57
+        },
+        "role":"assistant",
+        "reasoning_content":"We need to insert import for KeyBindings likely. After cursor line, before from prompt_toolkit.application import run_in_terminal. So add \"from prompt_toolkit.key_binding import KeyBindings\"."
+      }],
+    "max_tokens":4096,
+    "top_p":1,
+    "raw":false,
+    "temperature":1
+  },
+  "flags":[],
+  "last_sse":{
+    "timings":{
+      "prompt_per_second":153.44483658125,
+      "prompt_n":1,
+      "predicted_per_second":232.58615032541,
+      "prompt_ms":6.517,
+      "prompt_per_token_ms":6.517,
+      "predicted_ms":240.771,
+      "predicted_per_token_ms":4.2994821428571,
+      "cache_n":2336,
+      "predicted_n":57
+    },
+    "created":1789970382,
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "model":"ggml-org/gpt-oss-120b-GGUF",
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b11062-3cf03257f",
+    "id":"chatcmpl-PTNFCpVVm77F72cYvwTGD3aFrn6VWPRH"
+  }
+}
