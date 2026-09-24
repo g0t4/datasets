@@ -1,0 +1,73 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }],
+    "timings":{
+      "prompt_ms":74.812,
+      "prompt_per_token_ms":14.9624,
+      "predicted_ms":54.675,
+      "predicted_per_token_ms":9.1125,
+      "predicted_n":7,
+      "prompt_per_second":66.834197722291,
+      "prompt_n":5,
+      "predicted_per_second":109.73936899863,
+      "draft_n":30,
+      "cache_n":1436,
+      "draft_n_accepted":5
+    },
+    "created":1790287774,
+    "id":"chatcmpl-CPNr4bqonBvKcWMIXFlPApjd5nnYd6J2",
+    "model":"meta-models/Muse-Glimmer-30B-GGUF:Q4_K_XL",
+    "system_fingerprint":"b11062-3cf03257f"
+  },
+  "flags":[],
+  "request_body":{
+    "post_sampling_probs":true,
+    "logprobs":true,
+    "top_k":64,
+    "temperature":1,
+    "raw":false,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|CURSOR_IS_HERE|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|CURSOR_IS_HERE|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|CURSOR_IS_HERE|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|CURSOR_IS_HERE|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|CURSOR_IS_HERE|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```.config/xonsh/rc.d/learn.xsh\nimport rich\n\nfrom xonsh.built_ins import XSH\nfrom xonsh.events import events\n\nfrom prompt_toolkit.keys import Keys\n\nimport logging\nfrom wes_logging import ensure_logger_is_setup, get_wes_logger\n\nlog = get_wes_logger(\"learn\")\nlog.setLevel(logging.INFO)  # only failures (effectively shuts up the logger)\n\ndef dump_keymaps():\n    return XSH.shell.shell.prompter.app.key_bindings.bindings\n\ndef dump_events():\n    rich.print(events)\n\n# app = XSH.shell.prompter.app\n# bindings = app.key_bindings.bindings\n#\n# for binding in bindings:\n#     keys = \" \".join(map(str, binding.keys))\n#     handler = getattr(binding.handler, \"__name__\", repr(binding.handler))\n#     if \"control\" in keys.lower():\n#         print(keys, handler)\n\ndef what_shell():\n    return \"xonsh\"\n\n# @events.on_ptk_create\n# def _wes_learn(bindings, **_):\n#     print(\"_wes_learn bindings registered\")\n#\n#     @bindings.add('a', 'b')\n#     def _(event):\n#         \" Do something if 'a' is pressed and then 'b' is pressed. \"\n#         print(\"this is why timeoutlen matters :)\")\n\n@events.on_command_not_found\ndef wes_command_not_found(cmd, **kwargs):\n    rich.print(f\"[red]Command not found...[/]\\n    {cmd=}\\n\")\n    if kwargs:\n        rich.print(f\"    {kwargs=}\")\n    # return {\"cmd\": [\"echo\",\"do\", \"something\", \"else\" ...] + cmd, \"env\": {\"FOO\": \"BAR\"}}\n\n\n# @events.on_precommand\n@events.on_transform_command\ndef wes_colorful_output(cmd: str, **kwargs):\n    # print(f\"precommand: {cmd=}, {type(cmd)=}, {kwargs=}\")\n    #\n    # TODO parse the command?\n    # log.info(f\"{cmd=}\")\n    cmd = cmd.strip()  # strip trailing \\n on submit\n    if cmd.strip().startswith(\"kubectl\"):\n        if \"-o yaml\" in cmd:\n            return f\"{cmd}<|CURSOR_IS_HERE|>\n    if cmd.strip().startswith(\"env\"):\n        if not \"| bat -l env\" in cmd:\n            return f\"{cmd} | bat -l env\"\n    if cmd.startswith(\"hf datasets info\"):\n        if not \"| bat -l json\" in cmd:\n        # pipe to bat for coloring\n        # hf datasets info roneneldan/TinyStories\n            return f\"{cmd} | bat -l json\"\n    # IIAC return nothing is preferred for no change?\n\n# @events.on_pre_cmdloop\n# def _event_show_tip(**kw):\n#     import random\n#     tips = [\"Use Tab for completion\", \"Try 'xonfig' to configure xonsh\"]\n#     print(\"Tip:\", random.choice(tips))\n```\n\n## Reminders about the cursor line:\nText before cursor: `            return f\"{cmd}`"
+      },{
+        "role":"assistant",
+        "content":"",
+        "reasoning_content":"<|eom|><|start|>assistant to=user<|message|>"
+      },{
+        "role":"assistant",
+        "content":" | bat -l yaml\"",
+        "timings":{
+          "prompt_ms":74.812,
+          "prompt_per_token_ms":14.9624,
+          "predicted_ms":54.675,
+          "predicted_per_token_ms":9.1125,
+          "predicted_n":7,
+          "prompt_per_second":66.834197722291,
+          "prompt_n":5,
+          "predicted_per_second":109.73936899863,
+          "draft_n":30,
+          "cache_n":1436,
+          "draft_n_accepted":5
+        },
+        "finish_reason":"stop"
+      }],
+    "chat_template_kwargs":{
+      "reasoning_strength":"off"
+    },
+    "max_tokens":2048,
+    "stream":true,
+    "top_p":1,
+    "top_logprobs":5
+  }
+}
