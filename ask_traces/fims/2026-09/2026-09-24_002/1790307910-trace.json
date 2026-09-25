@@ -1,0 +1,70 @@
+{
+  "request_body":{
+    "temperature":1,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|CURSOR_IS_HERE|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|CURSOR_IS_HERE|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|CURSOR_IS_HERE|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|CURSOR_IS_HERE|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|CURSOR_IS_HERE|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Fish Shell\n\n- Use snake_case for names\n- Use long options, i.e. `--quiet` over `-q`, `--regex` over `-r`\n\nTake advantage of fish-isms:\n```fish\n\n# use `not`, avoid `!`\nif not test -f spoon\n    echo There is no spoon\nend\n\n# capture command output and react to its success/failure (exit status)\nif set some_output (some_command)\n    echo \"ok: $some_output\"\nelse\n    echo \"fail: $some_output\"\nend\n\n# prefer named arguments\nfunction show_variable --argument-names name value\n    echo \"$name = $value\"\nend\n\n# fish doesn't have heredocs, use mulit-line strings:\necho \"foo\nbar\" | string join \",\"\n\n# blocks combine the output of multiple commands:\nbegin\n    echo -n \"Hello Wes, the time is: \"\n    date\nend > welcome.txt\n\n# every variable is an array\nset names wes john bob jane\nfor name in $names\n    echo $name\nend\n\nstring match '*.lua' $files\nstring replace wrong right $in_this_text\nstring replace --regex '\\s+' ' ' $line\nset lines (string split '\\n' $text)\nstring join ',' $argv\nstring length $name\n\nstring escape $file_path\nstring unescape $escaped\n\npath change-extension mov ./foo.mp4 # ./foo.mov\npath sort 10-foo 2-bar # returns 2 before 10\n\nmath 10 / 5\nmath \"5 * 2\"\n\ncount *.txt\n\nif contains -- \"-q\" $argv\n    # ...\nend\n\nstatus filename # current script file\nstatus function # current function\n```\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```fish/load_last_interactive_only/cloud-ai-specific.fish\nabbr anu 'asciinema upload'\nabbr anc 'asciinema cat'\n\nfunction abbr_agg\n    set -l cast_file *.cast\n    if test -z \"$cast_file\"\n        echo \"no cast files\"\n        return\n    end\n    echo \"agg --font-size 20 --font-family 'SauceCodePro Nerd Font' --theme 17181d,c7b168,555a6c,dc3d6f,9ed279,fae67f,469cd0,8b47e5,61d2b8,c229cf\" $cast_file $cast_file.gif\nend\nabbr aggo --function abbr_agg\n\n# NOTES about ROWS/COLUMNS:\n# - check current size with: echo lines: $LINES cols: $COLUMNS\n# ! *** prefer resize terminal before recording and asciinema will capture $ROWS $COLUMNS and just works on export then => dry run commands and see how they appear with constraints (ie upper left quarter of screen position window gives smaller window thats probably ideal for sharing a terminal gif recording)\n#  *** OR `asciinema rec --rows X --cols Y...` works too though can be weird if smaller than actual terminal, esp if output would overflow the limits you place in --rows/--cols so best not to use this just set cols/rows by resizing window\n#  IF YOU set agg's --cols/rows < actual cols/rows (in cast file) then you get a % and new lines in agg gif output\n\n## agg\n# PRN does agg support a config file? upon cursory inspection of repo I didn't see any documented nor in brief code review\n#\n# brew install agg\n#\n# config:\n# --font-size 20+/--line-height\n#   --font-dir/--font-family\n#     mac:    --font-family 'SauceCodePro Nerd Font'\n# --rows X / --cols Y\n# --theme asciinema, dracula, monokai, solarized-dark, solarized-light, custom\n# --speed 1.0\n# --idle-time-limit 5.0 / --last-frame-delay 3.0\n#   my terminal dark    --theme 17181d,c7b168,555a6c,dc3d6f,9ed279,fae67f,469cd0,8b47e5,61d2b8,c229cf\n#\n#\n## asciicast2gif retired\n#   https://github.com/asciinema/asciicast2gif\n#   alias asciicast2gif='docker run --rm -v $PWD:/data asciinema/asciicast2gif'\n#   successors:\n#   - listed by asciicast2gif repo: https://github.com/asciinema/agg\n#       nix! flake!\n#   - copilot suggests: try ttygif?\n\nabbr vllms \"vllm serve\"\n# PRN some common args for vllm serve?\n# abbr vllmsd \"vllm serve --download-dir \"\nabbr vllmb \"vllm bench\"\nabbr vllmc \"vllm chat\"\nabbr vllmg \"vllm complete\"\n\n# *** tail\nabbr tailf 'tail -F -n 1000'\nabbr tailF 'tail -F -n 1000'\nabbr tailn 'tail -n 1000'\nabbr tailr 'tail -r' # reverse order\n# *** frequently tailed files\nabbr tt trash_n_tail\n#\n# trash+tail b/c these quickly become unruly in size... I should setup truncation\nabbr tt_xonsh \"trash_n_tail -F ~/.local/state/xonsh/xonsh.log\"\n#\nfunction _define_devtools_abbrs --argument-names name log_path\n    # abbreviation to trash and tail the log (used by nvim plugin)\n    abbr tt_devtools_$name \"trash_n_tail $log_path\" # nvim plugin\n\n    # show the last 1000 lines, filtering out ClearScrollback entries\n    abbr tail_all_devtools_$name \"tail -1000 $log_path | rg_grep -v ClearScrollback\"\n\n    # continuously follow the log file\n    abbr tail_devtools_$name \"tail -F $log_path\"\nend\n\n# define abbrs for every *.log in the devtools directory\nset devtools_dir ~/.local/share/devtools\nfor log_path in $devtools_dir/*.log\n    # strip directory and .log extension to get the abbreviation name\n    _define_devtools_abbrs $abbr_name $log_path\nend\nabbr tt_devtools_universal trash_n_tail ~/.local/share/devtools/universal.log\nabbr tt_devtools_hammerspoons trash_n_tail ~/.local/share/devtools/hammerspoons.log\nabbr tt_devtools_<|CURSOR_IS_HERE|> trash_n_tail ~/.local/share/devtools/launcher.log\n\n#\n# for now I want to keep the commands.log, maybe go back to trash_n_tail later on, for now leave tt as tail -F too:\nabbr tt_mcp_server_commands 'tail -F ~/.local/state/mcp-server-commands/commands.log'\nabbr tail_mcp_server_commands 'tail -F ~/.local/state/mcp-server-commands/commands.log'\nabbr commands_log_review \"commands_log_executable_mode; commands_log_shell_mode\"\nfunction commands_log_executable_mode\n    cat ~/.local/state/mcp-server-commands/commands.log | rg_grep run_process | rg_grep '\"argv\":'\nend\n\nfunction commands_log_shell_mode\n    cat ~/.local/state/mcp-server-commands/commands.log | rg_grep run_process | rg_grep '\"command_line\":'\nend\n# delegate tool / agents MCP server\nabbr tt_agents_mcp_server 'tail -F ~/.local/state/mcp-servers/agent.log'\n# TODO other files here like traces?\n\n#\nabbr tt_ask_lang_server 'trash_n_tail ~/.local/state/ask-openai/language.server.log' # python LS\nabbr tail_ask_lang_server 'tail -F ~/.local/state/ask-openai/language.server.log' # python LS\n#\nabbr tt_nvim_lsp_log 'trash_n_tail ~/.local/state/nvim/lsp.log' # nvim lsp logs\nabbr tail_nvim_lsp_log 'tail -F ~/.local/state/nvim/lsp.log' # nvim lsp logs\n#\nabbr tt_streamdeck_wes 'trash_n_tail ~/.hammerspoon/logs/streamdeck_keyboardmaestro_runner.log'\nabbr tail_streamdeck_wes 'tail -F ~/.hammerspoon/logs/streamdeck_keyboardmaestro_runner.log'\n#\nabbr tail_hardtime_logs 'cat ~/.local/state/nvim/hardtime.nvim.log | cut -c34- | sort | uniq -c | sort'\nfunction trash_n_tail\n    trash $argv\n    tail -F $argv\nend\n\n# tail10<space> => tail -n 10\nabbr taild --regex 'tail\\d+' --function _taild\nfunction _taild\n    string replace tail 'tail -n ' $argv[1]\nend\n\n# do not use if command -q b/c yapf is often installed per venv\nabbr -- yapfs \"yapf --style-help\"\nabbr --command yapf -- sh --style-help\n\n# * idea is to have rebuilders listed here\nfunction rebuild_llama_cpp\n\n    set llama_dir ~/repos/github/ggml-org/llama.cpp\n    if not test -d $llama_dir\n        echo \"llama.cpp not checked out, aborting...\"\n        return 1\n    end\n\n    if not cd $llama_dir 2>/dev/null\n        echo \"Failed to change directory to $llama_dir\"\n        return 1\n    end\n\n    # git fetch origin\n    git pull --rebase\n    # show any commits reachable by `origin` (upstream) and not (^) readable by `^HEAD`\n    if test -n \"$(git rev-list origin ^HEAD)\"\n        # TODO address current branch vs its tracked? or is that implicit in this already?\n        #    TLDR read up on git rev-list args\n        log_ --red --bold \"Upstream has new commits, pull if needed\\n\\n\"\n        exit 1\n    end\n\n    trash \"$llama_dir/build\"\n\n    build_llama_cpp\nend\n\nfunction build_llama_cpp\n\n    # warn user if any upstream commits, but don't stop build\n    # b/c I might not want to build latest version!\n\n    # if not git pull --rebase\n    #     echo pull failed, aborting...\n    #     return 1\n```\n\n## Reminders about the cursor line:\nText before cursor: `abbr tt_devtools_`\nText after cursor: ` trash_n_tail ~/.local/share/devtools/launcher.log`"
+      },{
+        "timings":{
+          "cache_n":618,
+          "draft_n":540,
+          "draft_n_accepted":81,
+          "prompt_ms":713.151,
+          "prompt_per_token_ms":0.29939168765743,
+          "prompt_per_second":3340.1060925386,
+          "predicted_per_token_ms":7.8976810344828,
+          "predicted_per_second":126.61944634556,
+          "predicted_ms":916.131,
+          "predicted_n":117,
+          "prompt_n":2382
+        },
+        "role":"assistant",
+        "content":"launcher",
+        "finish_reason":"stop",
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\nWe need fill abbreviation name. Context: previous lines define abbr tt_devtools_universal, tt_devtools_hammerspoons, then tt_devtools_<CURSOR> trash_n_tail ... launcher.log\n\nSo name should be launcher? Probably tt_devtools_launcher.\n\nThe pattern: abbr tt_devtools_$name ... So name derived from log file? launcher.log -> launcher.\n\nSo insert `launcher`.\n\nProbably just `launcher`.\n\nReturn code at cursor position."
+      }],
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "post_sampling_probs":true,
+    "max_tokens":4096,
+    "top_p":1,
+    "stream":true,
+    "top_logprobs":5,
+    "raw":false,
+    "logprobs":true,
+    "top_k":64
+  },
+  "flags":[],
+  "last_sse":{
+    "timings":{
+      "cache_n":618,
+      "draft_n":540,
+      "draft_n_accepted":81,
+      "prompt_ms":713.151,
+      "prompt_per_token_ms":0.29939168765743,
+      "prompt_per_second":3340.1060925386,
+      "predicted_per_token_ms":7.8976810344828,
+      "predicted_per_second":126.61944634556,
+      "predicted_ms":916.131,
+      "predicted_n":117,
+      "prompt_n":2382
+    },
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "object":"chat.completion.chunk",
+    "created":1790307912,
+    "id":"chatcmpl-KK0022sHaA4IlqOk78ScpYEn7NFar06k",
+    "system_fingerprint":"b11062-3cf03257f",
+    "model":"meta-models/Muse-Glimmer-30B-GGUF:Q4_K_XL"
+  }
+}
