@@ -1,0 +1,73 @@
+{
+  "last_sse":{
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "model":"meta-models/Muse-Glimmer-30B-GGUF:Q4_K_XL",
+    "timings":{
+      "draft_n_accepted":240,
+      "prompt_ms":811.352,
+      "prompt_per_token_ms":0.47839150943396,
+      "predicted_ms":2243.571,
+      "predicted_per_token_ms":6.8610733944954,
+      "predicted_n":328,
+      "prompt_per_second":2090.338102328,
+      "draft_n":1320,
+      "predicted_per_second":145.74978906395,
+      "prompt_n":1696,
+      "cache_n":922
+    },
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b11062-3cf03257f",
+    "id":"chatcmpl-ElQWlJjpuO7gkK3PtdD3BlScBJBag7Jw",
+    "created":1790567120
+  },
+  "request_body":{
+    "top_logprobs":5,
+    "post_sampling_probs":true,
+    "logprobs":true,
+    "top_k":64,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|CURSOR_IS_HERE|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|CURSOR_IS_HERE|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|CURSOR_IS_HERE|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|CURSOR_IS_HERE|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|CURSOR_IS_HERE|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: devtools.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/co/ensure_in_coroutine.lua:7-40\n--- ensure we are running inside a non main coroutine\n---@param what fun(...): any\nfunction ensure_in_coroutine(what, ...)\n    local function ensure_timer(co)\n        if CoroutineStateTracker._get(\"timer\", co) == nil then\n            local timer = Timer.new()\n            CoroutineStateTracker._set(\"timer\", timer, co)\n        end\n    end\n\n    local existing_coroutine, ismain = coroutine.running()\n    -- log:info(\"ismain:\", ismain, \"|\", \"running_thread:\", running_thread)\n    -- DO not try to reuse main thread (coroutine), it is not yield/resumable\n    if existing_coroutine and not ismain then\n        -- log:info(\"already have running, non-main coroutine, reusing it\")\n        -- * ensure timer attached on first call to ensure_in_coroutine\n        ensure_timer(existing_coroutine)\n        what(...)\n        return\n    end\n\n    -- FYI no easy way to test this pathway b/c plenary creates a coroutine per test case so this would never fire within plenary test runner\n    -- log:info(\"creating coroutine (thread)...\")\n    local new_coroutine = coroutine.create(what)\n    ensure_timer(new_coroutine)\n\n    -- ONLY call resume once, let `what` manage subsequent yield/resume (or delegate it to helpers like sleep_ms and callbacker)\n    local ok, err = coroutine.resume(new_coroutine, ...)\n    if not ok then\n        local failure = \"ensure_in_coroutine: failed resuming coroutine \"\n        log:error(failure, err)\n        error(failure .. tostring(err))\n    end\nend\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/co/ensure_in_coroutine.lua:0-10\nlocal log = require(\"devtools.logs.logger\"):universal()\nlocal Timer = require(\"devtools.logs.timer\")\nlocal CoroutineStateTracker = require(\"devtools.co.state\")\n\n-- FYI! always check resume result for failure!!!\n--   else wind up swallowing errors!\n\n--- ensure we are running inside a non main coroutine\n---@param what fun(...): any\nfunction ensure_in_coroutine(what, ...)\n    \n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/co/syncify.tests.lua:8-22\n                                   function()\n            -- FYI double ensure_in_coroutine (ensure_in_coroutine in ensure_in_coroutine) doesn't matter for this bug\n            -- FYI error is only visible in logs right now given async nature\n            --   TODO make test fail on double resume\n            ensure_in_coroutine(function()\n                local result1, result2, result3 = syncify(function(cb)\n                    -- vim.schedule(function()\n                    cb(3, 4, 5)\n                    -- end)\n                end)\n                assert.equal(3, result1)\n                assert.equal(4, result2)\n                assert.equal(5, result3)\n            end)\n        end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/co/ensure_in_coroutine.lua:15-34\n\n\n    local existing_coroutine, ismain = coroutine.running()\n    -- log:info(\"ismain:\", ismain, \"|\", \"running_thread:\", running_thread)\n    -- DO not try to reuse main thread (coroutine), it is not yield/resumable\n    if existing_coroutine and not ismain then\n        -- log:info(\"already have running, non-main coroutine, reusing it\")\n        -- * ensure timer attached on first call to ensure_in_coroutine\n        ensure_timer(existing_coroutine)\n        what(...)\n        return\n    end\n\n    -- FYI no easy way to test this pathway b/c plenary creates a coroutine per test case so this would never fire within plenary test runner\n    -- log:info(\"creating coroutine (thread)...\")\n    local new_coroutine = coroutine.create(what)\n    ensure_timer(new_coroutine)\n\n    -- ONLY call resume once, let `what` manage subsequent yield/resume (or delegate it to helpers like sleep_ms and callbacker)\n    local ok, err = coroutine.resume(new_coroutine, ...)\n\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/co/syncify.tests.lua:7-23\n                                        function()\n        it(\"due to sync callback\", function()\n            -- FYI double ensure_in_coroutine (ensure_in_coroutine in ensure_in_coroutine) doesn't matter for this bug\n            -- FYI error is only visible in logs right now given async nature\n            --   TODO make test fail on double resume\n            ensure_in_coroutine(function()\n                local result1, result2, result3 = syncify(function(cb)\n                    -- vim.schedule(function()\n                    cb(3, 4, 5)\n                    -- end)\n                end)\n                assert.equal(3, result1)\n                assert.equal(4, result2)\n                assert.equal(5, result3)\n            end)\n        end)\n    end\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```lua/devtools/co/ensure_in_coroutine.tests.lua\nlocal histogram = require('devtools.diff.histogram')\nlocal should = require('devtools.tests.should')\nlocal combined = require('devtools.diff.combined')\nlocal describe = require('devtools.tests.define.describe')\nlocal only = require('devtools.tests.define.only')\nlocal skip = require('devtools.tests.define.skip')\n\nrequire(\"devtools.co\")\nlocal TestTimer = require(\"devtools.async.test_timer\")\nlocal Counter = require(\"devtools.async.counter\")\n\nlocal ensure_in_coroutine = require(\"<|CURSOR_IS_HERE|>\n\n-- FYI alternative is to use async module, but I am happy with my ensure_in_coroutine\n-- local async = require('plenary.async.tests')\n\nlocal stop_after_this = only\n\ndescribe(\"ensure_in_coroutine\", function()\n    it(\"should not start a new coroutine\", function()\n        local co_before, is_main = coroutine.running()\n        assert.not_truthy(is_main, \"assumed that test runner starts a coroutine and is thus not main thread\") -- is_main is nil in plenary test runner, I thought it was a boolean?\n        ensure_in_coroutine(function()\n            local co_after = coroutine.running()\n            should.be_equal(co_before, co_after)\n        end)\n    end)\n    it(\"should attach timer to coroutine state\", function()\n        local CoroutineStateTracker = require(\"devtools.co.state\")\n        local co, is_main = coroutine.running()\n        assert.not_truthy(is_main, \"assumed that test runner starts a coroutine and is thus not main thread\") -- is_main is nil in plenary test runner, I thought it was a boolean?\n        ensure_in_coroutine(function()\n            local timer = CoroutineStateTracker.get(\"timer\")\n            assert.not_nil(timer, \"timer not set\")\n        end)\n    end)\n    it(\"should not create new timer if ensure_in_coroutine is nested\", function()\n        local CoroutineStateTracker = require(\"devtools.co.state\")\n        local co, is_main = coroutine.running()\n        assert.not_truthy(is_main, \"assumed that test runner starts a coroutine and is thus not main thread\") -- is_main is nil in plenary test runner, I thought it was a boolean?\n        ensure_in_coroutine(function()\n            local timer = CoroutineStateTracker.get(\"timer\")\n            assert.not_nil(timer, \"timer not set\")\n            ensure_in_coroutine(function()\n                local timer2 = CoroutineStateTracker.get(\"timer\")\n                assert.not_nil(timer2, \"timer not set\")\n                assert.are.equal(timer, timer2)\n            end)\n        end)\n    end)\nend)\n\n```\n\n## Reminders about the cursor line:\nText before cursor: `local ensure_in_coroutine = require(\"`",
+        "role":"user"
+      },{
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```lua/devtools/co/ensure_in_coroutine.tests.lua\n...\nlocal ensure_in_coroutine = require(\"<|CURSOR_IS_HERE|>\n\nWe need module path. From context, ensure_in_coroutine.lua is at lua/devtools/co/ensure_in_coroutine.lua\n\nSo require(\"devtools.co.ensure_in_coroutine\") likely.\n\nProbably need closing quote? The cursor is inside require(\" ... ). Text before cursor: local ensure_in_coroutine = require(\"\n\nSo we need the module path. Probably devtools.co.ensure_in_coroutine\n\nAlso maybe need closing \") ? The line continues after cursor? The snippet shows require(\"<|CURSOR_IS_HERE|> . Next line is blank. So probably need devtools.co.ensure_in_coroutine\") ?\n\nThe cursor is inside quotes. If we insert devtools.co.ensure_in_coroutine, we need closing quote and maybe newline? The line currently: local ensure_in_coroutine = require(\"<|CURSOR_IS_HERE|> . If we replace with devtools.co.ensure_in_coroutine\", then line becomes require(\"devtools.co.ensure_in_coroutine\") . That's good.\n\nSo return devtools.co.ensure_in_coroutine\"\n\nProbably just devtools.co.ensure_in_coroutine\n\nBut the cursor replacement should include closing quote? The text before cursor is require(\" . So after replacement we need closing \". Could include.\n\nSafer to return devtools.co.ensure_in_coroutine\"\n\nLet's output devtools.co.ensure_in_coroutine\"\n\n",
+        "role":"assistant",
+        "timings":{
+          "draft_n_accepted":240,
+          "prompt_ms":811.352,
+          "prompt_per_token_ms":0.47839150943396,
+          "predicted_ms":2243.571,
+          "predicted_per_token_ms":6.8610733944954,
+          "predicted_n":328,
+          "prompt_per_second":2090.338102328,
+          "draft_n":1320,
+          "predicted_per_second":145.74978906395,
+          "prompt_n":1696,
+          "cache_n":922
+        },
+        "content":"devtools.co.ensure_in_coroutine\"\n",
+        "finish_reason":"stop"
+      }],
+    "top_p":1,
+    "stream":true,
+    "temperature":1,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "max_tokens":4096,
+    "raw":false
+  },
+  "flags":[]
+}
