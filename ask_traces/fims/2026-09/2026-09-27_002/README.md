@@ -1,0 +1,1 @@
+ok, I am just now realizing that Muse seems to do well with partial completions of an existing line of text, and I do not recall it duplicating cursorline prefix that already exists (at least not often)
