@@ -1,0 +1,73 @@
+{
+  "request_body":{
+    "temperature":1,
+    "messages":[{
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|CURSOR_IS_HERE|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|CURSOR_IS_HERE|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|CURSOR_IS_HERE|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|CURSOR_IS_HERE|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|CURSOR_IS_HERE|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/traces/python_traces.tests.lua:25-26\n                                function()\n    end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/traces/python_traces.tests.lua:22-23\n                                  function()\n    end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/host.lua:56-56\n                        function() return _cached end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/tests/str.tests.lua:72-72\n                     function() str(\"foobar\"):should_start_with(\"bar\") end\n\n## ~/repos/github/g0t4/devtools.nvim/lua/devtools/debug/tests/this_fails.lua:2-4\nfunction M.failsauce()\n    error(\"failsauce\")\nend\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```~/repos/github/g0t4/devtools.nvim/lua/devtools/async/counter.lua\nlocal Counter = {}\nCounter.__index = Counter\n\nfunction Counter.new()\n    return setmetatable({ count = 0 }, Counter)\nend\n\nfunction Counter.one()\n    -- PRN `Counter.new_one()` if `one()` is confusing\n    return <|CURSOR_IS_HERE|>\nend\n\nfunction Counter:increment()\n    self.count = self.count + 1\n    return self -- so can do `Counter:new():increment()`\nend\n\nfunction Counter:decrement()\n    self.count = self.count - 1\n    return self\nend\n\nfunction Counter:is_done()\n    return self.count == 0\nend\n\nfunction Counter:wait(timeout)\n    -- up to 1 second or timeout...\n    -- this counter is intended for testing scenarios with near 0 delays, not timing tests\n    --  use TestTimer for intentional delays\n    local ok = vim.wait(timeout or 1000, function()\n        -- log:info(self.count)\n        return self:is_done()\n    end, 10)\n    assert(ok, (\"Counter not done after %d ms (count=%d should be 0)\")\n        :format(timeout or 1000, self.count))\nend\n\nreturn Counter\n```\n\n## Reminders about the cursor line:\nText before cursor: `    return `",
+        "role":"user"
+      },{
+        "role":"assistant",
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\nWe need complete Counter.one(). Likely return Counter.new():increment()? Or new counter with count 1? Function name one suggests creates counter with count 1? Or increments once?\n\nContext: Counter.new() returns count=0. increment returns self. So Counter.one() probably should return a counter with count =1.\n\nImplementation: return Counter.new():increment()\n\nOr Counter.new():increment():increment()? No.\n\nProbably return Counter.new():increment().\n\nCould also be Counter.new():increment() ? Wait one means count =1.\n\nMaybe they want Counter.new():increment()? yes.\n\nAlternative return setmetatable({count=1}, Counter)\n\nSimpler: return Counter.new():increment()\n\nI'll suggest that.\n\nNo comments.\n\nReturn code: Counter.new():increment()\n\nMake sure no leading spaces? The line has `    return ` already. So just insert Counter.new():increment()\n\n",
+        "finish_reason":"stop",
+        "timings":{
+          "predicted_ms":2198.796,
+          "predicted_per_token_ms":10.778411764706,
+          "prompt_n":836,
+          "cache_n":618,
+          "draft_n":1035,
+          "draft_n_accepted":136,
+          "predicted_per_second":92.778047622426,
+          "predicted_n":205,
+          "prompt_per_second":2939.4184452023,
+          "prompt_ms":284.41,
+          "prompt_per_token_ms":0.3402033492823
+        },
+        "content":"Counter.new():increment()"
+      }],
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "max_tokens":4096,
+    "raw":false,
+    "top_p":1,
+    "top_logprobs":5,
+    "post_sampling_probs":true,
+    "logprobs":true,
+    "top_k":64
+  },
+  "last_sse":{
+    "timings":{
+      "predicted_ms":2198.796,
+      "predicted_per_token_ms":10.778411764706,
+      "prompt_n":836,
+      "cache_n":618,
+      "draft_n":1035,
+      "draft_n_accepted":136,
+      "predicted_per_second":92.778047622426,
+      "predicted_n":205,
+      "prompt_per_second":2939.4184452023,
+      "prompt_ms":284.41,
+      "prompt_per_token_ms":0.3402033492823
+    },
+    "object":"chat.completion.chunk",
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL",
+    "system_fingerprint":"b11062-3cf03257f",
+    "created":1790664364,
+    "id":"chatcmpl-YnBwbNJckTHovfeU4x8xXpuT1U0rqnzF",
+    "choices":[{
+        "finish_reason":"stop",
+        "delta":[],
+        "index":0
+      }]
+  },
+  "flags":[]
+}
