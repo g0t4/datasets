@@ -1,0 +1,70 @@
+{
+  "flags":[],
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "max_tokens":4096,
+    "top_k":64,
+    "top_logprobs":5,
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "content":"You are completing code from a Neovim plugin.\nAs the user types, the plugin suggests code completions based on their cursor position: <|CURSOR_IS_HERE|>\n\nThe surrounding code is limited, it may not be the full file. Focus on the code near <|CURSOR_IS_HERE|>\nDo NOT explain your decisions. Do NOT return markdown blocks ```\nONLY return valid code at the <|CURSOR_IS_HERE|> position\nPAY attention to existing whitespace. Especially on the cursor line!\nYOU ARE ONLY INSERTING CODE. DO NOT REPEAT PREFIX. DO NOT REPEAT SUFFIX.\nComplete as little or as much code as is necessary to help the user. That means part of a line, a full line or even multiple lines! Goal is to help the user as much as is possible and reasonable.\n\nHere are a few examples of tricky completions:\n\n## Example: suggest middle of line (cursor has existing code before and after it)\n\n```python\ndef area(width, height):\n    return <|CURSOR_IS_HERE|> * height\n```\n\nSay this is your desired result:\n```python\ndef area(width, height):\n    return width * height\n```\n\n1. then the CORRECT completion is (do not include backticks, those are just to delimit included whitespace):\n`width`\n\n2. WRONG (because repeats the suffix):\n`width * height`\nresults in:\n`    return width * height * height`\n\n3. WRONG (because repeats both suffix and prefix):\n`    return width * height`\nresults in:\n`    return     return width * height * height`\n\n\n## Example: cursor is indented\n\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    <|CURSOR_IS_HERE|>\n    end\nend\n```\n\n*Keep in mind, the indent will be there before the suggested code too.*\n\nSay this is your desired result:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n1. then the CORRECT completion is:\n```lua\nelse\n        print(\"Non‑positive\")\n```\n\n2. WRONG (`else` ends up double indented when it should be single):\n```lua\n    else\n        print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n        else\n        print(\"Non‑positive\")\n    end\nend\n```\n\n3. WRONG (`print` ends up single indented when it should be double):\n```lua\nelse\n    print(\"Non‑positive\")\n```\nresults in:\n```lua\nfunction print_sign(number)\n    if number > 0 then\n        print(\"Positive\")\n    else\n    print(\"Non‑positive\")\n    end\nend\n```\n\n\n"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```.local.xsh\nfrom wes_local_config import local_abbr\n#\ncd_repo_root = \"cd ~/repos/github/g0t4/ask-openai.nvim\"\ncd_rag = f\"{cd_repo_root}/lua/ask-openai/rag\"\nlocal_abbr(\"ptw_apply_patch_wrapper\", f\"{cd_repo_root}; ptw --clear lua/ask-openai/tools/inproc/apply_patch_wrapper_tests.py --  --capture=no --log-cli-level=INFO\")\nlocal_abbr(\"ptw_chunking\", f\"{cd_rag}; ptw --clear *_tests.py -- chunks/*.py --capture=no --log-cli-level=INFO\")\ncd_chat_viewer_web = f\"{cd_repo_root}/tools/chat_viewer_web\"\nlocal_abbr(\"run_vite\", f\"{cd_chat_viewer_web}; npm run dev\")\n\n# * E2E test abbreviations for ask-openai.nvim\n# #    Run with: type the abbr then tab to expand\n# abbr --position=anywhere --set-cursor e2e-pred \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/predictions/e2e.tests.lua\\\" -c quit!\"\n# abbr --position=anywhere --set-cursor e2e-rewrite \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/rewrites/e2e.tests.lua\\\" -c quit!\"\n# abbr --position=anywhere --set-cursor e2e-agent \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/agents/e2e.tests.lua\\\" -c quit!\"\n# abbr --position=anywhere --set-cursor e2e-all \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/agents/e2e.tests.lua\\\" && nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/predictions/e2e.tests.lua\\\" && nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/rewrites/e2e.tests.lua\\\"\"\nlocal_abbr(\"e2e-pred\", \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/predictions/e2e.tests.lua\\\" -c quit!\", position=\"anywhere\")\n<|CURSOR_IS_HERE|>\n\n```\n\n## Reminders about the cursor line:\n"
+      },{
+        "timings":{
+          "prompt_n":425,
+          "prompt_per_token_ms":0.37225882352941,
+          "predicted_ms":1444.317,
+          "predicted_per_token_ms":3.2167416481069,
+          "draft_n_accepted":407,
+          "cache_n":865,
+          "predicted_per_second":310.87358246147,
+          "predicted_n":450,
+          "prompt_per_second":2686.3030149801,
+          "draft_n":645,
+          "prompt_ms":158.21
+        },
+        "role":"assistant",
+        "finish_reason":"stop",
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\nWe need continue file. Likely add similar local_abbr lines for e2e-rewrite, e2e-agent, e2e-all.\n\nContext shows commented examples. Need uncommented with local_abbr.\n\nProbably:\n\nlocal_abbr(\"e2e-rewrite\", \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/rewrites/e2e.tests.lua\\\" -c quit!\", position=\"anywhere\")\nlocal_abbr(\"e2e-agent\", \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/agents/e2e.tests.lua\\\" -c quit!\", position=\"anywhere\")\nlocal_abbr(\"e2e-all\", \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/agents/e2e.tests.lua\\\" && nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/predictions/e2e.tests.lua\\\" && nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/rewrites/e2e.tests.lua\\\"\", position=\"anywhere\")\n\nReturn code.",
+        "content":"local_abbr(\"e2e-rewrite\", \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/rewrites/e2e.tests.lua\\\" -c quit!\", position=\"anywhere\")\nlocal_abbr(\"e2e-agent\", \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/agents/e2e.tests.lua\\\" -c quit!\", position=\"anywhere\")\nlocal_abbr(\"e2e-all\", \"nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/agents/e2e.tests.lua\\\" && nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/predictions/e2e.tests.lua\\\" && nvim --headless -c \\\"PlenaryBustedFile lua/ask-openai/rewrites/e2e.tests.lua\\\"\", position=\"anywhere\")\n"
+      }],
+    "logprobs":true,
+    "raw":false,
+    "stream":true,
+    "post_sampling_probs":true,
+    "temperature":1
+  },
+  "last_sse":{
+    "timings":{
+      "prompt_n":425,
+      "prompt_per_token_ms":0.37225882352941,
+      "predicted_ms":1444.317,
+      "predicted_per_token_ms":3.2167416481069,
+      "draft_n_accepted":407,
+      "cache_n":865,
+      "predicted_per_second":310.87358246147,
+      "predicted_n":450,
+      "prompt_per_second":2686.3030149801,
+      "draft_n":645,
+      "prompt_ms":158.21
+    },
+    "created":1790967489,
+    "id":"chatcmpl-C9yEGCAfDgo2Zo4eNGQEZoSUb30LhNLR",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL",
+    "object":"chat.completion.chunk",
+    "system_fingerprint":"b11062-3cf03257f"
+  }
+}
