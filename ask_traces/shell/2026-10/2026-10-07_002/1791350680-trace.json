@@ -1,0 +1,51 @@
+{
+  "session_id": 1791350680,
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a command line expert. Respond with a single, valid commandline. I intend to execute it. No explanation. No markdown. DO NOT respond with leading ``` nor trailing ```"
+    },
+    {
+      "role": "user",
+      "content": "env: shell=xonsh on uname=None and FYI lastCommand=re.Pattern()\nquestion: [a for a in XONSH_ABBREVIATIONS.abbreviations if type(a.trigger) == re ] # how do I filter just regex.compiles"
+    },
+    {
+      "role": "assistant",
+      "content": "import re; [a for a in XONSH_ABBREVIATIONS.abbreviations if isinstance(a.trigger, re.Pattern)]",
+      "finish_reason": "stop"
+    }
+  ],
+  "response": {
+    "finish_reason": "stop",
+    "model_name": "gpt-5-2025-08-07",
+    "service_tier": "default",
+    "model_provider": "llama_server",
+    "model": "gpt-5",
+    "service": "openai"
+  },
+  "last_sse": {
+    "id": "chatcmpl-EWEQkJTxAkiBHa88OxMlWwXSOA2tO",
+    "choices": [
+      {
+        "delta": {
+          "content": null,
+          "function_call": null,
+          "refusal": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null
+      }
+    ],
+    "created": 1791350674,
+    "model": "gpt-5-2025-08-07",
+    "object": "chat.completion.chunk",
+    "moderation": null,
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": null,
+    "obfuscation": "IAp"
+  }
+}
