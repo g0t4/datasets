@@ -1,0 +1,64 @@
+{
+  "session_id": 1791411425,
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a command line expert. Respond with a single, valid commandline. I intend to execute it. No explanation. No markdown. DO NOT respond with leading ``` nor trailing ```"
+    },
+    {
+      "role": "user",
+      "content": "My shell is xonsh on None.\n\n## Recent command history\n\nThese may be relevant, or not. You decide.\n```xonsh\nopen .\n```\n\nI need help with my current commandline buffer, which contains this text:\ntake 38s to 46s from 'Defendant attacks judge in Las Vegas during sentencing.webm'\n"
+    },
+    {
+      "role": "assistant",
+      "content": "ffmpeg -i 'Defendant attacks judge in Las Vegas during sentencing.webm' -ss 00:00:38 -to 00:00:46 -c copy output.webm",
+      "finish_reason": "stop"
+    }
+  ],
+  "response": {
+    "finish_reason": "stop",
+    "model_name": "deepseek-flash",
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "model_provider": "llama_server",
+    "model": "deepseek-chat",
+    "service": "deepseek"
+  },
+  "last_sse": {
+    "id": "434ec680-8ff7-4372-bd1a-070a8b42a56d",
+    "choices": [
+      {
+        "delta": {
+          "content": "",
+          "function_call": null,
+          "refusal": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null
+      }
+    ],
+    "created": 1791411424,
+    "model": "deepseek-flash",
+    "object": "chat.completion.chunk",
+    "moderation": null,
+    "service_tier": null,
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "usage": {
+      "completion_tokens": 40,
+      "prompt_tokens": 113,
+      "total_tokens": 153,
+      "completion_tokens_details": null,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cache_write_tokens": null,
+        "cached_tokens": 0,
+        "image_tokens": null,
+        "text_tokens": null
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 113
+    }
+  }
+}
