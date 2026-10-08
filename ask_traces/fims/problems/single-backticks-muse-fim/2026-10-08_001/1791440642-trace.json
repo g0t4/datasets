@@ -1,0 +1,73 @@
+{
+  "request_body":{
+    "top_logprobs":5,
+    "post_sampling_probs":true,
+    "logprobs":true,
+    "top_k":64,
+    "temperature":1,
+    "stream":true,
+    "top_p":1,
+    "raw":false,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "messages":[{
+        "content":"Do not overthink this, the user is only asking for a code prediction, return the first thing that comes to mind. Do not reason for more than 100 tokens. Do not wrap your suggestion in backticks",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Python Code Preferences\n- use snake_case for functions and variables\n- use PascalCase for classes\n- add type hints that improve code completion\n- prefer `list[]` over `List[]` to mimimize imports\n- `py_compile` is a great way to check for syntax errors\n\n### I like pytest\n\npytest has stellar failure diffs (introspection):\n- projections just work (tuples, lists, sets, dicts, etc) especially for complex comparisons\n- use `assert`\n- just say no to `self.assert*`\n\n```python\n# 🥰 (complex compare by projecting a list of tuples)\nexpected = [(\"c1\", Range(0, 6)), (\"c3\", Range(6, 9))]\nassert [(c.id, c.range) for c in removed.clips()] == expected\n\n# 🤮 (repetitive assertions)\nclips = list(removed.clips())\nassert clips[0].id == \"c1\"\nassert clips[0].range == Range(0, 6)\nassert clips[1].id == \"c3\"\nassert clips[1].range == Range(6, 9)\n```\n\n\n\n## Recent yanks (copy to clipboard):\n```tools/chat_viewer/theme.py\n👤\n```\n\n```tools/chat_viewer/theme.py\n✨\n```\n\n```tools/chat_viewer/theme.py\n    # \"run_command\": \"⚡\",\n```\n\n```tools/chat_viewer/theme.py\n\n```\n\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may or may not be relevant.\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/__main__.py:207-225\ndef _parse_native_fim(prompt: str, completion: str) -> dict | None:\n    \"\"\"Parse native FIM (FIM_PREFIX/FIM_SUFFIX/FIM_MIDDLE tokens) into diff components.\"\"\"\n    middle_idx = prompt.find(FIM_MIDDLE)\n    prefix_idx = prompt.find(FIM_PREFIX)\n    suffix_idx = prompt.find(FIM_SUFFIX)\n    if middle_idx < 0 or prefix_idx < 0 or suffix_idx < 0:\n        return None\n\n    # we skip everything before FIM_PREFIX (it's only used in repo level FIM where you have other files included before the FIM PSM request\n    # prefix is FIM_PREFIX until FIM_SUFFIX\n    prefix = prompt[prefix_idx + len(FIM_PREFIX):suffix_idx]\n    # suffix is FIM_SUFFIX until FIM_MIDDLE\n    suffix = prompt[suffix_idx + len(FIM_SUFFIX):middle_idx]\n    return {\n        \"prefix\": prefix,\n        \"suffix\": suffix,\n        \"completion\": completion,\n        \"diff_type\": \"fim\",\n    }\n\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/__main__.py:256-286\ndef print_fim_diff(prompt: str, completion: str) -> None:\n    \"\"\"Print a FIM completion diff (native FIM tokens or chat-style CURSOR_IS_HERE).\"\"\"\n    parsed = parse_fim_diff(prompt, completion)\n    if not parsed:\n        return\n\n    # Limit context to last 10 lines before and first 10 lines after\n    CONTEXT_LINES = 10\n\n    before_lines = parsed[\"prefix\"].split(\"\\n\")\n    before_omitted = len(before_lines) - CONTEXT_LINES if len(before_lines) > CONTEXT_LINES else 0\n    prefix = \"\\n\".join(before_lines[-CONTEXT_LINES:]) if before_omitted > 0 else parsed[\"prefix\"]\n\n    after_lines = parsed[\"suffix\"].split(\"\\n\")\n    after_omitted = len(after_lines) - CONTEXT_LINES if len(after_lines) > CONTEXT_LINES else 0\n    suffix = \"\\n\".join(after_lines[:CONTEXT_LINES]) if after_omitted > 0 else parsed[\"suffix\"]\n\n    old_text = prefix + suffix\n    new_text = prefix + completion + suffix\n\n    _console.print(header_bar(\"TLDR - FIM DIFF\", \"cyan\", _console.width))\n    # FYI not a fan of both tree + console.print/rule uses... usually I like trees when I defer print until full output is built... meh for now\n    root = TreeWrapper.hidden_root()\n    if before_omitted or after_omitted:\n        root.add_with_markup(\"[dim] • Showing 10 lines of context before/after[/]\")\n\n    # completions are always INSERTIONS only... so just mark it as green! no need to run a diff\n    final_text = Text(prefix) + Text(completion, style=\"bold italic green\") + Text(suffix)\n    root.add(final_text)\n    root.blank_line()\n    _console.print(root)\n\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/__main__.py:253-272\n\n\n\ndef print_fim_diff(prompt: str, completion: str) -> None:\n    \"\"\"Print a FIM completion diff (native FIM tokens or chat-style CURSOR_IS_HERE).\"\"\"\n    parsed = parse_fim_diff(prompt, completion)\n    if not parsed:\n        return\n\n    # Limit context to last 10 lines before and first 10 lines after\n    CONTEXT_LINES = 10\n\n    before_lines = parsed[\"prefix\"].split(\"\\n\")\n    before_omitted = len(before_lines) - CONTEXT_LINES if len(before_lines) > CONTEXT_LINES else 0\n    prefix = \"\\n\".join(before_lines[-CONTEXT_LINES:]) if before_omitted > 0 else parsed[\"prefix\"]\n\n    after_lines = parsed[\"suffix\"].split(\"\\n\")\n    after_omitted = len(after_lines) - CONTEXT_LINES if len(after_lines) > CONTEXT_LINES else 0\n    suffix = \"\\n\".join(after_lines[:CONTEXT_LINES]) if after_omitted > 0 else parsed[\"suffix\"]\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/tools/chat_viewer/__main__.py:171-187\n    \"d19df70165c3e1214bfe6ca4fc12c03abf07b1dba26df369f2340e7387e33864\",  ## Current directory - dotfiles\n    #\n    # FIM system prompt\n    \"fb1842d9f11887b8a23baf27c8faa6c1ee58ed9047b8b6431ef8b277787dd156\", ## You are completing code from a Neovim plugin...\n    \"80c4c3b46c1c387c83a08d102d4a89a869b006ed8bf054a6c3217c9dca1d0a49\", ## Example: suggest middle of line (cursor has existing code before and after it)\n    \"21e6255cbed477f7d444b57093d4a3a5ad517eab0f0c5a65b78ac1cb1033bb07\", ## Example: cursor is indented\n    #\n    \"8d81ff4c004007e887bee0462ab6e1de3d712c62d856c3b004b3771c1784501e\",  # Here is context that's automatically provided, that MAY be relevant.\n\n]\n\nFIM_PREFIX = \"<|fim_prefix|>\"\nFIM_MIDDLE = \"<|fim_middle|>\"\nFIM_SUFFIX = \"<|fim_suffix|>\"\nCURSOR_IS_HERE = \"<|CURSOR_IS_HERE|>\"\n\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/tests/manual_prompting/jetbrains_mellum/base/file_level_fim.py:0-13\nfrom show import show_completion_for\n\nrequest_body = {\n    \"prompt\": \"<fim_prefix>local M = {}\\n\\nfunction M.add(a, b)\\n    return a + b\\nend\\n\\n<fim_suffix>\\n\\n\\nreturn M<fim_middle>\",\n    \"options\": {\n        \"num_ctx\": 8192\n    },\n    \"raw\": True,\n    \"num_predict\": 200,\n    \"stream\": False,\n    \"model\": \"huggingface.co/JetBrains/Mellum-4b-base-gguf:latest\",\n}\n\nshow_completion_for(request_body)\n\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```tools/chat_viewer/theme.py\n\"\"\"Centralized color/icon palette for the chat trace viewer.\n\nKeeps all the aesthetic decisions in one place so the CLI dump and the\nTextual viewer stay visually consistent.\n\"\"\"\n\nfrom __future__ import annotations\n\nfrom rich.color import Color\nfrom rich.style import Style\nfrom rich.text import Text\n\n\n# Role -> accent color (used for section headers, labels, timing lines).\nROLE_COLORS = {\n    \"system\": \"magenta\",\n    \"developer\": \"cyan\",\n    \"user\": \"green\",\n    \"user_raw\": \"green\",\n    \"assistant\": \"yellow\",\n    \"assistant_raw\": \"yellow\",\n    \"tool\": \"red\",\n}\n\n# Role -> icon shown next to the message header.\nROLE_ICONS = {\n    \"system\": \"📢\",\n    \"developer\": \"💻\",\n    \"user\": \"👤\",\n    \"user_raw\": \"👤\",\n\n    \"assistant\": \"✨\",\n    #   nf-oct-sparkle_fill \\u\n    #   nf-cod-sparkle \\uec10\n    \"assistant_raw\": \"✨\",\n\n    \"tool\": \"🔧\",\n}\n\n# Tool name -> icon shown in the call title.\nTOOL_ICONS = {\n    \"apply_patch\": \"📝\",\n    # \"run_command\": \"⚡\",\n    \"run_command\": \" \",\n    #  \\uea85\n    #  <|CURSOR_IS_HERE|> \n    #   \\uf120\n    #   \\uf489\n    \"run_process\": \" \",\n    \"run_xonsh\": \"🐚\",\n    \"run_in_neovim\": \"\", # \\uf36f\n    \"semantic_grep\": \"󰕡\",\n    \"fetch\": \"󰜏\",\n    \"delegate\": \"🤝\",\n    \"locate_anything\": \"🖼️\",\n    \"screencap\": \"📸\",\n}\n\n\ndef role_color(role: str) -> str:\n    \"\"\"Return the accent color for a message role.\"\"\"\n    return ROLE_COLORS.get(role.lower(), \"white\")\n\n\ndef role_icon(role: str) -> str:\n    \"\"\"Return the icon for a message role.\"\"\"\n    return ROLE_ICONS.get(role.lower(), \"•\")\n\n\ndef tool_icon(name: str) -> str:\n    \"\"\"Return the icon for a tool call.\"\"\"\n    return TOOL_ICONS.get(name, \"🔧\")\n\n\ndef contrast_color_for(bg_color: str) -> str:\n    \"\"\"Pick black or white text for best contrast on the given background.\"\"\"\n    r, g, b = Color.parse(bg_color).get_truecolor()\n\n    # Relative luminance (WCAG): 0 = black, 1 = white.\n    def linearize(channel: int) -> float:\n        channel /= 255\n        return channel / 12.92 if channel <= 0.03928 else ((channel + 0.055) / 1.055) ** 2.4\n\n    luminance = 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)\n    return \"black\" if luminance > 0.4 else \"white\"\n\n\ndef header_bar(title: str, color: str, width: int) -> Text:\n    \"\"\"Build a full-width section header bar.\n\n    A colored ``pill`` holds the title (with a role icon), then a dim ``rule``\n    fills the rest of the line so messages are cleanly separated without\n    consuming three full lines.\n    \"\"\"\n    r, g, b = Color.parse(color).get_truecolor()\n    bg_hex = f\"#{r:02x}{g:02x}{b:02x}\"\n    font_color = contrast_color_for(color)\n\n    pill = Text(f\" {title} \", style=Style(bgcolor=bg_hex, color=font_color, bold=True))\n    rule_width = max(0, width - len(pill) - 1) # -1 for icons (some overflow a char and wrap the header)\n    rule = Text(\" \" * rule_width, style=\"dim\")\n    return pill + rule\n```\n\n## Reminders about the cursor line:\nText before cursor: `    #  `\nText after cursor: ` `",
+        "role":"user"
+      },{
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\nWe need suggest text to replace cursor. Context shows recent yanks: tools/chat_viewer/theme.py with 👤, ✨, # \"run_command\": \"⚡\", \n\nCursor line: #  <|CURSOR_IS_HERE|> \nText before: `    #  `\nText after: ` `\n\nProbably want comment with unicode code? The line shows #   and comments show #  \\uea85 etc. Maybe they want \\uf120? Previous yanks? Recent yanks include theme.py 👤 etc.\n\nPossibly suggest ` \\uf120`? The line is about run_command icon alternatives. The comment shows #  <|CURSOR_IS_HERE|> . Maybe they want unicode code for that icon.  is U+E795? Let's check:  is U+E755? Actually need. Could be `\\ue795`. Might want to add comment with code.\n\nProbably suggest ` \\ue795` ?\n\nBetter suggest ` \\ue795` to document code.\n\nGiven recent yank , maybe they want `\\uea85`? Hmm.\n\nCursor after  . Might be they want comment showing code point. The pattern: #  \\uea85. So for  should be \\ue795? Let's assume.\n\nProvide suggestion: ` \\ue795`.\n\nReturn text.\n\n",
+        "finish_reason":"stop",
+        "timings":{
+          "draft_n_accepted":213,
+          "draft_n":1575,
+          "predicted_per_second":93.231948735957,
+          "predicted_n":318,
+          "prompt_per_second":3321.1408825435,
+          "prompt_ms":870.484,
+          "prompt_per_token_ms":0.30110134901418,
+          "predicted_ms":3400.122,
+          "predicted_per_token_ms":10.725936908517,
+          "prompt_n":2891,
+          "cache_n":64
+        },
+        "role":"assistant",
+        "content":"` \\ue795`\n"
+      }],
+    "max_tokens":4096
+  },
+  "flags":[],
+  "last_sse":{
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL",
+    "system_fingerprint":"b11062-3cf03257f",
+    "choices":[{
+        "finish_reason":"stop",
+        "index":0,
+        "delta":[]
+      }],
+    "timings":{
+      "draft_n_accepted":213,
+      "draft_n":1575,
+      "predicted_per_second":93.231948735957,
+      "predicted_n":318,
+      "prompt_per_second":3321.1408825435,
+      "prompt_ms":870.484,
+      "prompt_per_token_ms":0.30110134901418,
+      "predicted_ms":3400.122,
+      "predicted_per_token_ms":10.725936908517,
+      "prompt_n":2891,
+      "cache_n":64
+    },
+    "created":1791440646,
+    "object":"chat.completion.chunk",
+    "id":"chatcmpl-9TViHYe8IRETG1z96qWiscZCwWB1qwZg"
+  }
+}
