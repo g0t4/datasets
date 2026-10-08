@@ -1,0 +1,73 @@
+{
+  "last_sse":{
+    "object":"chat.completion.chunk",
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL",
+    "choices":[{
+        "delta":[],
+        "index":0,
+        "finish_reason":"stop"
+      }],
+    "timings":{
+      "prompt_n":2270,
+      "cache_n":64,
+      "draft_n_accepted":173,
+      "draft_n":1110,
+      "prompt_ms":643.506,
+      "prompt_per_token_ms":0.28348281938326,
+      "predicted_n":247,
+      "prompt_per_second":3527.5506366685,
+      "predicted_per_second":102.53943495769,
+      "predicted_ms":2399.077,
+      "predicted_per_token_ms":9.7523455284553
+    },
+    "created":1791465554,
+    "system_fingerprint":"b11062-3cf03257f",
+    "id":"chatcmpl-S91vUtfP64qIUSoTuadN64GtG1u4yOj0"
+  },
+  "flags":[],
+  "request_body":{
+    "post_sampling_probs":true,
+    "logprobs":true,
+    "messages":[{
+        "content":"Do not overthink this, the user is only asking for a code prediction, return the first thing that comes to mind. Do not reason for more than 100 tokens. Do not wrap your suggestion in backticks",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n## Recent yanks (copy to clipboard):\n```lua/ask-openai/tools/inproc/semantic_grep.lua\n                isError = rag_response.result.isError\n```\n\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may not be relevant to my request.\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/prompts/rag_instructions.lua:26-65\n---@param rag_matches LSPRankedMatch[]\n---@param explanation string? -- extra details to insert after header with count of matches\n---@return string\nfunction M.matches_to_markdown(rag_matches, explanation)\n    -- TODO! dedupe matches that overlap/touch dedupe.merge_contiguous_rag_chunks()\n    local lines = {\n        \"# Semantic Grep matches: \" .. #rag_matches,\n        \"\",\n    }\n\n    if explanation ~= nil and explanation ~= \"\" then\n        table.insert(lines, explanation)\n        table.insert(lines, \"\")\n    end\n\n    vim.iter(rag_matches)\n        :each(function(chunk)\n            ---@cast chunk LSPRankedMatch\n            local file = chunk.file .. \":\" .. chunk.start_line_base0 .. \"-\" .. chunk.end_line_base0\n            local code_chunk = chunk.text\n\n            -- * add leading whitespace for non-zero start columns (ts chunks only, so far)\n            local start_col0 = chunk.start_column_base0\n            if start_col0 and start_col0 > 0 then\n                -- I noticed in some cases a treesitter matched function has non-zero start column and that shows as incorrectly indented in trace RAG matches\n                --   mostly wanted to avoid model being confused, especialy if multiple matches are from same file and the de-indented func signature (often all that is off like this)... is just slightly wrong but could it confuse the generated code?\n                --      could this be partially why I get poorly indented suggestions at times?\n                --   so, I am adding whitespace for now\n                --   FYI it would be fine to roll this back, most of the time it would just be incorrectly indented function signature, which isn't even invalid in python\n                -- TODO any material cases where the leading chars aren't actually whitespace?\n                local visible_ws = \" \"\n                code_chunk = string.rep(visible_ws, start_col0) .. code_chunk\n                -- TODO consider is col offset in bytes or chars? (see RAG preview for more on this)... i.e. with emoji or other unicode chars?\n            end\n\n            table.insert(lines, \"## \" .. file .. \"\\n\" .. code_chunk .. \"\\n\")\n        end)\n    local markdown = table.concat(lines, \"\\n\")\n    return markdown\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/prompts/rag_instructions.lua:24-43\n\n\n---@param rag_matches LSPRankedMatch[]\n---@param explanation string? -- extra details to insert after header with count of matches\n---@return string\nfunction M.matches_to_markdown(rag_matches, explanation)\n    -- TODO! dedupe matches that overlap/touch dedupe.merge_contiguous_rag_chunks()\n    local lines = {\n        \"# Semantic Grep matches: \" .. #rag_matches,\n        \"\",\n    }\n\n    if explanation ~= nil and explanation ~= \"\" then\n        table.insert(lines, explanation)\n        table.insert(lines, \"\")\n    end\n\n    vim.iter(rag_matches)\n        :each(function(chunk)\n            ---@cast chunk LSPRankedMatch\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/client.lua:95-105\n\n\n--- semantic grep results in an MCP like shape so they readily work with MCP client and models can understand the results\n---@class SemanticGrepWithTimeoutResponseObj : MCP_CallToolResponse\n---@field result SemanticGrepWithTimeoutResult\n\n---@class SemanticGrepWithTimeoutResult\n---@field isError? boolean\n---@field error? string\n---@field rag_matches LSPRankedMatch[]\n\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/tools/mcp/schemas.lua:60-79\n---@field name string\n---@field arguments? table<string, any>\n---\n---@class MCP_CallToolResult: table<string, any>\n---@field _meta? table<string, unknown>\n---@field content MCP_ContentBlock[]\n---@field structuredContent? table<string, unknown>\n---@field isError? boolean\n\n-- MCP schemas: https://modelcontextprotocol.io/specification/2025-11-25/schema\n---@class MCP_JSONRPCError\n---@field code: integer\n---@field message string\n---@field data? any\n\n---@alias MCP_ProgressToken string | number\n---@alias MCP_RequestId string | number\n\n--- @class MCP_JSONRPCErrorResponse\n--- @field jsonrpc \"2.0\"\n\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/prompts/rag_instructions.lua:6-11\n---@param rag_matches LSPRankedMatch[]\n---@return string?\nfunction M.explain_rag_auto_context(rag_matches)\n    if #rag_matches == 0 then return end\n    return M.matches_to_markdown(rag_matches, \"This is automatic context based on my request. These may not be relevant to my request.\")\nend\n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```lua/ask-openai/tools/inproc/semantic_grep.lua\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal ansi = require(\"devtools.ansi\")\nlocal client = require(\"ask-openai.rag.client.client\")\nlocal rag_instructions = require(\"ask-openai.frontends.prompts.rag_instructions\")\n\nlocal M = {\n    ---@type OpenAITool;\n    ToolDefinition = {\n        [\"function\"] = {\n            description =\n            \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\",\n            name = \"semantic_grep\",\n            parameters = {\n                properties = {\n                    filetype = {\n                        type = \"string\",\n                        description = \"limit matches to a vim compatible filetype. default includes all filetypes\"\n                    },\n                    query = {\n                        type = \"string\",\n                        description = \"query text, what you are looking for\"\n                    },\n                    instruct = {\n                        type = \"string\",\n                        description = \"instructions for the query, explain the type of query\"\n                    },\n                    top_k = {\n                        type = \"number\",\n                        description = \"number of matches, defaults to 5 which is usually plenty!\"\n                    },\n                    embed_top_k = {\n                        type = \"number\",\n                        description = \"number of embeddings matches to consider for reranking\"\n                    },\n                },\n                required = { \"query\" },\n                type = \"object\"\n            }\n        },\n        type = \"function\"\n    }\n}\n\n---@type InProcessToolCall\nfunction M.call(parsed_args, callback)\n    local domains = \"\"\n    -- log:info(\"parsed_args\", vim.inspect(parsed_args))\n    if parsed_args.filetype == nil or parsed_args.filetype:match(\"^%s*$\") then\n        -- PRN use EVERYTHING instead of GLOBAL?\n        -- when using tools that might make more sense\n        -- but for now, assume if I limit the list then I did that for a good reason that likely benefits agent tool use\n        domains = \"GLOBAL\" -- GLOBAL is subject to rag.yaml -> global_languages\n    end\n\n    ---@type LSPSemanticGrepRequest\n    local semantic_grep_request = {\n        query = parsed_args.query,\n        instruct = parsed_args.instruct or \"Find relevant code for the AI agent's query\",\n        -- TODO make currentFileAbsolutePath nil-able instead of empty string\n        currentFileAbsolutePath = \"\",\n        -- TODO NEED TO make sure no issues using filetype vs extension....\n        vimFiletype = parsed_args.filetype,\n        domains = domains,\n        skipSameFile = false,\n        topK = parsed_args.top_k or 5,\n        embedTopK = parsed_args.embed_top_k or 18,\n    }\n\n    ---@param rag_response SemanticGrepWithTimeoutResponseObj\n    local function then_monkey_patch_content_with_rag_matches_markdown(rag_response)\n        local mcp_result = {\n            isError = rag_response.result.isError,\n            error = rag_response.result.error,\n        }\n        local matches = rag_response.result.rag_matches\n        rag_response.result.rag_matches = nil -- remove just to be safe\n        if matches == nil or #matches == 0 then\n            mcp_result.content = \"\"\n            return\n        end\n        mcp_result.content = rag_instructions.matches_to_markdown(matches)\n        callback({\n            <|CURSOR_IS_HERE|>\n        })\n    end\n\n    local _, cancel_request = client.semantic_grep_with_timeout(semantic_grep_request, nil, then_monkey_patch_content_with_rag_matches_markdown, \"agent-tool\")\n    return cancel_request -- FYI rag client already gracefull deals with cancel handling so no need to duplicate that here\nend\n\nreturn M\n```\n\n## Reminders about the cursor line:\nText before cursor: `            `\nText before cursor is all whitespace (do not ignore this)",
+        "role":"user"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\nWe need replace cursor. Probably callback expects something. Looking at code: then_monkey_patch_content_with_rag_matches_markdown builds mcp_result. Then callback({ <|CURSOR_IS_HERE|> }). Need to pass what? Likely { result = mcp_result }? Or just mcp_result? Inproc tool call? Let's see pattern. Might be callback({ result = mcp_result })? The semantic grep results in MCP like shape. Earlier code shows isError = rag_response.result.isError. Could be callback({ result = mcp_result }).\n\nProbably callback({ result = mcp_result }) . Or need content as MCP content block? Might be { result = mcp_result }.\n\nGiven recent yank: isError = rag_response.result.isError\n\nI think callback expects table with result field. Let's suggest:\n\nresult = mcp_result\n\nAlso need content? The mcp_result.content set to markdown string but MCP expects content array? Hmm.\n\nMaybe callback({ result = mcp_result }) is correct.\n\nProvide text to replace.\n\n",
+        "content":"```lua\nresult = mcp_result\n```",
+        "timings":{
+          "prompt_n":2270,
+          "cache_n":64,
+          "draft_n_accepted":173,
+          "draft_n":1110,
+          "prompt_ms":643.506,
+          "prompt_per_token_ms":0.28348281938326,
+          "predicted_n":247,
+          "prompt_per_second":3527.5506366685,
+          "predicted_per_second":102.53943495769,
+          "predicted_ms":2399.077,
+          "predicted_per_token_ms":9.7523455284553
+        },
+        "role":"assistant"
+      }],
+    "top_k":64,
+    "temperature":1,
+    "stream":true,
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "max_tokens":4096,
+    "raw":false,
+    "top_logprobs":5
+  }
+}
