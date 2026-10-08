@@ -1,0 +1,75 @@
+{
+  "request_body":{
+    "raw":false,
+    "max_tokens":4096,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "top_p":1,
+    "messages":[{
+        "role":"system",
+        "content":"Do not overthink this, the user is only asking for a code prediction, return the first thing that comes to mind. Do not reason for more than 100 tokens. Do not wrap your suggestion in backticks"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n## Recent yanks (copy to clipboard):\n```lua/ask-openai/frontends/prompts/rag_instructions.lua\nmatch.start_column_base0\n```\n\n```lua/ask-openai/frontends/prompts/rag_instructions.lua\nmatch.end_column_base0\n```\n\n```lua/ask-openai/frontends/prompts/rag_instructions.lua\n        if match.start_column_base0 and match.start_column_base0 > 0 or match.end_column_base0 > 0 then\n            position =\n                (match.start_line_base0 + 1) .. \":\" .. (match.start_column_base0 + 1)\n                .. \"-\" ..\n                (match.end_line_base0 + 1) .. \":\" .. (match.end_column_base0 + 1)\n        end\n```\n\n```lua/ask-openai/frontends/prompts/rag_instructions.lua\nposition = position .\n```\n\n```lua/ask-openai/frontends/prompts/rag_instructions.lua\n        table.insert(parts, match.end_line_base0 + 1)\n        if match.end_column_base0 and match.end_column_base0 > 0 then\n            table.insert(parts, \":\" .. (match.end_column_base0 + 1))\n        end\n        local position = table.concat(parts, \"\")\n```\n```\n\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may not be relevant to my request.\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/fim.lua:88:19-93:16\n```lua\nfunction(chunk)\n                ---@cast chunk LSPRankedMatch\n                local file_name = chunk.file .. \":\" .. chunk.start_line_base0 .. \"-\" .. chunk.end_line_base0\n                local non_fim_file = tokens.FILE_SEP .. file_name .. \"\\n\" .. chunk.text\n                prompt = prompt .. non_fim_file\n            end\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/fim.lua:674:19-685:16\n```lua\nfunction(chunk)\n                ---@cast chunk LSPRankedMatch\n                local file_name = chunk.file .. \":\" .. chunk.start_line_base0 .. \"-\" .. chunk.end_line_base0\n                local non_fim_file = tokens.BEGIN_OF_FILE\n                    .. tokens.BEGIN_FILE_NAME\n                    .. file_name\n                    .. tokens.END_FILE_NAME\n                    .. \"\\n\"\n                    .. chunk.text\n                    .. tokens.END_OF_FILE\n                prompt = prompt .. non_fim_file\n            end\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/fim.lua:532:1-539:4\n```lua\n---@param parts string[]\nlocal function deepseek_tag(...)\n    local parts = { ... }\n    -- build this SO WE DON'T HAVE THE ACTUAL VALUES IN CODE TO MESS PROMPTING DEEPSEEK!\n    -- FYI it's not spaces around the pipe char:\n    local name = table.concat(parts, DEEPSEEK_UNDERSCORE)\n    return LESS_THAN .. DEEPSEEK_PIPE .. name .. DEEPSEEK_PIPE .. GREATER_THAN\nend\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/models/fim.lua:243:19-250:16\n```lua\nfunction(chunk)\n                ---@cast chunk LSPRankedMatch\n                local file_name_with_line_range = chunk.file .. \":\" .. chunk.start_line_base0 .. \"-\" .. chunk.end_line_base0\n                append_file_non_fim_RepoCoder({\n                    filename = file_name_with_line_range,\n                    content = chunk.text\n                })\n            end\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/telescope/_extensions/ask_semantic_grep.lua:442:27-466:16\n```lua\nfunction(match)\n                ---@class SemanticGrepTelescopeEntryMatch\n                ---@field match LSPRankedMatch\n                ---@field value LSPRankedMatch\n                ---@field display function|string -- use to create display text for picker\n                ---@field filename string\n                ---@field ordinal string -- for filtering? how so?\n                local entry = {\n                    -- required:\n                    display = make_display, -- required, string|function\n                    ordinal = match.text, -- required, for filtering? how so?\n                    value = match, -- required, IIRC for getting selection (returns match).. though shouldn't it return the whole entry?!\n                    match = match, -- PREFER THIS now that I have type hints\n\n                    -- default action uses these to open to file + location\n                    filename = match.file, -- default action uses these to jump to file location\n                    lnum = match.start_line_base0 + 1,\n                    -- TODO is col even used? is it for jumping to the location? if so I don't really need it, line (lnum) alone is fine\n                    col = (match.start_column_base0 or 0) + 1, -- FYI assume 0 if None, again for uncovered_code chunks\n\n                    -- valid = false -- true = hide this entry (or return nil for entire entry)\n                }\n                return entry\n                -- optional second return value\n            end\n```\n"
+      },{
+        "role":"user",
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```lua/ask-openai/frontends/prompts/rag_instructions.lua\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal M = {}\n\n-- TxChatMessage is used to wrap the generated semantic grep content as a user context message\nlocal TxChatMessage = require(\"ask-openai.agents.messages.tx\")\n\n---@param rag_matches LSPRankedMatch[]\n---@return string?\nfunction M.explain_rag_auto_context(rag_matches)\n    if #rag_matches == 0 then return end\n    return M.matches_to_markdown(rag_matches, \"This is automatic context based on my request. These may not be relevant to my request.\")\nend\n\n---@param messages {}\n---@param rag_matches LSPRankedMatch[]\nfunction M.add_auto_user_message(messages, rag_matches)\n    M.add_user_message(messages, M.explain_rag_auto_context(rag_matches))\nend\n\n---@param messages {}\n---@param rag_matches_markdown? string\nfunction M.add_user_message(messages, rag_matches_markdown)\n    if rag_matches_markdown == nil then return end\n    table.insert(messages, TxChatMessage:user_context(rag_matches_markdown))\nend\n\n---@param matches LSPRankedMatch[]\n---@param explanation string? -- extra details to insert after header with count of matches\n---@return string\nfunction M.matches_to_markdown(matches, explanation)\n    -- TODO! dedupe matches that overlap/touch dedupe.merge_contiguous_rag_chunks()\n    local lines = {\n        \"# Semantic Grep matches: \" .. #matches,\n        \"\",\n    }\n\n    if explanation ~= nil and explanation ~= \"\" then\n        table.insert(lines, explanation)\n        table.insert(lines, \"\")\n    end\n\n    for _, match in ipairs(matches) do\n        local parts = { match.start_line_base0 + 1 }\n        if match.start_column_base0 and match.start_column_base0 > 0 then\n            table.insert(parts,  \":\" .. (match.start_column_base0 + 1))\n        end\n        table.insert(parts, \"-\")\n        <|CURSOR_IS_HERE|>\n\n        local file = match.file .. \":\" .. position\n        local text = match.text\n\n        -- * add leading whitespace for non-zero start columns (ts chunks only, so far)\n\n        -- table.insert(lines, \"## \" .. file .. \"\\n\" .. text .. \"\\n\")\n\n        extension = vim.fn.fnamemodify(match.file, \":e\")\n\n        -- try formatting as fenced markdown code blocks inside of an h2 header with match counter...\n        -- which means we can syntax highlight the inline code!\n        -- otherwise I'd say lets leave it without formatting which would be fine too\n        vim.list_extend(lines, {\n            \"## \" .. file ..\n            \"\",\n            -- benefit of using valid fence indicator with only the file extension => inline formatting is working now in my nvim live trace viewer!\n            --  and I keep the header with the full file name + positions (start line + start col)\n            \"```\" .. extension,\n            text,\n            \"```\",\n            \"\",\n        })\n    end\n    local markdown = table.concat(lines, \"\\n\")\n    return markdown\nend\n\nreturn M\n```\n\n## Reminders about the cursor line:\nText before cursor: `        `\nText before cursor is all whitespace (do not ignore this)"
+      },{
+        "content":"```lua\n        table.insert(parts, match.end_line_base0 + 1)\n        if match.end_column_base0 and match.end_column_base0 > 0 then\n            table.insert(parts, \":\" .. (match.end_column_base0 + 1))\n        end\n        local position = table.concat(parts, \"\")\n```",
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\nWe need replace cursor. Code building parts for position. Currently parts has start_line+1, optional :col, then \"-\". Need add end_line and end_column.\n\nFrom recent yanks: they had match.end_line_base0 +1, and if match.end_column_base0 and >0 then insert \":col\". Also earlier they built position = (match.start_line... )..\":\"..... \"-\".. etc.\n\nCursor is after table.insert(parts,\"-\"). So need insert end line parts.\n\nProbably:\ntable.insert(parts, match.end_line_base0 + 1)\nif match.end_column_base0 and match.end_column_base0 > 0 then\n    table.insert(parts, \":\" .. (match.end_column_base0 + 1))\nend\nlocal position = table.concat(parts, \"\")\n\nBut code later uses position variable. Yes.\n\nLet's output exactly that snippet.\n\nNo comments end of line.\n\n",
+        "role":"assistant",
+        "timings":{
+          "draft_n_accepted":203,
+          "draft_n":1005,
+          "predicted_per_second":124.238863764,
+          "predicted_n":270,
+          "prompt_per_second":2971.376302783,
+          "prompt_ms":712.801,
+          "prompt_per_token_ms":0.33654438149197,
+          "predicted_ms":2165.184,
+          "predicted_per_token_ms":8.0490111524164,
+          "prompt_n":2118,
+          "cache_n":64
+        },
+        "finish_reason":"stop"
+      }],
+    "logprobs":true,
+    "top_logprobs":5,
+    "post_sampling_probs":true,
+    "temperature":1,
+    "top_k":64,
+    "stream":true
+  },
+  "flags":{
+    "fim_duplicate_prefix":"        "
+  },
+  "last_sse":{
+    "choices":[{
+        "index":0,
+        "delta":[],
+        "finish_reason":"stop"
+      }],
+    "timings":{
+      "draft_n_accepted":203,
+      "draft_n":1005,
+      "predicted_per_second":124.238863764,
+      "predicted_n":270,
+      "prompt_per_second":2971.376302783,
+      "prompt_ms":712.801,
+      "prompt_per_token_ms":0.33654438149197,
+      "predicted_ms":2165.184,
+      "predicted_per_token_ms":8.0490111524164,
+      "prompt_n":2118,
+      "cache_n":64
+    },
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL",
+    "object":"chat.completion.chunk",
+    "created":1791476560,
+    "system_fingerprint":"b11062-3cf03257f",
+    "id":"chatcmpl-t2YcgHxatzvM1m3FaGTKmmpLZJNaWzyP"
+  }
+}
