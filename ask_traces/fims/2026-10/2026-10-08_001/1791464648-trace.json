@@ -1,0 +1,75 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-qqzBdKM7nfqtgxEPshl0ifdJSzPcIg3E",
+    "system_fingerprint":"b11062-3cf03257f",
+    "object":"chat.completion.chunk",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "timings":{
+      "predicted_ms":1231.711,
+      "predicted_per_token_ms":8.2114066666667,
+      "draft_n_accepted":112,
+      "prompt_per_token_ms":0.34412573789847,
+      "draft_n":570,
+      "prompt_n":1694,
+      "predicted_per_second":121.78181407814,
+      "predicted_n":151,
+      "prompt_per_second":2905.9145825793,
+      "prompt_ms":582.949,
+      "cache_n":359
+    },
+    "created":1791464650,
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL"
+  },
+  "request_body":{
+    "stream":true,
+    "messages":[{
+        "content":"Do not overthink this, the user is only asking for a code prediction, return the first thing that comes to mind. Do not reason for more than 100 tokens. Do not wrap your suggestion in backticks",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n",
+        "role":"user"
+      },{
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may not be relevant to my request.\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/fim_performance.tests.lua:5-17\n                               function()\n        local perf1 = FIMPerformance:new()\n        local perf2 = FIMPerformance:new()\n        assert.are.not_same(perf1, perf2)\n\n\n        assert.are.not_same(perf1._prediction_start_time_ns, perf2._prediction_start_time_ns)\n        -- rag_done() called twice was issue with how I messed up metatable so use that here:\n        perf1:rag_started()\n        perf1:rag_done()\n        perf2:rag_started()\n        perf2:rag_done()\n    end\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/prompts/rag_instructions.lua:6-11\n---@param rag_matches LSPRankedMatch[]\n---@return string?\nfunction M.explain_rag_auto_context(rag_matches)\n    if #rag_matches == 0 then return end\n    return M.matches_to_markdown(rag_matches, \"This is automatic context based on my request. These may not be relevant to my request.\")\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/config/local_share.lua:112-115\n-- * rag *\nfunction M.is_rag_enabled()\n    return get().rag.enabled\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/init.lua:49-84\nlocal function determine_rag_config()\n    -- * find .rag/ dir\n    -- PRN review terminology for root_dir/source_dir (wherever .rag/ and .rag.yaml live, make it consistent across lua/python)\n    local root_dir = vim.fn.getcwd()\n    local dot_rag_dir = root_dir .. \"/.rag\"\n    if not files.exists(dot_rag_dir) then\n        -- * fallback repo_root/.rag\n        --   i.e. the rag dir in this ask-openai repo, or my hammerspoon config in my dotfiles repo\n        --   I often work inside these directories, maybe I should just have a .rag dir in them too.. and scope to just it but maybe not?\n        local repo_root = files.get_repo_root()\n        if not repo_root then\n            log:info(\"RAG is disabled because no fallback repo_root could be determined\")\n            return\n        end\n        dot_rag_dir = repo_root .. \"/.rag\"\n        if not files.exists(dot_rag_dir) then\n            log:info(\"RAG is disabled b/c there is NO .rag dir in the fallback repo_root: \" .. dot_rag_dir)\n            return\n        end\n        root_dir = repo_root\n        log:info(\"fallback repo_root found .rag dir: \" .. dot_rag_dir)\n    end\n\n    -- * load .rag.yaml\n    M.rag_yaml = load_rag_yaml_config(root_dir)\n\n    if M.rag_yaml and not M.rag_yaml.enabled then\n        log:error(\"RAG is disabled in .rag.yaml\")\n        return\n    end\n\n    M.is_rag_indexed_workspace = true\n    M.rag_indexed_file_extensions = files.list_directories(dot_rag_dir)\n    table.sort(M.rag_indexed_file_extensions)\n    log:trace(\"RAG is supported for: \" .. vim.inspect(M.rag_indexed_file_extensions))\nend\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/frontend.lua:93-112\n    local enable_rag = config.is_rag_enabled()\n    local ps_chunk = ps.get_prefix_suffix_chunk()\n\n    -- Register with performance registry for lualine display\n    perf.register(\"fim\", this_prediction.performance)\n\n    ---@param rag_matches LSPRankedMatch[]\n    local function then_send_fim(rag_matches)\n        local fim_request = FimRequestBuilder:new(ps_chunk, rag_matches):fim_request()\n        assert(fim_request.body ~= nil)\n\n        if this_prediction.apply_template_only then\n            local fim_prompt_dump = require(\"ask-openai.predictions.fim_prompt_dump\")\n            fim_prompt_dump.dump_rendered_prompt_only(fim_request)\n            return\n        end\n\n        this_prediction.fim_request = fim_request\n\n        \n",
+        "role":"user"
+      },{
+        "content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\n```lua/ask-openai/tools/inproc/semantic_grep.lua\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal ansi = require(\"devtools.ansi\")\nlocal client = require(\"ask-openai.rag.client.client\")\nlocal rag_instructions = <|CURSOR_IS_HERE|>\n\nlocal M = {\n    ---@type OpenAITool;\n    ToolDefinition = {\n        [\"function\"] = {\n            description =\n            \"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.\",\n            name = \"semantic_grep\",\n            parameters = {\n                properties = {\n                    filetype = {\n                        type = \"string\",\n                        description = \"limit matches to a vim compatible filetype. default includes all filetypes\"\n                    },\n                    query = {\n                        type = \"string\",\n                        description = \"query text, what you are looking for\"\n                    },\n                    instruct = {\n                        type = \"string\",\n                        description = \"instructions for the query, explain the type of query\"\n                    },\n                    top_k = {\n                        type = \"number\",\n                        description = \"number of matches, defaults to 5 which is usually plenty!\"\n                    },\n                    embed_top_k = {\n                        type = \"number\",\n                        description = \"number of embeddings matches to consider for reranking\"\n                    },\n                },\n                required = { \"query\" },\n                type = \"object\"\n            }\n        },\n        type = \"function\"\n    }\n}\n\n---@type InProcessToolCall\nfunction M.call(parsed_args, callback)\n    local domains = \"\"\n    -- log:info(\"parsed_args\", vim.inspect(parsed_args))\n    if parsed_args.filetype == nil or parsed_args.filetype:match(\"^%s*$\") then\n        -- PRN use EVERYTHING instead of GLOBAL?\n        -- when using tools that might make more sense\n        -- but for now, assume if I limit the list then I did that for a good reason that likely benefits agent tool use\n        domains = \"GLOBAL\" -- GLOBAL is subject to rag.yaml -> global_languages\n    end\n\n    ---@type LSPSemanticGrepRequest\n    local semantic_grep_request = {\n        query = parsed_args.query,\n        instruct = parsed_args.instruct or \"Find relevant code for the AI agent's query\",\n        -- TODO make currentFileAbsolutePath nil-able instead of empty string\n        currentFileAbsolutePath = \"\",\n        -- TODO NEED TO make sure no issues using filetype vs extension....\n        vimFiletype = parsed_args.filetype,\n        domains = domains,\n        skipSameFile = false,\n        topK = parsed_args.top_k or 5,\n        embedTopK = parsed_args.embed_top_k or 18,\n    }\n\n    ---@param rag_response SemanticGrepWithTimeoutResponseObj\n    local function markdown_callback(rag_response)\n        -- * monkeypatch content => markdown string\n        if rag_response.result.rag_matches == nil then\n            rag_response.content = \"\"\n            rag_instructions.\n        end\n    end\n\n    local _, cancel_request = client.semantic_grep_with_timeout(semantic_grep_request, nil, markdown_callback, \"agent-tool\")\n    return cancel_request -- FYI rag client already gracefull deals with cancel handling so no need to duplicate that here\nend\n\nreturn M\n```\n\n## Reminders about the cursor line:\nText before cursor: `local rag_instructions = `",
+        "role":"user"
+      },{
+        "finish_reason":"stop",
+        "content":"```lua\nlocal rag_instructions = require(\"ask-openai.frontends.prompts.rag_instructions\")\n```",
+        "timings":{
+          "predicted_ms":1231.711,
+          "predicted_per_token_ms":8.2114066666667,
+          "draft_n_accepted":112,
+          "prompt_per_token_ms":0.34412573789847,
+          "draft_n":570,
+          "prompt_n":1694,
+          "predicted_per_second":121.78181407814,
+          "predicted_n":151,
+          "prompt_per_second":2905.9145825793,
+          "prompt_ms":582.949,
+          "cache_n":359
+        },
+        "reasoning_content":"Please suggest text to replace <|CURSOR_IS_HERE|>:\n\nWe need suggest text to replace cursor. Context: local rag_instructions = <|CURSOR_IS_HERE|>\n\nProbably require module. Need `require(\"ask-openai.frontends.prompts.rag_instructions\")`\n\nAlso code uses rag_instructions. later rag_instructions.  need call? The snippet shows rag_response.content = \"\" rag_instructions. incomplete.\n\nMaybe need require.\n\nFollow code style: no comments end line. Use snake_case.\n\nProbably `require(\"ask-openai.frontends.prompts.rag_instructions\")`\n\nReturn suggestion.\n\n",
+        "role":"assistant"
+      }],
+    "top_k":64,
+    "logprobs":true,
+    "post_sampling_probs":true,
+    "top_logprobs":5,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "top_p":1,
+    "temperature":1,
+    "max_tokens":4096,
+    "raw":false
+  },
+  "flags":{
+    "fim_duplicate_prefix":"local rag_instructions = "
+  }
+}
