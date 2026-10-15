@@ -1,0 +1,73 @@
+{
+  "flags":[],
+  "request_body":{
+    "top_p":1,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "raw":false,
+    "max_tokens":4096,
+    "temperature":1,
+    "stream":true,
+    "post_sampling_probs":true,
+    "top_logprobs":5,
+    "messages":[{
+        "role":"system",
+        "content":"Do not overthink this, the user is only asking for a code prediction, return the first thing that comes to mind. Do not reason for more than 100 tokens. Do not wrap your suggestion in backticks"
+      },{
+        "role":"user",
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: ask-openai.nvim\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n\n\n## Recent yanks (copy to clipboard):\n```lua/ask-openai/backends/sse/parsers.lua\nempty_for_nil\n```\n\n```lua/ask-openai/helpers/values.lua\nempty_for_nil\n```\n\n```lua/ask-openai/helpers/values.lua\n    if value == vim.NIL then\n        return nil\n    end\n    return value\n```\n\n```lua/ask-openai/backends/sse/parsers.lua\nl\n```\n\n```lua/ask-openai/backends/sse/parsers.lua\nvalues.\n```\n\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may not be relevant to my request.\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/safely.lua:1-4 [rerank: 87.4%]\n\n```lua\nlocal log = require(\"devtools.logs.logger\").universal()\n\nlocal M = {}\n\n\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/helpers/files.lua:1-4 [rerank: 84.6%]\n\n```lua\nlocal log = require(\"devtools.logs.logger\").universal()\n\nlocal M = {}\n\n\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/frontends/context/coc/learn/diagnostics.lua:1-4 [rerank: 83.7%]\n\n```lua\nlocal log = require(\"devtools.logs.logger\").universal()\n\nlocal M = {}\n\n\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/predictions/fim_performance.lua:1-20 [rerank: 80.3%]\n\n```lua\nlocal ansi = require(\"devtools.ansi\")\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal perf = require(\"ask-openai.perf\")\n\n\n-- TODO track thinking time? and merge thinking dots logic into here\n-- TODO turn this into FIMState too? and use for UX updates, i.e.\n--   request started (before anything sent)\n--   RAG sent/pending\n--   FIM sent/pending\n--   Thinking started\n--   Content started\n--   Finished\n--   (other states/perf/timing too)\n\n---@class FIMPerformance\n---@field time_to_first_token_ms? number\n---@field rag_duration_ms? number\n---@field total_duration_ms? number\nlocal FIMPerformance = {}\n\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/logs/completion_logger.lua:1-8 [rerank: 70.9%]\n\n```lua\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal json = require(\"dkjson\")\nlocal tables = require(\"ask-openai.helpers.tables\")\n\nlocal M = {\n    last_done = {},\n}\n\n\n```\n"
+      },{
+        "role":"user",
+        "content":"Please suggest an edit to the following code.Return only the code for the edit: first repeat at least one unchanged line immediately before the change as a context anchor, then give the new or revised code, then repeat at least one unchanged line immediately after the change as a trailing anchor. The edit may be at or near the cursor. Use the surrounding code to infer what should be completed or changed. Do not include an explanation or markdown fences.\n\nFYI <|CURSOR_IS_HERE|> marks the editor's current cursor position. Use it only to understand what code the user is focused on; it does not indicate where to insert or place generated code. Do not include the marker in your response.\n\nThis is from lua/ask-openai/backends/sse/parsers.lua (lines: 1-161)\n```lua\nlocal log = require(\"devtools.logs.logger\"):universal()\n<|CURSOR_IS_HERE|>\n\n-- logic for parsing SSEs from all completion backends\n\n---@class SseFieldsResult\n---@field content string  -- The content chunk from this SSE\n---@field done boolean  -- Whether this is the final SSE (generation complete)\n---@field finish_reason? string  -- Reason why generation stopped (e.g., \"stop\", \"length\", \"eos\")\n---@field reasoning_content? string -- Reasoning/thinking content if available\n---@field prob? number -- Probability of the selected token\n\nfunction get_probs(choice)\n    -- PRN parse logprobs\n    -- * post_sampling_probs = TRUE =>\n    --\n    --     material diff is returning probability (0 to 1)\n    --       also truncates any tokens that round to zero probability\n    --       whereas below logprobs will show those\n    --\n    --     choices[1].logprobs.content.{prob,top_probs}\n    --     top_probs[1].prob\n    --\n    --     logprobs = {\n    --       content = { {\n    --           bytes = { 32, 105, 110, 115, 101, 114, 116 },\n    --           id = 10898,\n    --           prob = 0.95149838924408,\n    --           token = \" insert\",\n    --           top_probs = { {\n    --               bytes = { 32, 105, 110, 115, 101, 114, 116 },\n    --               id = 10898,\n    --               prob = 0.95149838924408,\n    --               token = \" insert\"\n    --             }, {\n    --               bytes = { 32, 97, 100, 100 },\n    --               id = 1147,\n    --               prob = 0.048501636832952,\n    --               token = \" add\"\n    --             } }\n    --         } }\n    --     }\n    --\n    --\n    -- * post_sampling_probs = FALSE =>\n    --\n    --     material diff is returning logits (IIAC -infinity to 0)\n    --        e^0 == 1 (100% probability)\n    --\n    --     choices[1].logprobs.content.{logprob,top_logprobs}\n    --     top_logprobs[1].logprob\n    --\n    --     logprobs = {\n    --         content = { {\n    --             bytes = { 32, 105, 110, 115, 101, 114, 116 },\n    --             id = 10898,\n    --             logprob = -0.020740794017911,\n    --             token = \" insert\",\n    --             top_logprobs = { {\n    --                 bytes = { 32, 105, 110, 115, 101, 114, 116 },\n    --                 id = 10898,\n    --                 logprob = -0.020740794017911,\n    --                 token = \" insert\"\n    --               }, {\n    --                 bytes = { 32, 97, 100, 100 },\n    --                 id = 1147,\n    --                 logprob = -4.3584332466125,\n    --                 token = \" add\"\n    --               }, {\n    --                 bytes = { 32, 102, 105, 108, 108 },\n    --                 id = 6954,\n    --                 logprob = -5.1742367744446,\n    --                 token = \" fill\"\n    --               }, {\n    --                 bytes = { 32, 115, 117, 103, 103, 101, 115, 116 },\n    --                 id = 6108,\n    --                 logprob = -6.732141494751,\n    --                 token = \" suggest\"\n    --               }, {\n    --                 bytes = { 32, 114, 101, 112, 108, 97, 99, 101 },\n    --                 id = 13284,\n    --                 logprob = -7.2061409950256,\n    --                 token = \" replace\"\n    --               } }\n    --           } }\n    --       }\n    if not choice.logprobs\n        or not choice.logprobs.content then\n        return nil\n    end\n    logprob_content = choice.logprobs.content[1]\n\n    if logprob_content.logprob ~= nil and logprob_content.logprob ~= vim.NIL then\n        log:error(\"raw logprob is not supported, submit post_sampling_probs=true to receive probabilities directly\")\n        return nil\n    end\n\n    -- FYI for now I am only returning probability of selected token\n    --  TODO expand to include probs for all tokens returned (if specified then # == top_logprobs count)\n    local selected_token_prob = logprob_content.prob\n    return selected_token_prob\nend\n\n---@param sse LlamaServerChatCompletionSSE\n---@return SseFieldsResult?\nfunction parse_sse_v1_chat_completions(sse)\n    if sse.error ~= nil then\n        -- error examples:\n        -- { error = { code = 503, message = \"Loading model\", type = \"unavailable_error\" } }\n        log:info(\"skipping SSE with error b/c that will be handled elsewhere\", sse)\n        return nil\n    end\n    if not sse.choices or not sse.choices[1] then\n        log:error(\"SSE is missing choices\", sse)\n        -- leave as hard stop error b/c I don't think this ever happens... but error will help me figure out if it does!\n        -- this would be for chat completions endpoint only... that's part of expectation already in calling this parse_sse_v1_chat_completions\n        -- and right now I only use this for predictions\n        error(\"SSE is missing choices - I don't think this ever happens so if it does... then raise hard error\")\n    end\n\n    local first_choice = sse.choices[1]\n    local delta = first_choice.delta\n    if delta == nil then\n        -- TODO get rid of this log if never happens and/or doesn't matter\n        log:info(\"case with no delta on a chat completions SSE - I think this does happen toward end of trace, right? and maybe at first\")\n        error(\"unexpected missing delta on a chat completions SSE\")\n    end\n\n    local prob = get_probs(first_choice)\n    -- log:info(\"prob\", prob)\n\n    local finish_reason = values.vim_NIL_to_nil(first_choice.finish_reason)\n\n    return {\n        -- content == vim.NIL => first response has `content: null` b/c it is setting the role to asssistant\n        --   - likely due to roles/channels token(s) in harmony parser (among others)\n        -- content == nil\n        --   - 2+ SSEs are for reasoning and use reasoning_content until thinking is complete (these don't even set the content field, so it's nil in this case)\n        content = values.empty_for_nil(delta.content),\n\n        -- FYI I have yet to seel reasoning_content come back with vim.NIL (and maybe not even nil?)\n        reasoning_content = values.empty_for_nil(delta.reasoning_content),\n\n        -- FYI finish_reason is vim.NIL until it is set (end of completion)\n        finish_reason = finish_reason,\n        done = finish_reason ~= nil,\n\n        prob = prob,\n    }\nend\n\n---@param sse LlamaServerRawCompletionSSE\n---@return SseFieldsResult\nfunction parse_sse_llamacpp_completions(sse)\n    -- FYI response_fields limits fields per SSE...\n    --    I set it to stop prompt and generation_settings on final SSE\n\n    -- {\"index\":0,\"content\":\"\\\",\",\"tokens\":[497],\"stop\":false,\"id_slot\":-1,\"tokens_predicted\":14,\"tokens_evaluated\":1963}\n    -- stop: true => a few fields (it returns entire prompt too so it's huge!... maybe skip logging the prompt field?)\n    -- \"truncated\": false,\n    -- \"stop_type\": \"eos\",\n```"
+      },{
+        "content":"local log = require(\"devtools.logs.logger\"):universal()\nlocal values = require(\"ask-openai.helpers.values\")\n\n-- logic for parsing SSEs from all completion backends\n\n---@class SseFieldsResult",
+        "reasoning_content":"Please suggest an edit to the following code.Return only the code for the edit: first repeat at least one unchanged line immediately before the change as a context anchor, then give the new or revised code, then repeat at least one unchanged line immediately after the change as a trailing anchor.\n\nWe need edit. Context shows recent yanks empty_for_nil etc. Possibly need to add require values? The code uses values.empty_for_nil and values.vim_NIL_to_nil but values not required.\n\nCursor is after local log = require... line.\n\nProbably need to add require values. Let's see code uses values.empty_for_nil, values.vim_NIL_to_nil. No require.\n\nAdd local values = require(\"ask-openai.helpers.values\") after log line.\n\nAlso need empty_for_nil function? Recent yank shows empty_for_nil.\n\nLet's output anchor: local log = require(\"devtools.logs.logger\"):universal()\n<|CURSOR_IS_HERE|>\n\nWe need repeat at least one unchanged line immediately before change as context anchor, then new/revised code, then repeat at least one unchanged line immediately after.\n\nSo produce:\n\nlocal log = require(\"devtools.logs.logger\"):universal()\nlocal values = require(\"ask-openai.helpers.values\")\n\n-- logic for parsing SSEs from all completion backends\n\nThat's good.\n\nEnsure no comments at end of line.\n\nReturn only code.\n\n",
+        "role":"assistant",
+        "timings":{
+          "predicted_per_second":142.04777304824,
+          "predicted_n":323,
+          "prompt_per_second":3228.0258862845,
+          "cache_n":388,
+          "prompt_n":2496,
+          "prompt_ms":773.228,
+          "prompt_per_token_ms":0.30978685897436,
+          "predicted_ms":2266.843,
+          "predicted_per_token_ms":7.0398850931677,
+          "draft_n_accepted":253,
+          "draft_n":1035
+        },
+        "finish_reason":"stop"
+      }],
+    "logprobs":true,
+    "top_k":64
+  },
+  "last_sse":{
+    "created":1792037177,
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL",
+    "system_fingerprint":"b11559-f2cc7282c",
+    "choices":[{
+        "delta":[],
+        "finish_reason":"stop",
+        "index":0
+      }],
+    "id":"chatcmpl-t7zQrZuI2g4505Bhrq3uQRmxwBMyYnSm",
+    "timings":{
+      "predicted_per_second":142.04777304824,
+      "predicted_n":323,
+      "prompt_per_second":3228.0258862845,
+      "cache_n":388,
+      "prompt_n":2496,
+      "prompt_ms":773.228,
+      "prompt_per_token_ms":0.30978685897436,
+      "predicted_ms":2266.843,
+      "predicted_per_token_ms":7.0398850931677,
+      "draft_n_accepted":253,
+      "draft_n":1035
+    },
+    "object":"chat.completion.chunk"
+  }
+}
