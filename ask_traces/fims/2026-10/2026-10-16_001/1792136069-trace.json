@@ -1,0 +1,70 @@
+{
+  "last_sse":{
+    "model":"unsloth/Muse-Glimmer-30B-GGUF:UD-Q8_K_XL",
+    "timings":{
+      "predicted_per_second":135.33347962441,
+      "predicted_n":318,
+      "prompt_per_second":73.991860895302,
+      "prompt_n":5,
+      "prompt_ms":67.575,
+      "prompt_per_token_ms":13.515,
+      "predicted_ms":2342.362,
+      "cache_n":1107,
+      "draft_n_accepted":244,
+      "predicted_per_token_ms":7.3891545741325,
+      "draft_n":1095
+    },
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "object":"chat.completion.chunk",
+    "created":1792136071,
+    "system_fingerprint":"b11559-f2cc7282c",
+    "id":"chatcmpl-KziwyycmcVfr0CXvverwXnksMITwqexD"
+  },
+  "request_body":{
+    "top_logprobs":5,
+    "post_sampling_probs":true,
+    "logprobs":true,
+    "top_k":64,
+    "temperature":1,
+    "raw":false,
+    "stream":true,
+    "chat_template_kwargs":{
+      "reasoning_strength":"low"
+    },
+    "top_p":1,
+    "messages":[{
+        "content":"Do not overthink this, the user is only asking for a code prediction, return the first thing that comes to mind. Do not reason for more than 100 tokens. Do not wrap your suggestion in backticks",
+        "role":"system"
+      },{
+        "content":"Here is context that's automatically provided, that MAY be relevant.\nrepo: dotfiles\n\n## General project code rules:\n- Never add comments to the end of a line.\n- NEVER add TODO comments for me.\n\n## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n\n\n## Recent yanks (copy to clipboard):\n```.config/xonsh/rc.d/ai.xsh\n# git log --since=\"2 days ago\" --numstat --author \"Wes Higbee\" --pretty=format: | awk '{add+=$1; del+=$2} END {print add,del}'\n```\n\n```.config/xonsh/rc.d/ai.xsh\n# git log --since=\"2 days ago\" --numstat --pretty=format: | awk '{add+=$1; del+=$2} END {print add,del}'\n```\n\n```.config/xonsh/rc.d/ai.xsh\n--since=\"2 days ago\"\n```\n\n```.config/xonsh/rc.d/ai.xsh\n    # list nested directories that are git repos\n    import os\n    for root, dirs, files in os.walk(\".\"):\n        if \".git\" in files or \".git\" in dirs:\n            print(os.path.relpath(root))\n            dirs[:] = []\n```\n\n",
+        "role":"user"
+      },{
+        "content":"Please suggest an edit to the following code.Return only the code for the edit: first repeat at least one unchanged line immediately before the change as a context anchor, then give the new or revised code, then repeat at least one unchanged line immediately after the change as a trailing anchor. The edit may be at or near the cursor. Use the surrounding code to infer what should be completed or changed. Do not include an explanation or markdown fences.\n\nFYI <|CURSOR_IS_HERE|> marks the editor's current cursor position. Use it only to understand what code the user is focused on; it does not indicate where to insert or place generated code. Do not include the marker in your response.\n\nThis is from .config/xonsh/rc.d/ai.xsh (lines: 1-67)\n```xsh\ndef _foreach_git_repo(action):\n    # list nested directories that are git repos\n    import os\n    for root, dirs, files in os.walk(\".\"):\n        if \".git\" in files or \".git\" in dirs:\n            action(os.path.relpath(root))\n            dirs[:] = []\n\ndef list_git_repos(<|CURSOR_IS_HERE|>\n\n\n# git log --since=\"2 days ago\" --numstat --pretty=format: | awk '{add+=$1; del+=$2} END {print add,del}'\n#\n# for the time range\n\ndef _git_churn(args):\n    import subprocess\n    from collections import defaultdict\n    from rich.console import Console\n    from rich.table import Table\n\n    since = \" \".join(args) or \"2 days ago\"\n    result = subprocess.run(\n        [\"git\", \"log\", f\"--since={since}\", \"--numstat\", \"--format=author:%an\"],\n        capture_output=True,\n        text=True,\n    )\n    console = Console()\n    if result.returncode:\n        console.print(result.stderr.strip(), style=\"red\", markup=False)\n        return result.returncode\n\n    counts = defaultdict(lambda: [0, 0, 0])\n    author = None\n    for line in result.stdout.splitlines():\n        if line.startswith(\"author:\"):\n            author = line.removeprefix(\"author:\")\n            counts[author][0] += 1\n        elif author and \"\\t\" in line:\n            added, deleted, _ = line.split(\"\\t\", 2)\n            if added.isdigit() and deleted.isdigit():\n                counts[author][1] += int(added)\n                counts[author][2] += int(deleted)\n\n    table = Table(title=f\"Git churn · since {since}\")\n    table.add_column(\"Author\")\n    for name, style in [\n        (\"Commits\", \"\"),\n        (\"Added\", \"green\"),\n        (\"Deleted\", \"red\"),\n        (\"Net\", \"cyan\"),\n    ]:\n        table.add_column(name, justify=\"right\", style=style)\n\n    for author, (commits, added, deleted) in sorted(\n        counts.items(), key=lambda item: item[1][1], reverse=True\n    ):\n        table.add_row(\n            author, str(commits), f\"{added:,}\", f\"{deleted:,}\",\n            f\"{added - deleted:+,}\",\n        )\n\n    console.print(table)\n\naliases[\"git-churn\"] = _git_churn\n\n\n```\n\n## Reminders about the cursor line:\nText before cursor: `def list_git_repos(`",
+        "role":"user"
+      },{
+        "finish_reason":"stop",
+        "content":"def list_git_repos(\ndef list_git_repos():\n    _foreach_git_repo(print)\n\n\n# git log --since=\"2 days ago\" --numstat --pretty=format: | awk '{add+=$1; del+=$2} END {print add,del}'",
+        "role":"assistant",
+        "timings":{
+          "predicted_per_second":135.33347962441,
+          "predicted_n":318,
+          "prompt_per_second":73.991860895302,
+          "prompt_n":5,
+          "prompt_ms":67.575,
+          "prompt_per_token_ms":13.515,
+          "predicted_ms":2342.362,
+          "cache_n":1107,
+          "draft_n_accepted":244,
+          "predicted_per_token_ms":7.3891545741325,
+          "draft_n":1095
+        },
+        "reasoning_content":"Please suggest an edit... Return only code for edit: first repeat at least one unchanged line immediately before change as context anchor, then give new/revised code, then repeat at least one unchanged line immediately after change as trailing anchor.\n\nWe need to complete def list_git_repos(<|CURSOR_IS_HERE|> \n\nProbably define function. Maybe list git repos. Context: _foreach_git_repo defined. So list_git_repos should use it.\n\nWe need repeat unchanged line before change as context anchor, then new code, then repeat unchanged line after.\n\nBefore line: def list_git_repos(<|CURSOR_IS_HERE|> \n\nWe need to provide edit. Probably complete definition.\n\nWe can do:\ndef list_git_repos():\n    _foreach_git_repo(print)\n\nThen next line is comment # git log...\n\nSo context anchor line: def list_git_repos( ??? Need unchanged line immediately before change. The line is def list_git_repos( . That's before change. Might need keep that? Actually change is to replace incomplete line.\n\nMaybe anchor: def list_git_repos(\nthen new code: def list_git_repos():\n    _foreach_git_repo(print)\n\nThen trailing anchor: # git log...\n\nLet's output.\n\nNo markdown fences."
+      }],
+    "max_tokens":4096
+  },
+  "flags":[]
+}
