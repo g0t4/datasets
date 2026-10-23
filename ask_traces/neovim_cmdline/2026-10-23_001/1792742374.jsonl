@@ -1,0 +1,37 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "%s/BufferController\\(\\W\\)/BufferController0Indexed\\1/gc",
+        "reasoning_content": "We need to output a valid command line (without leading colon) to be used in command mode. The user wants to replace groups with the original value so they can use it to match and not replace it. They have a substitution: %s/BufferController(\\W)/BufferController0Indexed\\1/gc. They want to replace groups with original value? Probably they want to keep the captured group unchanged. In substitution, \\1 refers to captured group. They already have that. But maybe they need to escape parentheses? In Vim regex, grouping uses \\(...\\) not just (...). So they need: %s/BufferController\\(\\W\\)/BufferController0Indexed\\1/gc. Also to keep original group, use \\1. So answer: %s/BufferController\\(\\W\\)/BufferController0Indexed\\1/gc\n\nThus output that line without leading colon."
+      }
+    }
+  ],
+  "created": 1792742374,
+  "model": "ggml-org/gpt-oss-120b-GGUF",
+  "system_fingerprint": "b11559-f2cc7282c",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 210,
+    "prompt_tokens": 303,
+    "total_tokens": 513,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "id": "chatcmpl-gQBAxnf5GcIUJWWi7tm8shyMWJYEW0FX",
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 303,
+    "prompt_ms": 179.904,
+    "prompt_per_token_ms": 0.5937425742574257,
+    "prompt_per_second": 1684.23159018143,
+    "predicted_n": 210,
+    "predicted_ms": 863.536,
+    "predicted_per_token_ms": 4.131751196172249,
+    "predicted_per_second": 242.0281262159308
+  }
+}
