@@ -1,0 +1,72 @@
+{
+  "session_id": 1793756520,
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a command line expert. Respond with a single, valid commandline. I intend to execute it. No explanation. No markdown. DO NOT respond with leading ``` nor trailing ```"
+    },
+    {
+      "role": "user",
+      "content": "My shell is xonsh on Darwin.\n\n## Recent command history\n\nThese may be relevant, or not. You decide.\n```xonsh\nNone\n```\n\nI need help with my current commandline buffer, which contains this text:\nuv sync how do I force to reinstall packages that are modifed in current venv?"
+    },
+    {
+      "role": "assistant",
+      "content": "uv sync --reinstall",
+      "finish_reason": "stop",
+      "reasoning_content": "The user has a command buffer with text that's actually a question, not a command. They want help. I need to respond with a single valid command line. The buffer contains: \"uv sync how do I force to reinstall packages that are modifed in current venv?\"\n\nThis looks like they typed a question into the buffer. I should probably replace it with the correct uv command to force reinstall. The answer is `uv sync --reinstall` or `uv sync --reinstall-package <name>`.\n\nSince it's xonsh and the buffer has this text, I should output a command that replaces the buffer. But they said \"Respond with a single, valid commandline. I intend to execute it.\" So I should give the command they want to run. The command to force reinstall modified packages in venv is `uv sync --reinstall`.\n\nActually the question is \"how do I force to reinstall packages that are modified in current venv?\" The answer command is `uv sync --reinstall`. That's it.\n\nShould I output just `uv sync --reinstall`? That's a single valid command line. Yes."
+    }
+  ],
+  "response": {
+    "finish_reason": "stop",
+    "model_name": "deepseek-flash",
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "model_provider": "llama_server",
+    "model": "deepseek-flash",
+    "service": "deepseek"
+  },
+  "last_sse": {
+    "id": "c09b92a1-2c61-4c87-8b16-36ae20c31c3a",
+    "choices": [
+      {
+        "delta": {
+          "content": "",
+          "function_call": null,
+          "refusal": null,
+          "role": null,
+          "tool_calls": null,
+          "reasoning_content": null
+        },
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null
+      }
+    ],
+    "created": 1793756518,
+    "model": "deepseek-flash",
+    "object": "chat.completion.chunk",
+    "moderation": null,
+    "service_tier": null,
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "usage": {
+      "completion_tokens": 243,
+      "prompt_tokens": 136,
+      "total_tokens": 379,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 237,
+        "rejected_prediction_tokens": null,
+        "text_tokens": null
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cache_write_tokens": null,
+        "cached_tokens": 0,
+        "image_tokens": null,
+        "text_tokens": null
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 136
+    }
+  }
+}
