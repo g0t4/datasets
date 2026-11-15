@@ -1,0 +1,1 @@
+first pass of a clanker_mode trace! exactly the scenario I intended clanker mode to help with (let clanker go off and figure out how to do something with a command, in this case with dust... and clanker gets to work with my real files right along side me watching)
