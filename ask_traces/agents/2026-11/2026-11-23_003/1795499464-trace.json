@@ -1,0 +1,297 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-999de6ddfbab093e",
+    "object":"chat.completion.chunk",
+    "created":1795499465,
+    "choices":[{
+        "index":0,
+        "finish_reason":"stop",
+        "delta":[]
+      }],
+    "system_fingerprint":"vllm-0.1.dev25855+g7cb5dae22-2109da7c",
+    "model":"inkling-2-mini",
+    "kv_transfer_params":null
+  },
+  "request_body":{
+    "messages":[{
+        "role":"system",
+        "content":"You're running in a neovim plugin\n\nCurrent directory: ~/repos/github/g0t4/ask-openai.nvim\nRepo: ask-openai.nvim (root: ~/repos/github/g0t4/ask-openai.nvim)\nDirty repo at start\n\n## File searches\n\nUse `semantic_grep` to discover where to look; use `rg` for exhaustive matches.\n\nUse `fd` to search file names.\n\nDon't use _SLOW_ 🐌 commands like `ls -R`, `grep -R` and `find . -type f`\n\n## Git repos\n\n- Use `git diff` as a sanity check\n- Commit when you're done with a task. Don't make me ask!\n- Include `--author=\"inkling2-mini<wes.mcclure+inkling2-mini@gmail.com>\"`\n\n\n## Use `apply_patch` to edit files.\n\nUses a diff format that's easy to parse and apply.\n\n*** Begin Patch\n[ one or more file operations ]\n*** End Patch\n\nEach “operation” MUST start with one of three “headers”:\n*** Add File: <path>\n*** Delete File: <path>\n*** Update File: <path>\n\nUpdateFile may be followed by MoveTo to rename it:\n*** Move to: <new_path>\n\nThen one or more “hunks”, each introduced by @@ (optionally followed by a hunk header).\n\nWithin a hunk each line starts with:\n+ for inserted text,\n- for removed text, or\n  space (\" \") for context (unchanged lines to match)\n\nAt the end of a truncated hunk you can emit:\n*** End of File\n\n### Here is the grammar:\n\nPatch := Begin { FileOp } End\nBegin := \"*** Begin Patch\" NEWLINE\nEnd := \"*** End Patch\" NEWLINE\nFileOp := AddFile | DeleteFile | UpdateFile\nAddFile := \"*** Add File: \" path NEWLINE { \"+\" line NEWLINE }\nDeleteFile := \"*** Delete File: \" path NEWLINE\nUpdateFile := \"*** Update File: \" path NEWLINE [ MoveTo ] { Hunk }\nMoveTo := \"*** Move to: \" newPath NEWLINE\nHunk := \"@@\" [ header ] NEWLINE { HunkLine } [ \"*** End of File\" NEWLINE ]\nHunkLine := (\" \" | \"-\" | \"+\") text NEWLINE\n\n### A patch can combine operations:\n\n*** Begin Patch\n*** Add File: hello.txt\n+Hello world\n*** Update File: src/app.py\n*** Move to: src/main.py\n@@ def greet():\n-print(\"Hi\")\n+print(\"Hello, world!\")\n*** Delete File: obsolete.txt\n*** End Patch\n\n### Reminders\n\nPrefer commands for simple edits:\n- `rm foo.json` to delete\n- `mv foo.json bar.json` to rename\n\n\nTips on a failure:\n- Split bigger patches into smaller patches\n- Watch out for whitespace differences\n\n### More exmaples\n\nHere's a patch file to change the type of `win`:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@ @dataclass\n-class GapContext:\n-    win: GapWindow\n-    gap_rms: TimeSeries\n-    analysis: AudioAnalysisResult\n+class GapContext:\n+    win: SilenceWindow\n+    gap_rms: TimeSeries\n+    analysis: AudioAnalysisResult\n*** End Patch\n```\n\nThis can be simplified to:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-class GapContext:\n-    win: GapWindow\n+class GapContext:\n+    win: SilenceWindow\n*** End Patch\n```\n\nOr, if the `win` property is globally unique:\n\n```diff\n*** Begin Patch\n*** Update File: src/gap.py\n@@\n-    win: GapWindow\n+    win: SilenceWindow\n*** End Patch\n```\n"
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"hello"
+      },{
+        "reasoning_content":"The user just said \"hello\". There's a dirty repo at start. I should greet them and maybe check repo status briefly? The instructions say commit when done with a task, but there's no task. Let's just respond. Maybe quickly check git status to be aware.",
+        "tool_calls":[{
+            "function":{
+              "arguments":"{\"command_line\":\"git status --short && git log --oneline -3\"}",
+              "name":"run_bash"
+            },
+            "id":"chatcmpl-tool-b54d2845d7b770cb",
+            "type":"function"
+          }],
+        "role":"assistant",
+        "content":""
+      },{
+        "start_time_ms":1314013937,
+        "duration_ms":37,
+        "tool_call_id":"chatcmpl-tool-b54d2845d7b770cb",
+        "content":"EXIT_CODE: 0\nSTDOUT:\n M lua/ask-openai/agents/models/params.lua\n M tools/chat_viewer/timings.py\nb8b5c6473 review\n3f3252ee1 stop differentiating mtp\n7e6fbbe83 simplify attribution to just qwen, redirect people to the traces if they care about what model and how\n\n",
+        "role":"tool",
+        "progress_notifications":[]
+      },{
+        "reasoning_content":"Just greet and note dirty repo.",
+        "finish_reason":"stop",
+        "role":"assistant",
+        "content":"Hello! I see the repo has two modified files (`lua/ask-openai/agents/models/params.lua` and `tools/chat_viewer/timings.py`) already in progress. What would you like me to do?"
+      }],
+    "tools":[{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["token"],
+            "properties":{
+              "token":{
+                "type":"string"
+              }
+            }
+          },
+          "description":"Check the status of a background process by token (from run_bash or run_xonsh with background=True). Reports done (true/false) plus the result or error. While running, returns any newly accumulated stdout/stderr since the last poll (buffers are drained).",
+          "name":"process_status"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["command_line"],
+            "properties":{
+              "background":{
+                "type":"boolean",
+                "default":false
+              },
+              "command_line":{
+                "type":"string"
+              },
+              "cwd":{
+                "default":null,
+                "anyOf":[{
+                    "type":"string"
+                  },{
+                    "type":"null"
+                  }]
+              },
+              "timeout_seconds":{
+                "type":"number",
+                "default":30
+              },
+              "stdin_text":{
+                "default":null,
+                "anyOf":[{
+                    "type":"string"
+                  },{
+                    "type":"null"
+                  }]
+              }
+            }
+          },
+          "description":"Run a bash command line in a fresh process. Bash semantics (pipes, heredocs, globbing). Returns structured stdout, stderr, exit status and timeout metadata. Output above 16 KiB per stream is saved to files; read selected sections with grep or sed. Use background=True to return immediately with a TOKEN; then use process_status to poll and process_stop to stop it.",
+          "name":"run_bash"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["token"],
+            "properties":{
+              "token":{
+                "type":"string"
+              }
+            }
+          },
+          "description":"Stop a background process by token (from run_bash or run_xonsh with background=True). Sends SIGTERM, escalating to SIGKILL.",
+          "name":"process_stop"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["url"],
+            "properties":{
+              "url":{
+                "type":"string"
+              },
+              "raw":{
+                "default":false,
+                "description":"Do not convert HTML to markdown",
+                "type":"boolean"
+              },
+              "start_index":{
+                "default":0,
+                "description":"Start at this character offset, useful if a previous fetch was truncated and more context is required",
+                "type":"integer"
+              },
+              "max_chars":{
+                "default":50000,
+                "description":"Maximum number of characters to return",
+                "type":"integer"
+              }
+            }
+          },
+          "description":"Fetch a URL and extract HTML contents as markdown",
+          "name":"fetch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["code"],
+            "properties":{
+              "max_output_bytes":{
+                "type":"integer",
+                "default":16384
+              },
+              "background":{
+                "type":"boolean",
+                "default":false
+              },
+              "stdin":{
+                "default":null,
+                "anyOf":[{
+                    "type":"string"
+                  },{
+                    "type":"null"
+                  }]
+              },
+              "code":{
+                "type":"string"
+              },
+              "timeout_seconds":{
+                "type":"number",
+                "default":30
+              },
+              "env":{
+                "default":null,
+                "anyOf":[{
+                    "type":"object",
+                    "additionalProperties":{
+                      "anyOf":[{
+                          "type":"string"
+                        },{
+                          "type":"null"
+                        }]
+                    }
+                  },{
+                    "type":"null"
+                  }]
+              },
+              "cwd":{
+                "default":null,
+                "anyOf":[{
+                    "type":"string"
+                  },{
+                    "type":"null"
+                  }]
+              }
+            }
+          },
+          "description":"Run Xonsh source in a fresh process. Xonsh accepts shell-like commands and ordinary Python in the same program. Returns structured stdout, stderr, exit status and timeout metadata. Output above 16 KiB per stream is saved to files; read selected sections with grep or sed. Use background=True to return immediately with a TOKEN; then use process_status to poll and process_stop to stop it.",
+          "name":"run_xonsh"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["query"],
+            "properties":{
+              "top_k":{
+                "description":"number of matches, defaults to 5 which is usually plenty!",
+                "type":"number"
+              },
+              "filetype":{
+                "description":"limit matches to a vim compatible filetype. default includes all filetypes",
+                "type":"string"
+              },
+              "embed_top_k":{
+                "description":"number of embeddings matches to consider for reranking",
+                "type":"number"
+              },
+              "instruct":{
+                "description":"instructions for the query, explain the type of query",
+                "type":"string"
+              },
+              "query":{
+                "description":"query text, what you are looking for",
+                "type":"string"
+              }
+            }
+          },
+          "description":"Retrieval tool (the R in RAG) for code and documents in the current workspace. Uses a vector store with embeddings of the entire codebase. And a re-ranker for sorting results.",
+          "name":"semantic_grep"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "required":["patch"],
+            "type":"object",
+            "properties":{
+              "patch":{
+                "description":"file changes in custom diff format",
+                "type":"string"
+              }
+            }
+          },
+          "description":"Patch a file",
+          "name":"apply_patch"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "required":["lua"],
+            "type":"object",
+            "properties":{
+              "lua":{
+                "description":"Lua code to execute. Should be a valid Lua chunk.",
+                "type":"string"
+              }
+            }
+          },
+          "description":"Execute Lua code in the current Neovim process (that hosts your agent). For example, call vim.cmd()",
+          "name":"run_in_neovim"
+        },
+        "type":"function"
+      },{
+        "function":{
+          "parameters":{
+            "type":"object",
+            "required":["path"],
+            "properties":{
+              "path":{
+                "type":"string"
+              }
+            }
+          },
+          "description":"View a local image file.",
+          "name":"open_image"
+        },
+        "type":"function"
+      }],
+    "temperature":1,
+    "stream":true,
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"minimal"
+    }
+  }
+}
