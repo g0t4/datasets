@@ -1,0 +1,1 @@
+GG qwen3.8-flash-next nvfp4 sglang => extract TraceMessageDTO and wire it all up .. wow this is exactly the right direction... this would have taken me hours and IDGAF if there are shortcomings, same thing would happen if I were doing this refactoring!
