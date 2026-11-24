@@ -1,0 +1,3 @@
+I was hoping inkling-2-mini would add my new values.nil_ify here too, but I don't think it had context to even know about that...
+- BUTTTT what it suggested was 100% interesting and I think valid in that it points to a gap in RewritesFrontend w.r.t. metrics
+- This is an example of cursor position turning into a KEY signal to the model about intent (need to beef up prompt about how the model should interpret cursor as a gesture)
