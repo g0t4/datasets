@@ -1,0 +1,1 @@
+GG qwen3.8-27b on refactoring my gstiv abbr in xonsh into a function and using that from fish and working out the quirks of executing as a command via aliases, even recognized my % --set-cursor and mapped that to an argument to constrain where it looks!! nice!
