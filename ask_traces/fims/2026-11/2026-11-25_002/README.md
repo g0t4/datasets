@@ -1,0 +1,1 @@
+GG inkling-2-mini I had a brain fart about the dir name and let it complete it... only complaint is that it didn't suggest the second abbr's update with the rest of the first one... still a good completion
