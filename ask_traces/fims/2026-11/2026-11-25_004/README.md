@@ -1,0 +1,1 @@
+JFC I was not expecting it to get this right, this is exactly what I was adding ... WTF man this was not necessarily obvious!!!! fuck... I was worried about `str` and inkling also nabbed `list` ... YES man!
