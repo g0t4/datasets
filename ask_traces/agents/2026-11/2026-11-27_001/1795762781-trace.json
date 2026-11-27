@@ -14,7 +14,7 @@
         "content":"what the fuck is the last part of this doing??\n\nfunction M.is_final(sse)\n    local choices = type(sse.choices) == \"table\" and sse.choices or {}\n    for _, choice in ipairs(choices) do\n        local choice_has_finish_reason = type(choice) == \"table\" and choice.finish_reason ~= nil and choice.finish_reason ~= vim.NIL\n        if choice_has_finish_reason then\n            return true\n        end\n    end\n    local has_timings = type(sse.timings) == \"table\"\n    local has_usage = type(sse.usage) == \"table\"\n    local has_sglext = type(sse.sglext) == \"table\"\n    return has_timings\n        or ((has_usage or has_sglext or type(sse.meta_info) == \"table\")\n            and type(sse.choices) == \"table\" and next(sse.choices) == nil)\nend\n\n\n\nteh type(sse.choices) == \"table\" and nil next bullshit"
       },{
         "model":"inkling-2-mini",
-        "response_backend":"vllm",
+        "backend":"vllm",
         "role":"assistant",
         "metrics":{
           "generation_time_ms":2704.1786099981,

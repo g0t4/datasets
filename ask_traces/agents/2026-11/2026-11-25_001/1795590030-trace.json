@@ -78,7 +78,7 @@
         },
         "reasoning_content":"The user wants to allow `pyright reportExplicitAny` — in other words, they want to configure pyright to not report `reportExplicitAny` (i.e., to allow explicit `Any` types). This is probably a pyright setting in the repository. Let me check the repository structure to find where pyright is configured (pyrightconfig.json, or settings in .vscode, or maybe a plugin config).\n\nFirst, let me look at the repository.\n",
         "content":"\n\n\n",
-        "response_backend":"sglang"
+        "backend":"sglang"
       },{
         "role":"tool",
         "progress_notifications":[],
@@ -153,7 +153,7 @@
         },
         "reasoning_content":"There's a pyrightconfig.json. Let's read it.\n",
         "content":"\n\n",
-        "response_backend":"sglang"
+        "backend":"sglang"
       },{
         "role":"tool",
         "progress_notifications":[],
@@ -221,7 +221,7 @@
         },
         "reasoning_content":"The user wants to allow `reportExplicitAny` — that is, set `\"reportExplicitAny\": \"none\"` in pyrightconfig.json. Note that `reportAny` is already set to \"none\", but `reportExplicitAny` is a separate diagnostic (reportAny covers implicit Any, while reportExplicitAny flags explicit `Any` annotations). So I'll add `\"reportExplicitAny\": \"none\"` with a comment matching the style.\n\nLet me add it near the reportAny line.\n",
         "content":"\n\n",
-        "response_backend":"sglang"
+        "backend":"sglang"
       },{
         "role":"tool",
         "progress_notifications":[],
@@ -289,7 +289,7 @@
         },
         "reasoning_content":"Next, I'll check the JSON validity (since pyrightconfig.json allows comments, it's JSONC). I'll either do a quick check with Python's json after stripping the comments, or just verify it visually. After that, I'll commit with the specified author.\n",
         "content":"\n\n",
-        "response_backend":"sglang"
+        "backend":"sglang"
       },{
         "role":"tool",
         "progress_notifications":[],
@@ -357,7 +357,7 @@
         },
         "reasoning_content":"The trailing comma inside the `extraPaths` array is a pre-existing one (JSONC allows trailing commas, and pyright accepts JSONC). The regex-based comment removal is fine, but the trailing comma is a JSONC feature that pyright supports. Let's verify with a more lenient check — either use a JSONC parser, or just confirm that the only error is the pre-existing trailing comma. Let's confirm that the trailing comma was already there before my changes (yes, it's on the last line of extraPaths: `\"../dotfiles/xonsh\",`). This is valid JSONC, and pyright accepts it.\n\nTo be sure, let's do a proper JSONC check — either strip out the trailing commas too, or use a proper JSONC parser if available. The easiest approach: strip the comments, remove trailing commas before `]` or `}`, and then parse.\n",
         "content":"\n\nThe trailing comma in `extraPaths` is pre-existing (valid JSONC, which pyright accepts). Let me verify properly:\n\n",
-        "response_backend":"sglang"
+        "backend":"sglang"
       },{
         "role":"tool",
         "progress_notifications":[],
@@ -425,7 +425,7 @@
         },
         "reasoning_content":"The configuration is valid. Next, commit with the author flag. First, let me check the git status/diff.\n",
         "content":"\n\nValid. Now committing:\n\n",
-        "response_backend":"sglang"
+        "backend":"sglang"
       },{
         "role":"tool",
         "progress_notifications":[],
@@ -493,7 +493,7 @@
         },
         "reasoning_content":"There's also a modified `tools/chat_viewer/theme.py` — this is a pre-existing dirty state (the repo was \"dirty at start\"). I should only commit my changes to pyrightconfig.json, not the unrelated theme.py changes.\n",
         "content":"\n\nOnly committing the pyright config change (the `theme.py` modification was pre-existing and unrelated):\n\n",
-        "response_backend":"sglang"
+        "backend":"sglang"
       },{
         "role":"tool",
         "progress_notifications":[],

@@ -129,7 +129,7 @@
             }]
         },
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -211,7 +211,7 @@
             }]
         },
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -286,7 +286,7 @@
             }]
         },
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -361,7 +361,7 @@
             }]
         },
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -443,7 +443,7 @@
             }]
         },
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -525,7 +525,7 @@
             }]
         },
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -600,7 +600,7 @@
             }]
         },
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -675,7 +675,7 @@
             }]
         },
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -757,7 +757,7 @@
             }]
         },
         "content":"\n\nLet me look at the exact context of the lines I need to change and check how xonsh is invoked.\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -832,7 +832,7 @@
             }]
         },
         "content":"\n\nLet me verify the key mechanism works — a subprocess expression (with a pipe and `@()` substitution) inside a Python function called as a xonsh command.\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -900,7 +900,7 @@
             }]
         },
         "content":"\n\nThe subprocess expression works inside a function. Now let me confirm alias expansion (like `rg_grep`) also works inside the function, and that calling it as a command via aliases works:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -968,7 +968,7 @@
             }]
         },
         "content":"\n\nInteresting — a bare name that's a Python function gets evaluated as Python (prints the function object), not invoked as a command. Let me test how xonsh resolves a name that's **both** a Python function and an alias (the existing `cert_connect` pattern):\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1036,7 +1036,7 @@
             }]
         },
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1104,7 +1104,7 @@
             }]
         },
         "content":"\n\nNow I understand the resolution rules clearly:\n- A bare name that is **also** a Python global → evaluated as Python (prints the function object) ❌\n- A bare name that is **only** an alias (function has a different name) → invoked as a command ✅\n\nSo the function needs an internal name distinct from the `gstiv` alias. Let me get the exact bytes of the line I'm removing to patch it precisely:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1172,7 +1172,7 @@
             }]
         },
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1240,7 +1240,7 @@
             }]
         },
         "content":"\n\nThe file has 4 literal backslashes before `.venv` and `.rag`. Now let me make all three changes. First, remove the `gstiv` abbr from `wes_git.py`:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1308,7 +1308,7 @@
             }]
         },
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1376,7 +1376,7 @@
             }]
         },
         "content":"\n\n`gstiv` removed from `wes_git.py`. Now let me add the function to `xonsh-only.xsh`. Let me check the exact context of the git section:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1444,7 +1444,7 @@
             }]
         },
         "content":"\n\nNow let me add the function to `xonsh-only.xsh` in the git section:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1512,7 +1512,7 @@
             }]
         },
         "content":"\n\nNow let me update the fish abbr. Let me check the exact bytes of that line:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1580,7 +1580,7 @@
             }]
         },
         "content":"\n\nThe fish line has varying backslash counts that are tricky to match in a patch. Let me replace it with a precise Python script:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1648,7 +1648,7 @@
             }]
         },
         "content":"\n\nAll three changes made. Let me verify them:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1716,7 +1716,7 @@
             }]
         },
         "content":"\n\nAll three changes are in place. Now let me test the function end-to-end. First, test the xonsh function in isolation (simulating the rc with `rg_grep`):\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1784,7 +1784,7 @@
             }]
         },
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1852,7 +1852,7 @@
             }]
         },
         "content":"\n\nThe function works and produces filtered git status output. Let me verify the noise filter is actually filtering (no `node_modules`, `.venv`, `__pycache__`, etc. in output) and confirm the path-arg case worked:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1920,7 +1920,7 @@
             }]
         },
         "content":"\n\nNoise filter works (no noise patterns leaked through), and the path arg is accepted (empty output for `fish/` is correct — no matching files there). Now let me test the **exact command fish will run** — `xonsh -c \"gstiv\"` with the real rc loaded:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -1988,7 +1988,7 @@
             }]
         },
         "content":"\n\nThe full rc needs `prompt_toolkit`, which isn't in the default xonsh env. Let me find the xonsh that has it (the one the user actually uses):\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2056,7 +2056,7 @@
             }]
         },
         "content":"\n\nThe dotfiles `.venv` has `prompt_toolkit`, and `~/.config/xonsh` symlinks to the dotfiles repo. Let me test with the correct xonsh (the one the user actually uses):\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2124,7 +2124,7 @@
             }]
         },
         "content":"\n\nTimed out — the full rc may be slow to load. Let me test whether the rc loads at all with a simple command, and give it more time:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2192,7 +2192,7 @@
             }]
         },
         "content":"\n\nThe rc loads fine (just slow). Let me test `gstiv` with a longer timeout:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2260,7 +2260,7 @@
             }]
         },
         "content":"\n\n`gstiv` timed out but `echo` didn't. Let me time how long the rc actually takes to load, to set an appropriate timeout:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2328,7 +2328,7 @@
             }]
         },
         "content":"\n\nThe rc loads in 0.28s, so `gstiv` itself is hanging. Let me check if `git status --ignored` is slow in this (large) repo:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2396,7 +2396,7 @@
             }]
         },
         "content":"\n\n`git status` is fast (0.48s, 78k lines). So the hang is specific to `gstiv` with the full rc. Let me observe what happens with a short timeout — does it produce any output before hanging?\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2464,7 +2464,7 @@
             }]
         },
         "content":"\n\nIt produces output but then hangs — likely a SIGPIPE from `| head`. Let me redirect to a file (no pipe) to avoid that and see if it completes:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2532,7 +2532,7 @@
             }]
         },
         "content":"\n\nIt completes successfully (exit 0, 383 lines) when redirected to a file — the earlier \"hang\" was just a SIGPIPE artifact from `| head`. Let me verify the output is correctly filtered:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2600,7 +2600,7 @@
             }]
         },
         "content":"\n\nThe xonsh function works perfectly: 78669 raw lines → 383 filtered lines, with all noise patterns removed. Now let me verify the fish abbr is valid and expands correctly:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2668,7 +2668,7 @@
             }]
         },
         "content":"\n\nThe fish abbr is correctly defined: `abbr -a -- gstiv 'xonsh -c \"gstiv\"'`. \n\nNow let me clean up the now-stale comment above the fish abbr (it referenced replacing the `.` via the cursor marker, which no longer applies in fish):\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2736,7 +2736,7 @@
             }]
         },
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2804,7 +2804,7 @@
             }]
         },
         "content":"\n\nNow let me do a final review — check for any other `gstiv` references I might have missed, and review the full diff:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2872,7 +2872,7 @@
             }]
         },
         "content":"\n\nAll references are consistent. Let me review the full diff:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -2940,7 +2940,7 @@
             }]
         },
         "content":"\n\nThe diff looks good. I notice a trailing blank line was also removed from `wes_git.py` — let me verify the file is still valid Python and check the ending:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{
@@ -3008,7 +3008,7 @@
             }]
         },
         "content":"\n\nEverything checks out:\n- `wes_git.py` is valid Python\n- The `_gstiv` function in `xonsh-only.xsh` is correct\n- `xonsh -c \"gstiv\"` (the exact command fish runs) produces 383 correctly-filtered lines (down from 78,669 raw), with all noise patterns removed\n- The fish abbr is defined as `abbr gstiv 'xonsh -c \"gstiv\"'`\n\nLet me commit the changes:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "role":"assistant",
         "sglext":{
           "spec_tokens_details":{

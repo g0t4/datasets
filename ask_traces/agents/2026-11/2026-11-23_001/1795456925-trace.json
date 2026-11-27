@@ -44,7 +44,7 @@
             }
           }],
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"First, let's start by reading the current file and understanding its structure.\n",
         "timings":{
           "choices":[{
@@ -113,7 +113,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"The file is large (63KB). Let's read it section by section. First, let's take a look at the structure of the file.\n",
         "timings":{
           "choices":[{
@@ -181,7 +181,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Let's read the relevant sections of the file. First, the imports and the top of the file, then the `load_trace_messages_from_path`, `load_trace_messages_from_stream`, `load_messages`, `get_model_name_from_jsonl_messages`, `load_jsonl_records`, and `print_model_info` functions.\n",
         "timings":{
           "choices":[{
@@ -249,7 +249,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Next, let's read the main loading functions (lines 506–665):\n",
         "timings":{
           "choices":[{
@@ -324,7 +324,7 @@
             }
           }],
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Now, let's take a look at how the return value is used in `main()` and `textual_viewer.py`:\n",
         "timings":{
           "choices":[{
@@ -406,7 +406,7 @@
             }
           }],
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Next, let's check `render_trace_to_console` and `TraceViewerApp.__init__` to understand how these values are being consumed:\n",
         "timings":{
           "choices":[{
@@ -488,7 +488,7 @@
             }
           }],
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Now I have a solid understanding of the code. The task is:\n\n> I want to modify the current file 'tools/chat_viewer/__main__.py' to add a DTO for the information extracted from the trace file, making it more interchangeable (i.e., `load_trace_messages_from_path` and related functions).\n\nIn other words, instead of returning a `tuple[list[dict[str, Any]], str | None, ModelTimings | None]` from `load_trace_messages_from_path` and `load_trace_messages_from_stream`, I should create a dataclass DTO (e.g., `TraceDTO`) that holds:\n- `messages: list[dict[str, Any]]`\n- `model_name: str | None`\n- `timings: ModelTimings | None`\n\nThen, update the following:\n1. `load_trace_messages_from_path` → return `TraceDTO`\n2. `load_trace_messages_from_stream` → return `TraceDTO`\n3. `main()` in `__main__.py` → use the DTO\n4. `main()` in `textual_viewer.py` → use the DTO (since it calls `viewer.load_trace_messages_from_path`)\n5. `render_trace_to_console` — this takes `messages, model_name, timings` as separate arguments. Should I change this to accept a DTO? The user said \"make it more interchangeable (i.e., load_trace_messages_from_path and related functions)\". The main focus is the loader functions. But `render_trace_to_console` is a consumer. Hmm.\n\nLet me think about scope. The user's request: \"add a DTO for the information extracted from the trace file, making it more interchangeable (i.e., load_trace_messages_from_path and related functions)\".\n\nSo the DTO should encapsulate the extracted information: messages, model_name, timings. The \"related functions\" are `load_trace_messages_from_stream` (the sibling loader) and probably `render_trace_to_console` (the main consumer).\n\nOptions:\n1. Minimal: Change only the two loader functions to return a `TraceDTO`, and update the call sites in `main()` (both files).\n2. Broader: Also change `render_trace_to_console` to accept a `TraceDTO`.\n\nLet me check who else calls `render_trace_to_console`:\n- `textual_viewer.py` around line 180: `render_trace_to_console(console, self._messages, self._model_name, self._timings, full_width=True)` — the app stores them separately.\n\nLet me look at the whole of textual_viewer.py to see how the app stores them.\n\nAlso, let me check `live_viewer.py` (run_live) — does it use these functions?\n\nLet me search for all usages.\n",
         "timings":{
           "choices":[{
@@ -576,7 +576,7 @@
             }
           }],
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"The user is saying \"I like dot-accessible DTOs rather than dicts\" — meaning they want a dataclass DTO with dot access (e.g., `trace.messages`, `trace.model_name`, `trace.timings`) rather than a dict.\n\nLet me check the existing `SectionDTO` dataclass in the file to match the style:\n",
         "timings":{
           "choices":[{
@@ -658,7 +658,7 @@
             }
           }],
         "content":"\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Now I have the full picture. Plan:\n\n1. Add a `TraceDTO` dataclass to `tools/chat_viewer/__main__.py` with the following fields:\n   - `messages: list[dict[str, Any]]`\n   - `model_name: str | None = None`\n   - `timings: ModelTimings | None = None`\n\n2. Change `load_trace_messages_from_path(trace_file: Path) -> TraceDTO` to return `TraceDTO(messages=..., model_name=..., timings=...)`.\n\n3. Change `load_trace_messages_from_stream(stream) -> TraceDTO` similarly.\n\n4. Update `main()` in `__main__.py`:\n   ```python\n   trace = load_trace_messages_from_stream(sys.stdin)\n   ...\n   render_trace_to_console(_console, trace, full_width=True)\n   ```\n\n5. Update `render_trace_to_console` to accept `trace: TraceDTO` instead of three separate arguments. But wait — `render_trace_to_console` is also called from:\n   - `textual_viewer.py` (the app stores `_messages`, `_model_name`, `_timings` separately)\n   - `response_stats_tests.py` (two call sites: one with `messages, None, None` and another with `Console(...)` + messages)\n   - `terminal_app_tests.py` (monkeypatches `render_trace_to_console` with `capture_width` — need to check that signature)\n\nLet me check these test files to see what the call sites look like.\n\nThe user's request focuses on the loader functions (\"i.e. load_trace_messages_from_path and related functions\"). \"Related functions\" probably means `load_trace_messages_from_stream`. But \"so it's more interchangeable\" suggests the DTO should flow through the system. The natural consumer is `render_trace_to_console`.\n\nGiven the user's preference for dot-accessible DTOs, I think the cleanest approach is:\n- `TraceDTO` dataclass\n- Both loaders return `TraceDTO`\n- `render_trace_to_console(console, trace: TraceDTO, *, full_width=False)` — takes the DTO\n- `TraceViewerApp.__init__` takes `trace: TraceDTO`\n- Update the tests accordingly\n\nLet me check the test files first.\n",
         "timings":{
           "choices":[{
@@ -733,7 +733,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Now I have the full picture. Let me also check `live_viewer.py` to see if it uses `render_trace_to_console` or the loader:\n",
         "timings":{
           "choices":[{
@@ -801,7 +801,7 @@
             }
           }],
         "content":"\n\nGot it — a dataclass with dot access, not a dict. Let me look at the remaining call sites before I thread it through.\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"`live_viewer.py` has its own `TraceSnapshot(path, messages, model_name)` — that's a separate thing, not part of this task.\n\nOK, let me plan the changes:\n\n**`tools/chat_viewer/__main__.py`:**\n\n1. Add a `TraceDTO` dataclass near the top (after the imports, or near `SectionDTO`? Since it's about trace loading, it makes sense to place it right before `load_trace_messages_from_path`, or near `SectionDTO`). I'll put it right before `load_trace_messages_from_path` — actually, since it's a DTO for trace extraction, it makes sense to place it near the other dataclass `SectionDTO`. But the loading functions are at lines 575–665. Let me put it right before `load_trace_messages_from_path` at line 575. Actually, `SectionDTO` is at line 405. Hmm, the DTO is used by the loaders and the renderer. I'll put it right before `load_trace_messages_from_path`.\n\n```python\n@dataclass\nclass TraceDTO:\n    \"\"\"Extracted information from a trace file or stream.\"\"\"\n    messages: list[dict[str, Any]]\n    model_name: str | None = None\n    timings: ModelTimings | None = None\n```\n\n2. `load_trace_messages_from_path`:\n```python\ndef load_trace_messages_from_path(trace_file: Path) -> TraceDTO:\n    if not trace_file.is_file():\n        print(f\"File not found: {trace_file}\")\n        sys.exit(1)\n    if str(trace_file).endswith(\".jsonl\"):\n        records = list(load_jsonl_records(trace_file))\n        messages = [r[\"message\"] for r in records if \"message\" in r and \"type\" in r and r[\"type\"] == \"message\"]\n        model_name = get_model_name_from_jsonl_messages(records)\n        # TODO return timings too? make sure we request them for vllm/sglang/llama-server/etc like in ask-openai.nvim\n        return TraceDTO(messages=messages, model_name=model_name)\n\n    with trace_file.open(\"r\", encoding=\"utf-8\") as f:\n        data = json.load(f)\n    model_name = data.get(\"last_sse\", {}).get(\"model\")\n    timings = parse_timings(data.get(\"last_sse\"))\n    messages = load_messages(data)\n\n    # * include response message at end of trace\n    if \"response_message\" in data:\n        # * trace.json\n        response = data[\"response_message\"]\n        if isinstance(response, dict):\n            response[\"output.json\"] = True\n            messages.append(response)\n    else:\n        # * legacy output.json\n        output_path = trace_file.parent / \"output.json\"\n        if output_path.is_file():\n            with output_path.open(\"r\", encoding=\"utf-8\") as f:\n                response = json.load(f)\n                if isinstance(response, dict):\n                    response[\"output.json\"] = True\n                    messages.append(response)\n\n    return TraceDTO(messages=messages, model_name=model_name, timings=timings)\n```\n\n3. `load_trace_messages_from_stream`:\n```python\ndef load_trace_messages_from_stream(stream) -> TraceDTO:\n    ...\n    return TraceDTO(messages=messages, model_name=model_name, timings=timings)\n```\n\n4. `render_trace_to_console(console, trace: TraceDTO, *, full_width=False)`:\n```python\ndef render_trace_to_console(console, trace: TraceDTO, *, full_width=False) -> None:\n    \"\"\"Render a full trace to the given rich Console. ...\"\"\"\n    global _console\n    _console = console\n\n    show_model_info(trace.model_name)\n\n    messages = trace.messages\n    has_per_message_timings = any(...)\n    if not has_per_message_timings:\n        print_model_info(trace.timings)\n\n    render_messages_to_console(console, messages, full_width=full_width)\n    ...\n```\n\nWait — should I change `render_trace_to_console` to take a DTO? The user said \"add a DTO for the extracted information from trace files so it's more interchangeable (i.e. load_trace_messages_from_path and related functions)\". The phrase \"i.e.\" suggests the DTO is for the extraction functions. \"More interchangeable\" — the extracted info can be passed around as a single object.\n\nIf I only change the loaders, `main()` will do:\n```python\ntrace = load_trace_messages_from_path(trace_file_path)\nrender_trace_to_console(_console, trace.messages, trace.model_name, trace.timings, full_width=True)\n```\nThat's clunky and defeats the purpose. The natural design is for `render_trace_to_console` to take the DTO. And `TraceViewerApp` should also take the DTO.\n\nBut that means changing:\n- `render_trace_to_console` signature\n- `TraceViewerApp.__init__` signature (stores `self._messages`, `self._model_name`, `self._timings`)\n- `response_stats_tests.py` (2 call sites)\n- `terminal_app_tests.py` (2 call sites: `TraceViewerApp([{'role':'assistant', 'content':'OK'}])` and `TraceViewerApp([{'role': 'assistant', 'content': 'short message'}])`)\n\nHmm, this is a bigger refactor. The user explicitly said \"i.e. load_trace_messages_from_path and related functions\" — \"related functions\" = `load_trace_messages_from_stream`. The DTO's purpose is \"to be more interchangeable\".\n\nI think the right scope is:\n1. Add `TraceDTO`.\n2. Both loaders return `TraceDTO`.\n3. `render_trace_to_console` takes `TraceDTO` (the main consumer of the extracted info).\n4. `TraceViewerApp` takes `TraceDTO`.\n5. Update the tests.\n\nThis makes the DTO flow end-to-end, which is what \"interchangeable\" means. The tests construct messages directly, so they'll need `TraceDTO(messages=...)`.\n\nLet me double-check `TraceViewerApp._render` too:\n```python\nviewer.render_trace_to_console(\n    console, self._messages, self._model_name, self._timings, full_width=True\n)\n```\nThis becomes:\n```python\nviewer.render_trace_to_console(console, self._trace, full_width=True)\n```\n\nAnd `__init__`:\n```python\ndef __init__(\n    self,\n    trace: TraceDTO,\n    max_width: int = 160,\n) -> None:\n    super().__init__()\n    self.max_width = max_width\n    self.width_capped = bool(max_width)\n    self._trace = trace\n```\n\nWait, but `TraceViewerApp` is in `textual_viewer.py` and imports `from tools.chat_viewer import __main__ as viewer`. So I can use `viewer.TraceDTO` for the type annotation.\n\nLet me also check `live_viewer.py` more carefully — does it use `TraceViewerApp`? Line 105: `return TraceSnapshot(path, messages, model_name)` — that's its own class. Let me check if live_viewer imports TraceViewerApp... From the earlier grep, `LiveTraceViewerApp` is defined in live_viewer.py itself (line 121). OK.\n\nNow, in `terminal_app_tests.py`:\n- `TraceViewerApp([{'role':'assistant', 'content':'OK'}])` → `TraceViewerApp(viewer.TraceDTO(messages=[{'role':'assistant', 'content':'OK'}]))`\n- `TraceViewerApp([{'role': 'assistant', 'content': 'short message'}])` → same treatment.\n\nIn `response_stats_tests.py`:\n- `viewer.render_trace_to_console(Console(...), [response], \"deepseek-v4.1-flash\", parse_timings(response))` → `viewer.render_trace_to_console(Console(...), viewer.TraceDTO(messages=[response], model_name=\"deepseek-v4.1-flash\", timings=parse_timings(response)))`\n- `viewer.render_trace_to_console(Console(...), messages, None, None)` → `viewer.render_trace_to_console(Console(...), viewer.TraceDTO(messages=messages))`\n\nNow, where to put `TraceDTO`? I'll put it right before `load_trace_messages_from_path` in `__main__.py`. Actually, let me think about the ordering: `print_model_info` is at 546, `get_model_name_from_jsonl_messages` at 560, `load_trace_messages_from_path` at 575. I'll add `TraceDTO` right before `load_trace_messages_from_path`.\n\nAlso, should I add a convenience method to the DTO? Something like a classmethod `from_jsonl_records`? That might be over-engineering. Let me keep it simple.\n\nOne consideration: `load_trace_messages_from_stream` has no type annotation on `stream`. I could add `stream: IO[str]` or leave it. The user prefers type hints that improve code completion. `json.load(stream)` works with any file-like object. I could annotate as `stream: TextIO`. Let me leave it mostly as-is, but I could add the annotation. Hmm, let me keep the changes focused. Actually, adding `TextIO` is a small improvement. But `sys.stdin` is `TextIOWrapper` which is a `TextIO`. Let me add it — no wait, let me keep the diff minimal and focused on the DTO. I'll leave `stream` unannotated as before.\n\nOK let me write the patches.\n\n**Patch 1: `tools/chat_viewer/__main__.py`**\n\na) Add TraceDTO before `load_trace_messages_from_path`:\n\n```python\n@dataclass\nclass TraceDTO:\n    \"\"\"Information extracted from a trace file or stream.\"\"\"\n\n    messages: list[dict[str, Any]]\n    model_name: str | None = None\n    timings: ModelTimings | None = None\n```\n\nb) Change the return of `load_trace_messages_from_path`:\n```python\ndef load_trace_messages_from_path(trace_file: Path) -> TraceDTO:\n    ...\n        return TraceDTO(messages=messages, model_name=model_name)\n    ...\n    return TraceDTO(messages=messages, model_name=model_name, timings=timings)\n```\n\nc) Change the return of `load_trace_messages_from_stream`:\n```python\ndef load_trace_messages_from_stream(stream) -> TraceDTO:\n    ...\n    return TraceDTO(messages=messages, model_name=model_name, timings=timings)\n```\n\nd) `render_trace_to_console`:\n```python\ndef render_trace_to_console(console, trace: TraceDTO, *, full_width=False) -> None:\n    \"\"\"Render a full trace to the given rich Console.\n\n    Shared by the CLI entrypoint (``main``) and the Textual viewer\n    (``textual_viewer``). Everything that renders a trace goes through here so\n    the interactive viewer shows exactly the same content as the CLI dump.\n    \"\"\"\n    global _console\n    _console = console\n\n    messages = trace.messages\n    show_model_info(trace.model_name)\n\n    has_per_message_timings = any(msg.get(\"role\") == \"assistant\" and parse_timings(msg) is not None for msg in messages)\n    if not has_per_message_timings:\n        print_model_info(trace.timings)\n\n    render_messages_to_console(console, messages, full_width=full_width)\n    ...\n```\n\nThe rest of the function body uses `messages` — let me check the full body again (lines 1449–1502):\n\n```python\ndef render_trace_to_console(console, messages, model_name, timings, *, full_width=False) -> None:\n    \"\"\"...\"\"\"\n    global _console\n    _console = console\n\n    show_model_info(model_name)\n\n    has_per_message_timings = any(msg.get(\"role\") == \"assistant\" and parse_timings(msg) is not None for msg in messages)\n    if not has_per_message_timings:\n        print_model_info(timings)\n\n    render_messages_to_console(console, messages, full_width=full_width)\n\n    from tools.chat_viewer.timings_summary import TimingEntry, build_timings_summary\n    summaries = {}\n    for message_number, message in enumerate(messages, start=1):\n        ...\n    fim_diff = find_fim_diff(messages)\n    ...\n```\n\nSo I need to bind `messages = trace.messages` at the top and replace `model_name`/`timings` usages.\n\ne) `main()`:\n```python\n    if trace_file_path is None and not sys.stdin.isatty():\n        # No file arg and stdin has data (piped)\n        trace = load_trace_messages_from_stream(sys.stdin)\n    elif trace_file_path is not None:\n        trace = load_trace_messages_from_path(trace_file_path)\n    else:\n        parser.print_help()\n        return\n    ...\n    render_trace_to_console(_console, trace, full_width=True)\n```\n\n**Patch 2: `tools/chat_viewer/textual_viewer.py`**\n\na) `TraceViewerApp.__init__`:\n```python\n    def __init__(\n        self,\n        trace: \"viewer.TraceDTO\",\n        max_width: int = 160,\n    ) -> None:\n        super().__init__()\n        self.max_width = max_width\n        self.width_capped = bool(max_width)\n        self._trace = trace\n```\n\nWait — `viewer` is `from tools.chat_viewer import __main__ as viewer`. Since textual_viewer.py has `from __future__ import annotations`, I can use `viewer.TraceDTO` in annotations without quotes... Actually, with `from __future__ import annotations`, annotations are strings, so `viewer.TraceDTO` works even at class definition time. And `viewer` is a module imported at the top, so it's available. Let me just use `viewer.TraceDTO` directly.\n\nb) `_render`:\n```python\n        viewer.render_trace_to_console(\n            console, self._trace, full_width=True\n        )\n```\n\nc) `main()`:\n```python\n    if args.trace_file:\n        trace = viewer.load_trace_messages_from_path(Path(args.trace_file))\n    elif not sys.stdin.isatty():\n        trace = viewer.load_trace_messages_from_stream(sys.stdin)\n    else:\n        parser.print_help()\n        return\n\n    TraceViewerApp(trace, max_width=args.max_width).run()\n```\n\n**Patch 3: `tools/chat_viewer/response_stats_tests.py`**\n\n```python\n    viewer.render_trace_to_console(Console(file=output, width=300, color_system=None),\n                                   viewer.TraceDTO(messages=[response], model_name=\"deepseek-v4.1-flash\",\n                                                   timings=parse_timings(response)))\n```\n\nand\n\n```python\n    viewer.render_trace_to_console(Console(file=output, width=300, color_system=None), viewer.TraceDTO(messages=messages))\n```\n\n**Patch 4: `tools/chat_viewer/terminal_app_tests.py`**\n\n```python\n    app = TraceViewerApp(viewer.TraceDTO(messages=[{'role':'assistant', 'content':'OK'}]))\n```\n\nand\n\n```python\n    app = LiveTraceViewerApp(tmp_path, poll_interval=3600) if live else TraceViewerApp(\n        viewer.TraceDTO(messages=[{'role': 'assistant', 'content': 'short message'}])\n    )\n```\n\nNote: in `test_blank_areas_use_terminal_default_background`, `viewer` is imported inside the test function: `from tools.chat_viewer import __main__ as viewer`. Good.\n\nIn `test_existing_vtt_caps_centers_and_toggles_width`, `viewer` is also imported inside the function. Good.\n\nNow, is there anything else that calls `TraceViewerApp`? Let me check... From the earlier grep, only textual_viewer.py and terminal_app_tests.py.\n\nAlso, let me double-check that `live_viewer.py` doesn't call `render_trace_to_console` with the old signature. The earlier grep on live_viewer.py only showed `TraceSnapshot` and `LiveTraceViewerApp`. Let me check if live_viewer renders via `viewer.render_trace_to_console`... I'll grep again to be safe.\n\nAlso, are there any other places in `__main__.py` that call `render_trace_to_console`? Only `main()` at line 1564.\n\nLet me also check if there's a `browser/__main__.py` that uses these — the earlier grep showed `load_trace_json` (a different function). OK.\n\nLet me also verify there are no other imports of `load_trace_messages_from_path` elsewhere (e.g., lua or other tools). The earlier repo-wide grep only showed chat_viewer files. Good.\n\nNow, about the `TraceDTO` name — the user said \"I like dottable DTOs not dicts\". So `trace.messages`, `trace.model_name`, `trace.timings`.\n\nOne more consideration: should `TraceDTO` have any behavior? Maybe a `has_per_message_timings` property? That's used in `render_trace_to_console`. Hmm, let me keep it as a plain dataclass — the user asked for a DTO for the extracted information. I'll keep it simple.\n\nAlso, let me think about where to place `TraceDTO` in the file. Options:\n- Near `SectionDTO` (line 405) — the other dataclass.\n- Right before `load_trace_messages_from_path` (line 575).\n\nI'll place it right before `load_trace_messages_from_path`, since it's the return type of the loader functions. That way it's close to its primary use.\n\nOK let me write the patches.\n\nFirst, let me verify the exact text of the sections I'm patching. I already have them from the sed output. Let me be careful with the exact whitespace.\n\nFor `render_trace_to_console`, the current text:\n\n```python\ndef render_trace_to_console(console, messages, model_name, timings, *, full_width=False) -> None:\n    \"\"\"Render a full trace to the given rich Console.\n\n    Shared by the CLI entrypoint (``main``) and the Textual viewer\n    (``textual_viewer``). Everything that renders a trace goes through here so\n    the interactive viewer shows exactly the same content as the CLI dump.\n    \"\"\"\n    global _console\n    _console = console\n\n    show_model_info(model_name)\n\n    has_per_message_timings = any(msg.get(\"role\") == \"assistant\" and parse_timings(msg) is not None for msg in messages)\n    if not has_per_message_timings:\n        print_model_info(timings)\n\n    render_messages_to_console(console, messages, full_width=full_width)\n```\n\nNew version:\n\n```python\ndef render_trace_to_console(console, trace: TraceDTO, *, full_width=False) -> None:\n    \"\"\"Render a full trace to the given rich Console.\n\n    Shared by the CLI entrypoint (``main``) and the Textual viewer\n    (``textual_viewer``). Everything that renders a trace goes through here so\n    the interactive viewer shows exactly the same content as the CLI dump.\n    \"\"\"\n    global _console\n    _console = console\n\n    messages = trace.messages\n    show_model_info(trace.model_name)\n\n    has_per_message_timings = any(msg.get(\"role\") == \"assistant\" and parse_timings(msg) is not None for msg in messages)\n    if not has_per_message_timings:\n        print_model_info(trace.timings)\n\n    render_messages_to_console(console, messages, full_width=full_width)\n```\n\nFor `main()`:\n\n```python\n    if trace_file_path is None and not sys.stdin.isatty():\n        # No file arg and stdin has data (piped)\n        messages, model_name, timings = load_trace_messages_from_stream(sys.stdin)\n    elif trace_file_path is not None:\n        messages, model_name, timings = load_trace_messages_from_path(trace_file_path)\n    else:\n        parser.print_help()\n        return\n```\n→\n```python\n    if trace_file_path is None and not sys.stdin.isatty():\n        # No file arg and stdin has data (piped)\n        trace = load_trace_messages_from_stream(sys.stdin)\n    elif trace_file_path is not None:\n        trace = load_trace_messages_from_path(trace_file_path)\n    else:\n        parser.print_help()\n        return\n```\n\nand\n\n```python\n    render_trace_to_console(_console, messages, model_name, timings, full_width=True)\n```\n→\n```python\n    render_trace_to_console(_console, trace, full_width=True)\n```\n\nOK let me apply the patches. I'll do it in a few apply_patch calls.\n\nPatch for `__main__.py`:\n\n```\n*** Begin Patch\n*** Update File: tools/chat_viewer/__main__.py\n@@\n-def load_trace_messages_from_path(trace_file: Path) -> tuple[list[dict[str, Any]], str | None, ModelTimings | None]:\n+@dataclass\n+class TraceDTO:\n+    \"\"\"Information extracted from a trace file or stream.\"\"\"\n+\n+    messages: list[dict[str, Any]]\n+    model_name: str | None = None\n+    timings: ModelTimings | None = None\n+\n+\n+def load_trace_messages_from_path(trace_file: Path) -> TraceDTO:\n@@\n-        return messages, model_name, None\n+        return TraceDTO(messages=messages, model_name=model_name)\n@@\n-    return messages, model_name, timings\n+    return TraceDTO(messages=messages, model_name=model_name, timings=timings)\n@@\n-def load_trace_messages_from_stream(stream) -> tuple[list[dict[str, Any]], str | None, ModelTimings | None]:\n+def load_trace_messages_from_stream(stream) -> TraceDTO:\n@@\n-    return messages, model_name, timings\n+    return TraceDTO(messages=messages, model_name=model_name, timings=timings)\n*** End Patch\n```\n\nWait, `return messages, model_name, timings` appears twice (once in `load_trace_messages_from_path` at line 609, once in `load_trace_messages_from_stream` at line 661). The apply_patch tool matches hunks in order, so as long as the context is unique enough, it should be fine. Let me include more context to disambiguate.\n\nFor the first occurrence (inside `load_trace_messages_from_path`), the preceding line is:\n```python\n                    response[\"output.json\"] = True\n                    messages.append(response)\n\n    return messages, model_name, timings\n```\n\nFor the second (inside `load_trace_messages_from_stream`), the preceding line is:\n```python\n    # FYI cannot assume output.json is related (or any othe file) given this data is from STDIN\n\n    return messages, model_name, timings\n```\n\nI'll include these context lines.\n\nActually, the first hunk also contains `return messages, model_name, None` — that's unique (only one occurrence). Good.\n\nLet me carefully construct the full patch.\n\nHunk 1: Add TraceDTO + change signature of `load_trace_messages_from_path`.\nContext: the line right before `def load_trace_messages_from_path` is:\n```python\n    return first['metadata']['response']['model_name']\n\ndef load_trace_messages_from_path(trace_file: Path) -> tuple[list[dict[str, Any]], str | None, ModelTimings | None]:\n```\n\nHunk 2: `return messages, model_name, None` — unique.\n\nHunk 3: the first `return messages, model_name, timings` with context `messages.append(response)` before it.\n\nHunk 4: signature of `load_trace_messages_from_stream`.\n\nHunk 5: the second `return messages, model_name, timings` with context `# FYI cannot assume output.json is related`.\n\nHunk 6: signature of `render_trace_to_console` + body changes.\n\nHunk 7: `main()` changes.\n\nLet me write it all out.\n\nFor hunk 6, the exact current text:\n```python\ndef render_trace_to_console(console, messages, model_name, timings, *, full_width=False) -> None:\n    \"\"\"Render a full trace to the given rich Console.\n\n    Shared by the CLI entrypoint (``main``) and the Textual viewer\n    (``textual_viewer``). Everything that renders a trace goes through here so\n    the interactive viewer shows exactly the same content as the CLI dump.\n    \"\"\"\n    global _console\n    _console = console\n\n    show_model_info(model_name)\n\n    has_per_message_timings = any(msg.get(\"role\") == \"assistant\" and parse_timings(msg) is not None for msg in messages)\n    if not has_per_message_timings:\n        print_model_info(timings)\n\n    render_messages_to_console(console, messages, full_width=full_width)\n```\n\nNew version:\n```python\ndef render_trace_to_console(console, trace: TraceDTO, *, full_width=False) -> None:\n    \"\"\"Render a full trace to the given rich Console.\n\n    Shared by the CLI entrypoint (``main``) and the Textual viewer\n    (``textual_viewer``). Everything that renders a trace goes through here so\n    the interactive viewer shows exactly the same content as the CLI dump.\n    \"\"\"\n    global _console\n    _console = console\n\n    messages = trace.messages\n    show_model_info(trace.model_name)\n\n    has_per_message_timings = any(msg.get(\"role\") == \"assistant\" and parse_timings(msg) is not None for msg in messages)\n    if not has_per_message_timings:\n        print_model_info(trace.timings)\n\n    render_messages_to_console(console, messages, full_width=full_width)\n```\n\nFor hunk 7, the exact current text:\n```python\n    if trace_file_path is None and not sys.stdin.isatty():\n        # No file arg and stdin has data (piped)\n        messages, model_name, timings = load_trace_messages_from_stream(sys.stdin)\n    elif trace_file_path is not None:\n        messages, model_name, timings = load_trace_messages_from_path(trace_file_path)\n    else:\n        parser.print_help()\n        return\n```\n\nand\n\n```python\n    render_trace_to_console(_console, messages, model_name, timings, full_width=True)\n```\n\nOK. Now let me apply the patches. I'll do `__main__.py` first, then the other files.\n\nActually, let me reconsider whether to change `render_trace_to_console` and `TraceViewerApp`. The user's request is specifically about the loader functions. But \"so it's more interchangeable\" strongly suggests they want the DTO to be passed around. If I only change the loaders, `main()` will immediately destructure it, which is pointless.\n\nI'm confident the right move is to thread the DTO through `render_trace_to_console` and `TraceViewerApp`. That's the \"related functions\" part.\n\nLet me also double-check: are there other consumers of `load_trace_messages_from_path`/`load_trace_messages_from_stream`? From the repo-wide grep:\n- `tools/chat_viewer/__main__.py` (main)\n- `tools/chat_viewer/textual_viewer.py` (main)\n\nThat's it. Good.\n\nOK let me apply the patches.\n",
         "timings":{
           "choices":[{
@@ -869,7 +869,7 @@
             }
           }],
         "content":"\n\n`live_viewer.py` is self-contained, so the scope is: `__main__.py` (loaders + renderer + `main`), `textual_viewer.py` (app + `main`), and the two test files. Applying now.\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"`live_viewer.py` has its own app and doesn't use `render_trace_to_console` or `TraceViewerApp`. Good.\n\nNow let's apply the patch.\n",
         "timings":{
           "choices":[{
@@ -937,7 +937,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Next is `textual_viewer.py`. Let me check the exact text of the `__init__` and `_render` sections once more:\n\n```python\n    def __init__(\n        self,\n        messages: list[dict],\n        model_name: str | None = None,\n        timings=None,\n        max_width: int = 160,\n    ) -> None:\n        super().__init__()\n        self.max_width = max_width\n        self.width_capped = bool(max_width)\n        self._messages = messages\n        self._model_name = model_name\n        self._timings = timings\n```\n\nand\n\n```python\n        viewer.render_trace_to_console(\n            console, self._messages, self._model_name, self._timings, full_width=True\n        )\n```\n\nand\n\n```python\n    if args.trace_file:\n        messages, model_name, timings = viewer.load_trace_messages_from_path(\n            Path(args.trace_file)\n        )\n    elif not sys.stdin.isatty():\n        messages, model_name, timings = viewer.load_trace_messages_from_stream(\n            sys.stdin\n        )\n    else:\n        parser.print_help()\n        return\n\n    TraceViewerApp(messages, model_name, timings, max_width=args.max_width).run()\n```\n\nNew version:\n\n```python\n    def __init__(\n        self,\n        trace: viewer.TraceDTO,\n        max_width: int = 160,\n    ) -> None:\n        super().__init__()\n        self.max_width = max_width\n        self.width_capped = bool(max_width)\n        self._trace = trace\n```\n\nWait, `viewer` is `from tools.chat_viewer import __main__ as viewer`. Since there's `from __future__ import annotations`, `viewer.TraceDTO` inside the annotation is fine (it's lazily evaluated).\n\n```python\n        viewer.render_trace_to_console(\n            console, self._trace, full_width=True\n        )\n```\n\nand\n\n```python\n    if args.trace_file:\n        trace = viewer.load_trace_messages_from_path(Path(args.trace_file))\n    elif not sys.stdin.isatty():\n        trace = viewer.load_trace_messages_from_stream(sys.stdin)\n    else:\n        parser.print_help()\n        return\n\n    TraceViewerApp(trace, max_width=args.max_width).run()\n```\n",
         "timings":{
           "choices":[{
@@ -1005,7 +1005,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Next up are the test files.\n\n`response_stats_tests.py`:\n```python\n    output = StringIO()\n    viewer.render_trace_to_console(Console(file=output, width=300, color_system=None),\n                                   [response], \"deepseek-v4.1-flash\", parse_timings(response))\n```\n→\n```python\n    output = StringIO()\n    viewer.render_trace_to_console(Console(file=output, width=300, color_system=None),\n                                   viewer.TraceDTO(messages=[response], model_name=\"deepseek-v4.1-flash\",\n                                                   timings=parse_timings(response)))\n```\n\nand\n\n```python\n    output = StringIO()\n    viewer.render_trace_to_console(Console(file=output, width=300, color_system=None), messages, None, None)\n```\n→\n```python\n    output = StringIO()\n    viewer.render_trace_to_console(Console(file=output, width=300, color_system=None), viewer.TraceDTO(messages=messages))\n```\n\n`terminal_app_tests.py`:\n```python\n    app = TraceViewerApp([{'role':'assistant', 'content':'OK'}])\n```\n→\n```python\n    app = TraceViewerApp(viewer.TraceDTO(messages=[{'role':'assistant', 'content':'OK'}]))\n```\n\nand\n\n```python\n    app = LiveTraceViewerApp(tmp_path, poll_interval=3600) if live else TraceViewerApp([\n        {'role': 'assistant', 'content': 'short message'}\n    ])\n```\n→\n```python\n    app = LiveTraceViewerApp(tmp_path, poll_interval=3600) if live else TraceViewerApp(\n        viewer.TraceDTO(messages=[{'role': 'assistant', 'content': 'short message'}])\n    )\n```\n",
         "timings":{
           "choices":[{
@@ -1073,7 +1073,7 @@
             }
           }],
         "content":"\n\nOne file op per patch — splitting into two calls.\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"The patch format doesn't allow multiple file operations separated by `*** End Patch` / `*** Begin Patch` within a single patch. I need to make separate apply_patch calls for each file.\n",
         "timings":{
           "choices":[{
@@ -1141,7 +1141,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Next, let's update terminal_app_tests.py. Let me check the exact context.\n",
         "timings":{
           "choices":[{
@@ -1216,7 +1216,7 @@
             }
           }],
         "content":"\n\nNow verifying — syntax check, remaining call-site search, and the test suite:\n\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Next, let's verify:\n1. Syntax check via `py_compile` on all 4 files.\n2. Run the relevant tests.\n3. Sanity check via `git diff`.\n\nAlso, let's double-check whether there are any other places in the repo (e.g., docs, other tools) that reference the old tuple unpacking pattern `messages, model_name, timings =`.\n",
         "timings":{
           "choices":[{
@@ -1291,7 +1291,7 @@
             }
           }],
         "content":"\n\nClean — the only remaining `_model_name` is in Lua (unrelated). Running the tests:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"The remaining `self._model_name` is in the Lua file, and it's unrelated. All Python call sites have been updated.\n\nNext, I'll run the tests:\n",
         "timings":{
           "choices":[{
@@ -1359,7 +1359,7 @@
             }
           }],
         "content":"\n\nDefault interpreter lacks deps — checking for the project environment:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"The default python3 doesn't have the dependencies. There's probably a venv or uv setup in the repo. Let me check for pyproject.toml / .venv / uv.\n",
         "timings":{
           "choices":[{
@@ -1427,7 +1427,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"There's a `.venv`. Let's use it:\n",
         "timings":{
           "choices":[{
@@ -1495,7 +1495,7 @@
             }
           }],
         "content":"\n\nThat test doesn't import `viewer` — adding the import:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"In `test_blank_areas_use_terminal_default_background`, `viewer` is not imported within that function. Let me check that test:\n\n```python\n@pytest.mark.asyncio\n@pytest.mark.parametrize('live', [False, True])\nasync def test_blank_areas_use_terminal_default_background(tmp_path, live):\n    from tools.chat_viewer.live_viewer import LiveTraceViewerApp\n    app = LiveTraceViewerApp(tmp_path, poll_interval=3600) if live else TraceViewerApp(\n        viewer.TraceDTO(messages=[{'role': 'assistant', 'content': 'short message'}])\n    )\n```\n\nOnly `LiveTraceViewerApp` is imported there. I need to add `from tools.chat_viewer import __main__ as viewer` to that test. Let me check the current state of the file around that area.\n",
         "timings":{
           "choices":[{
@@ -1563,7 +1563,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"In that test, `viewer` is not imported. Let's add the import. I'll check the top of the file to see what's imported.\n",
         "timings":{
           "choices":[{
@@ -1631,7 +1631,7 @@
             }
           }],
         "content":"\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"Wait, actually, it might be cleaner to import `TraceDTO` directly. But `TraceViewerApp` is imported at the top of the file from `tools.chat_viewer.textual_viewer`. Let me check what's at the top of the file and decide whether to import `TraceDTO` at the top level instead.\n\nActually, the other tests in this file use the local `from tools.chat_viewer import __main__ as viewer` import pattern. For consistency, I'll keep the local import. But let me reconsider — it might be cleaner to import `TraceDTO` at the top of the file. Let me check the top of the file.\n",
         "timings":{
           "choices":[{
@@ -1699,7 +1699,7 @@
             }
           }],
         "content":"\n\nConsistent with the file's local-import style. Re-running:\n\n",
-        "response_backend":"sglang",
+        "backend":"sglang",
         "reasoning_content":"The local import pattern is consistent with the rest of the file (the other tests import `viewer` locally). Let's leave it as is. I'll re-run the tests.\n",
         "timings":{
           "choices":[{
@@ -1758,7 +1758,7 @@
         "start_time_ms":1270009822,
         "role":"tool"
       },{
-        "response_backend":"sglang",
+        "backend":"sglang",
         "content":"\n\nAll 8 pass. Quick functional smoke test with a real trace file:\n\n",
         "reasoning_content":"All 8 tests passed. Next, I'll do a functional smoke test of the loader itself — I'll create a small trace file and run the CLI. Let me check what kind of trace files exist in the repo for testing.\n",
         "timings":{
