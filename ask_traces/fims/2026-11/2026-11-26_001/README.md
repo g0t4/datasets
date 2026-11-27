@@ -1,0 +1,1 @@
+good FIM from inkling-2-mini to mirror the ansi-ification of my keys, though it only suggested one edit... I need to nudge it to consider more edits than just one! if it makes sense in a context, this is where verbal steering would help! track my verbal steering comments as we go... I could say do all of them and just talk to the Edit Predictions trace :) 
