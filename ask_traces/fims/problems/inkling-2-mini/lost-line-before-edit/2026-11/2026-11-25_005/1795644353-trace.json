@@ -34,7 +34,7 @@
       "tokens_per_second":395.42804582788,
       "generation_time_ms":1735.522121
     },
-    "response_backend":"vllm",
+    "backend":"vllm",
     "created":1795644353,
     "model":"inkling-2-mini"
   },
@@ -93,7 +93,7 @@
           "tokens_per_second":395.42804582788,
           "generation_time_ms":1735.522121
         },
-        "response_backend":"vllm",
+        "backend":"vllm",
         "content":"            print_indented(f\"[bold gray0 on {purple}] INPUT base_generation_info \")\n            print_indented(f\"[bold gray0 on {purple}] SUPER GENERATION \")\n            print_indented(generation, level=2)",
         "reasoning_content":"The cursor is on the line:\n`            print_indented(\"[bold gray0 on <|CURSOR_IS_HERE|>] SUPER GENERATION \")`\n\nText before cursor: `            print_indented(\"[bold gray0 on `\nText after cursor: `] SUPER GENERATION \")`\n\nLooking at the surrounding code, the pattern of print_indented calls:\n```python\n            print_indented(f\"[bold gray0 on {purple}] INPUT CHUNK \")\n            print_indented(chunk, level=2)\n            print_indented(f\"[bold gray0 on {purple}] INPUT default_chunk_class \")\n            print_indented(default_chunk_class, level=2)\n            print_indented(f\"[bold gray0 on {purple}] INPUT base_generation_info \")\n            print_indented(base_generation_info, level=2)\n            print_indented(\"[bold gray0 on <|CURSOR_IS_HERE|>] SUPER GENERATION \")\n            print_indented(generation, level=2)\n```\n\nSo the cursor is in the f-string color position. The pattern is `f\"[bold gray0 on {purple}] ...\"`. The missing part is `{purple}` — likely the user wants to fill in the f-string with `{purple}`. So the edit is:\n\n`            print_indented(f\"[bold gray0 on {purple}] SUPER GENERATION \")`\n\nThe yanked recent code shows:\n```\n            print_indented(f\"[bold gray0 on {purple}] INPUT base_generation_info \")\n```\nand\n```\n            print_indented(default_chunk_class, level=2)\n```\n\nThis confirms the pattern. The cursor line is missing `f\"[bold gray0 on {purple}]` — the user probably wants to change it to `f\"[bold gray0 on {purple}] SUPER GENERATION \"`.\n\nSo the edit: replace the line with the f-string version. Anchor: the line before it:\n`            print_indented(f\"[bold gray0 on {purple}] INPUT base_generation_info \")`\nand trailing anchor:\n`            print_indented(generation, level=2)`.\n\nWait — \"INPUT base_generation_info\" line is immediately before the cursor line. Yes.\n\nSo response:\n```\n            print_indented(f\"[bold gray0 on {purple}] INPUT base_generation_info \")\n            print_indented(f\"[bold gray0 on {purple}] SUPER GENERATION \")\n            print_indented(generation, level=2)\n```"
       }],

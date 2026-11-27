@@ -32,7 +32,7 @@
       "generation_time_ms":1768.343497999,
       "tokens_per_second":305.73134773415
     },
-    "response_backend":"vllm",
+    "backend":"vllm",
     "choices":[],
     "object":"chat.completion.chunk",
     "model":"inkling-2-mini"
@@ -64,7 +64,7 @@
         "reasoning_content":"The user wants to ansi yellow all of keys. The selection has mixed keys: some already ansi.yellow, some plain. Want all keys ansi yellow. Preserve indentation. Need output only replaced code. Need be careful: keys must be strings; frontend/sse_parsed/trace_data are plain keys that will be unquoted? In Lua table constructor, keys like frontend = value are sugar for [\"frontend\"]? Actually in Lua table constructor, `frontend = frontend` is sugar for `[\"frontend\"] = frontend`. But if we wrap as [ansi.yellow(\"frontend\")] = frontend, that's fine though unusual. User asks \"ansi yellow all of keys\". So make every key [ansi.yellow(\"...\")]. Need preserve indentation: lines start with 12 spaces? Selection shown with 12 spaces? In the snippet, lines begin with 12 spaces (since inside function). The provided selection:\n```\n            local vars = {\n                [ansi.yellow(\"request\")] = request,\n                frontend = frontend,\n                [ansi.yellow(\"messages_snapshot\")] = no_messages,\n                sse_parsed = sse_parsed,\n                trace_data = trace_data\n            }\n```\nFirst line 12 spaces, subsequent 16 spaces. Need output exactly replacement code only, no markdown code fences. So:\n            local vars = {\n                [ansi.yellow(\"request\")] = request,\n                [ansi.yellow(\"frontend\")] = frontend,\n                [ansi.yellow(\"messages_snapshot\")] = no_messages,\n                [ansi.yellow(\"sse_parsed\")] = sse_parsed,\n                [ansi.yellow(\"trace_data\")] = trace_data\n            }\n\nNeed ensure no extra explanation. Also note: yellowing keys means maybe keys are displayed colored in log; fine.\n\nNo code block. Final just code.",
         "content":"            local vars = {\n                [ansi.yellow(\"request\")] = request,\n                [ansi.yellow(\"frontend\")] = frontend,\n                [ansi.yellow(\"messages_snapshot\")] = no_messages,\n                [ansi.yellow(\"sse_parsed\")] = sse_parsed,\n                [ansi.yellow(\"trace_data\")] = trace_data\n            }",
         "role":"assistant",
-        "response_backend":"vllm",
+        "backend":"vllm",
         "usage":{
           "completion_tokens":571,
           "total_tokens":2439,
