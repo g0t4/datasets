@@ -1,0 +1,1 @@
+I wanted to confirm I was reading the code how I suspected... next() part was confusing why that would be used so I wanted to see if the model saw anything I did not see... cool part is the middle part where inkling listed **Final** under three cases, this is perfectly readable... love it

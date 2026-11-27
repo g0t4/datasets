@@ -1,0 +1,62 @@
+{
+  "request_body":{
+    "messages":[{
+        "role":"system",
+        "content":"You're running in a neovim plugin\n\n\n\n## File searches\n\nUse `semantic_grep` to discover where to look; use `rg` for exhaustive matches.\n\nUse `fd` to search file names.\n\nDon't use _SLOW_ 🐌 commands like `ls -R`, `grep -R` and `find . -type f`\n\n## Git repos\n\n- Use `git diff` as a sanity check\n- Commit when you're done with a task. Don't make me ask!\n- Include `--author=\"INSERT_COMMIT_AUTHOR\"`\n"
+      },{
+        "role":"user",
+        "content":"## Recent yanks (copy to clipboard):\n```lua/ask-openai/backends/response_metadata.lua\nfunction M.is_final(sse)\n    local choices = type(sse.choices) == \"table\" and sse.choices or {}\n    for _, choice in ipairs(choices) do\n        local choice_has_finish_reason = type(choice) == \"table\" and choice.finish_reason ~= nil and choice.finish_reason ~= vim.NIL\n        if choice_has_finish_reason then\n            return true\n        end\n    end\n    local has_timings = type(sse.timings) == \"table\"\n    local has_usage = type(sse.usage) == \"table\"\n    local has_sglext = type(sse.sglext) == \"table\"\n    return has_timings\n        or ((has_usage or has_sglext or type(sse.meta_info) == \"table\")\n            and type(sse.choices) == \"table\" and next(sse.choices) == nil)\nend\n\n```\n\n"
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"what the fuck is the last part of this doing??\n\nfunction M.is_final(sse)\n    local choices = type(sse.choices) == \"table\" and sse.choices or {}\n    for _, choice in ipairs(choices) do\n        local choice_has_finish_reason = type(choice) == \"table\" and choice.finish_reason ~= nil and choice.finish_reason ~= vim.NIL\n        if choice_has_finish_reason then\n            return true\n        end\n    end\n    local has_timings = type(sse.timings) == \"table\"\n    local has_usage = type(sse.usage) == \"table\"\n    local has_sglext = type(sse.sglext) == \"table\"\n    return has_timings\n        or ((has_usage or has_sglext or type(sse.meta_info) == \"table\")\n            and type(sse.choices) == \"table\" and next(sse.choices) == nil)\nend\n\n\n\nteh type(sse.choices) == \"table\" and nil next bullshit"
+      },{
+        "model":"inkling-2-mini",
+        "response_backend":"vllm",
+        "role":"assistant",
+        "metrics":{
+          "generation_time_ms":2704.1786099981,
+          "time_to_first_token_ms":57.464420999167,
+          "queue_time_ms":0.13191100151744,
+          "speculative_decoding":{
+            "draft_acceptance_rate":0.26050420168067,
+            "num_accepted_draft_tokens":403,
+            "acceptance_histogram":[82,49,27,22,11,7,6,17],
+            "num_spec_steps":221,
+            "num_spec_tokens":7,
+            "num_verified_draft_tokens":1547,
+            "num_draft_tokens":1547,
+            "mean_acceptance_length":2.8235294117647
+          },
+          "mean_itl_ms":4.3405756179744,
+          "tokens_per_second":225.9524467848
+        },
+        "reasoning_content":"The user asks to explain. Just explain, no code change requested.",
+        "content":"So the last clause:\n\n```lua\n(has_usage or has_sglext or type(sse.meta_info) == \"table\")\n    and type(sse.choices) == \"table\" and next(sse.choices) == nil\n```\n\nmeans: \"the response carries timing/usage/meta metadata AND the `choices` array is an empty table\" — i.e., a final/summary event for backends that return usage stats (like xAI/grok-style \"usage\" events, and some SSE variants), where the payload has no choices at all.\n\nWhy not just `has_usage`? Because a partial/streaming chunk can include `usage` while still carrying a non-empty `choices` array (e.g., a delta chunk with usage attached), and that's *not* final. The `next(sse.choices) == nil` guard is the filter: it only declares the event final if `choices` is a table with zero entries. The explicit `type(sse.choices) == \"table\"` is redundant given the earlier check (`choices` already falls back to `{}`), but it does guard the `next(sse.choices)` call itself — without it, `next(nil)` would error.\n\nSo the function is really saying:\n\n- **Final** if any choice carried a `finish_reason` (classic OpenAI shape), OR\n- **Final** if there's a `timings` table, OR\n- **Final** if there's `usage`/`sglext`/`meta_info` AND choices is present-but-empty (usage-only trailing events),\n\nand not final otherwise.\n\nThe redundant `type(sse.choices) == \"table\"` in the last conjunct is the ugly part — it's there purely so `next()` is safe, and could more idiomatically be `#choices == 0` or just reuse the already-normalized `choices`:\n\n```lua\nlocal is_final_by_empty_choices =\n    (has_usage or has_sglext or type(sse.meta_info) == \"table\")\n    and #choices == 0\nreturn has_timings or is_final_by_empty_choices\n```\n\n(that's equivalent here, since `choices` is already normalized to `{}` and isn't a hash with non-numeric keys worth caring about — though if `choices` were ever a map with string keys, `#choices == 0` would misbehave; `next(choices) == nil` is the correct check for \"no entries\"). So honestly the guard isn't wrong, just wordier than it needs to be.",
+        "usage":{
+          "completion_tokens_details":{
+            "reasoning_tokens":14
+          },
+          "completion_tokens":624,
+          "prompt_tokens":785,
+          "prompt_tokens_details":{
+            "cached_tokens":0,
+            "created_cache_tokens":768
+          },
+          "total_tokens":1409
+        },
+        "finish_reason":"stop"
+      }],
+    "model":"",
+    "chat_template_kwargs":{
+      "reasoning_effort":"minimal"
+    },
+    "stream":true,
+    "stream_options":{
+      "include_usage":true
+    },
+    "temperature":1
+  }
+}
