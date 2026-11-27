@@ -1,0 +1,105 @@
+{
+  "last_sse":{
+    "id":"chatcmpl-bc094a1a664e7c80",
+    "created":1795753910,
+    "usage":{
+      "completion_tokens":571,
+      "total_tokens":2439,
+      "prompt_tokens_details":{
+        "created_cache_tokens":1856,
+        "cached_tokens":0
+      },
+      "prompt_tokens":1868,
+      "completion_tokens_details":{
+        "reasoning_tokens":460
+      }
+    },
+    "system_fingerprint":"vllm-0.1.dev25855+g7cb5dae22-2109da7c",
+    "metrics":{
+      "time_to_first_token_ms":99.30927700043,
+      "queue_time_ms":0.039148000723799,
+      "mean_itl_ms":3.1023570140334,
+      "speculative_decoding":{
+        "num_draft_tokens":994,
+        "acceptance_histogram":[33,28,16,13,6,4,7,35],
+        "num_spec_steps":142,
+        "num_spec_tokens":7,
+        "num_verified_draft_tokens":994,
+        "mean_acceptance_length":4.0281690140845,
+        "draft_acceptance_rate":0.43259557344064,
+        "num_accepted_draft_tokens":430
+      },
+      "generation_time_ms":1768.343497999,
+      "tokens_per_second":305.73134773415
+    },
+    "response_backend":"vllm",
+    "choices":[],
+    "object":"chat.completion.chunk",
+    "model":"inkling-2-mini"
+  },
+  "request_body":{
+    "chat_template_kwargs":{
+      "reasoning_effort":"none"
+    },
+    "messages":[{
+        "role":"system",
+        "content":"## Ground rules:\n- Follow the user's instructions carefully.\n- DO NOT wrap answers in markdown code blocks, which means no triple backticks like ``` nor single backtick like ` .\n- Do not explain answers, just give me code.\n- Respect indentation when modifying code.\n- Prefer meaningful names for variables, functions, etc. Avoid ambiguous names."
+      },{
+        "role":"user",
+        "content":"## Recent yanks (copy to clipboard):\n```lua/ask-openai/logs/completion_logger.lua\n[ansi.red(\"messages_snapshot\")] \n```\n\n"
+      },{
+        "role":"user",
+        "content":"## General Code Preferences\n\n- Avoid ambiguity, for example:\n\n```lua\n-- 👎 if there's a bug in the regex, how would I know? I'd have to surmise from surrounding code 🤮\nif line:match(\"^%s*$\") then\n    -- ...\nend\n```\n\n```lua\n-- 🙌 clear intent\nlocal is_blank_line = line:match(\"^%s*$\")\nif is_blank_line then\n    -- ...\nend\n```\n"
+      },{
+        "role":"user",
+        "content":"## Lua Code Preferences\n\n- use snake_case for functions and variables\n- use PascalCase for classes\n- use EmmyLua/LuaLS annotations to improve code completion\n- use `luac` to check for syntax errors\n- index/count variables end in `_base0` or `_base1` to indicate whether the loop starts at 0 (C-style) or 1 (Lua-style)\n\nExamples:\n```lua\n---@param names string[]\n---@param checker fun(name: string): boolean\n---@return table<string, integer>\nfunction process_names(names, checker) end\n\n---@class WindowController\n---@field window hs.axuielement\n---@field title? string\n---@field size { w: number, h: number }\nlocal WindowController = {}\n```\n"
+      },{
+        "role":"user",
+        "content":"# Semantic Grep matches: 5\n\nThis is automatic context based on my request. These may not be relevant to my request.\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/response_metadata.tests.lua:105:79-114:8 [rerank: 73.4%]\n\n```lua\nfunction()\n        local saved\n        logger.save_trace = function(_, _, messages) saved = messages end\n        local request = { body = { messages = {} } }\n        logger.log_sse_to_request({ choices = { { delta = { role = \"assistant\", content = \"OK\" } } } }, request, {})\n        logger.log_sse_to_request({ choices = { { delta = {}, finish_reason = \"stop\" } } }, request, {})\n        assert.is_true(vim.wait(1000, function() return saved ~= nil end, 10))\n        assert.equals(\"OK\", saved[1].content)\n        assert.equals(\"stop\", saved[1].finish_reason)\n    end\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/rag/client/client.lua:1-8 [rerank: 67.2%]\n\n```lua\nlocal ansi = require(\"devtools.ansi\")\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal rag_trace = require(\"ask-openai.rag.client.trace\")\nlocal safely = require(\"ask-openai.helpers.safely\")\nlocal values = require(\"ask-openai.helpers.values\")\n\nlocal M = {}\n\n\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/agents/messages/rx.lua:1-20 [rerank: 66.9%]\n\n```lua\nlocal log = require('devtools.logs.logger').universal()\nlocal ansi = require('devtools.ansi')\nlocal shared = require('ask-openai.agents.messages.shared')\n\n---@class RxAccumulatedMessage\n---@field role? string\n---@field index integer -- TODO! this appears to be Rx side only (it is not in OpenAI docs for chat completions endpoint, on any message type)... I believe I just need choice.index if there are multiple response rx_messages for one request ... but I wouldn't need it on the rx_message... just the dict that looksup rx mesage by choice.index ... IOTW I think I can remove tracking index ... ALSO choice.index is always 0 b/c it is PER response!\n---@field content? string\n---@field _verbatim_content? string -- hack for  <tool_call>... leaks (can be removed if fixed)\n---@field reasoning_content? string\n---@field finish_reason? string|vim.NIL -- FYI use get_finish_reason() for clean value (vim.NIL => nil)\n---@field tool_call_id? string\n---@field name? string\n---@field tool_calls ToolCall[] -- empty if none\n---@field last_sse? LlamaServerSSEBase\n---@field timings? LlamaServerTimings\nlocal RxAccumulatedMessage = {}\n\n---@enum RX_MESSAGE_ROLES\nlocal RX_MESSAGE_ROLES = {\n\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/curl.lua:1-20 [rerank: 52.7%]\n\n```lua\nlocal log = require(\"devtools.logs.logger\").universal()\nlocal completion_logger = require(\"ask-openai.logs.completion_logger\")\nlocal CurlRequest = require(\"ask-openai.backends.curl_request\")\nlocal SSEDataOnlyParser = require(\"ask-openai.backends.sse.data_only_parser\")\nlocal safely = require(\"ask-openai.helpers.safely\")\nlocal json = require('dkjson')\nlocal uv_spawn = require(\"ask-openai.helpers.uv_spawn\").uv_spawn\nlocal raw_request = require(\"ask-openai.backends.raw_request\")\nlocal perf = require(\"devtools.performance\")\n\nlocal Curl = {}\n\n---@enum CompletionsEndpoints\n_G.CompletionsEndpoints = {\n    -- llama-server non-openai:\n    llamacpp_completions = \"/completions\",\n\n    -- openai compat (but I've been developing this for llama-server for so long I can't guarantee that without testing)\n    v1_chat_completions = \"/v1/chat/completions\",\n}\n\n```\n\n## ~/repos/github/g0t4/ask-openai.nvim/lua/ask-openai/backends/response_metadata.tests.lua:72:9-72:81 [rerank: 34.9%]\n\n```lua\nlocal function emit(sse) logger.log_sse_to_request(sse, request, {}) end\n```\n"
+      },{
+        "role":"user",
+        "content":"Please rewrite the following code selection. My editor will replace the selected code with your response. Here is my request:\nansi yellow all of keys\n\nI selected from lua/ask-openai/logs/completion_logger.lua (lines: 83-89)\n```lua\n            local vars = {\n                [ansi.yellow(\"request\")] = request,\n                frontend = frontend,\n                [ansi.yellow(\"messages_snapshot\")] = no_messages,\n                sse_parsed = sse_parsed,\n                trace_data = trace_data\n            }\n```\n\nThis is not necessarily a complete selection of nearby code, this is just the part I want help with. Preserve indentation!"
+      },{
+        "finish_reason":"stop",
+        "reasoning_content":"The user wants to ansi yellow all of keys. The selection has mixed keys: some already ansi.yellow, some plain. Want all keys ansi yellow. Preserve indentation. Need output only replaced code. Need be careful: keys must be strings; frontend/sse_parsed/trace_data are plain keys that will be unquoted? In Lua table constructor, keys like frontend = value are sugar for [\"frontend\"]? Actually in Lua table constructor, `frontend = frontend` is sugar for `[\"frontend\"] = frontend`. But if we wrap as [ansi.yellow(\"frontend\")] = frontend, that's fine though unusual. User asks \"ansi yellow all of keys\". So make every key [ansi.yellow(\"...\")]. Need preserve indentation: lines start with 12 spaces? Selection shown with 12 spaces? In the snippet, lines begin with 12 spaces (since inside function). The provided selection:\n```\n            local vars = {\n                [ansi.yellow(\"request\")] = request,\n                frontend = frontend,\n                [ansi.yellow(\"messages_snapshot\")] = no_messages,\n                sse_parsed = sse_parsed,\n                trace_data = trace_data\n            }\n```\nFirst line 12 spaces, subsequent 16 spaces. Need output exactly replacement code only, no markdown code fences. So:\n            local vars = {\n                [ansi.yellow(\"request\")] = request,\n                [ansi.yellow(\"frontend\")] = frontend,\n                [ansi.yellow(\"messages_snapshot\")] = no_messages,\n                [ansi.yellow(\"sse_parsed\")] = sse_parsed,\n                [ansi.yellow(\"trace_data\")] = trace_data\n            }\n\nNeed ensure no extra explanation. Also note: yellowing keys means maybe keys are displayed colored in log; fine.\n\nNo code block. Final just code.",
+        "content":"            local vars = {\n                [ansi.yellow(\"request\")] = request,\n                [ansi.yellow(\"frontend\")] = frontend,\n                [ansi.yellow(\"messages_snapshot\")] = no_messages,\n                [ansi.yellow(\"sse_parsed\")] = sse_parsed,\n                [ansi.yellow(\"trace_data\")] = trace_data\n            }",
+        "role":"assistant",
+        "response_backend":"vllm",
+        "usage":{
+          "completion_tokens":571,
+          "total_tokens":2439,
+          "prompt_tokens_details":{
+            "created_cache_tokens":1856,
+            "cached_tokens":0
+          },
+          "prompt_tokens":1868,
+          "completion_tokens_details":{
+            "reasoning_tokens":460
+          }
+        },
+        "metrics":{
+          "time_to_first_token_ms":99.30927700043,
+          "queue_time_ms":0.039148000723799,
+          "mean_itl_ms":3.1023570140334,
+          "speculative_decoding":{
+            "num_draft_tokens":994,
+            "acceptance_histogram":[33,28,16,13,6,4,7,35],
+            "num_spec_steps":142,
+            "num_spec_tokens":7,
+            "num_verified_draft_tokens":994,
+            "mean_acceptance_length":4.0281690140845,
+            "draft_acceptance_rate":0.43259557344064,
+            "num_accepted_draft_tokens":430
+          },
+          "generation_time_ms":1768.343497999,
+          "tokens_per_second":305.73134773415
+        }
+      }],
+    "stream_options":{
+      "include_usage":true
+    },
+    "model":"",
+    "temperature":1,
+    "stream":true
+  }
+}

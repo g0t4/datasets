@@ -1,0 +1,1 @@
+GG inkling-2-mini rewrite all the keys ... ok this is where verbal would really be neat... even if it means select and talk... but would be best to just talk to the AI and let it suggest and not need to distinguish selection (AskRewrite) vs using FIM and getting lucky... fuck I want clanker to be a live agent I can just fucking talk to... fuck yes fuck yes
