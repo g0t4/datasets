@@ -1,1 +1,5 @@
-GG inklings-2-mini .. absolute pleasure to refactor with this model... one neat observation if you look above `which luac && sed -n '200,235p' lua/ask-openai/logs/completion_logger.lua` was run in message 17... it was checking for the presence of luac while preparing its edit to the completion_logger.lua module... imagine waiting and doing this after the edit, that would be a second tool call round... neat to see it anticipate tools it will need later and start looking early on for them (probably so it can adapt plans if it does not find them)
+GG inklings-2-mini .. absolute pleasure to refactor with this model...
+
+one neat observation if you look above `which luac && sed -n '200,235p' lua/ask-openai/logs/completion_logger.lua` was run in message 17... it was checking for the presence of luac while preparing its edit to the completion_logger.lua module... imagine waiting and doing this after the edit, that would be a second tool call round... neat to see it anticipate tools it will need later and start looking early on for them (probably so it can adapt plans if it does not find them)
+
+also FYI I was in the middle of major changes to trace saving... so I didn't yet have stats per assistant message, so those are missing but the content of the agent's actions is present and I wanted to capture that b/c it's neat.
