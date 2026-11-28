@@ -1,0 +1,1 @@
+GG inklings-2-mini... I did not even start the function name and yet it figured out I wanted to add one to get all choices!... I did rename it to all_choices... though :choices() is perfectly reasonable too
