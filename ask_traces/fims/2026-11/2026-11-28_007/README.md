@@ -1,0 +1,1 @@
+GG inklings-2-mini... I just added `for` and it did the rest as I suspected it would :)... and albeit `choices` was not the method, it was `all_choices`... `choices` as the sane assumption given semantic_grep (RAG) did not return any examples of that
